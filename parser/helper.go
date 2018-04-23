@@ -2,6 +2,7 @@ package parser
 
 import (
 	"github.com/emicklei/proto"
+	"github.com/pkg/errors"
 	"strconv"
 	"strings"
 )
@@ -80,4 +81,30 @@ func quoteComment(comments *proto.Comment) string {
 		return `""`
 	}
 	return strconv.Quote(strings.TrimSpace(strings.Join(comments.Lines, "\n")))
+}
+
+func getVisiteeTypename(v proto.Visitee) ([]string, error) {
+	var res []string
+	prependType := func(typ string) {
+		res = append(res, "")
+		copy(res[1:], res)
+		res[0] = typ
+	}
+	switch v.(type) {
+	case *proto.Message, *proto.Enum:
+		vv := v
+		for {
+			if msg, ok := vv.(*proto.Message); ok {
+				prependType(msg.Name)
+				vv = msg.Parent
+			} else if enum, ok := vv.(*proto.Enum); ok {
+				prependType(enum.Name)
+				vv = enum.Parent
+			} else {
+				return res, nil
+			}
+		}
+
+	}
+	return nil, errors.Errorf("can't get TypeName of %T", v)
 }

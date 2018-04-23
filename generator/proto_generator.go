@@ -235,7 +235,6 @@ func (g *protoGenerator) messageErrorField(msg *parser.Message) string {
 				return f.Name
 			}
 		}
-
 	}
 	return ""
 }

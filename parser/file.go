@@ -23,50 +23,8 @@ type File struct {
 	Messages           []*Message
 	Maps               []*Map
 	Enums              []*Enum
-	Imports            []*File  // package name => File
-	ParsedFiles        *[]*File // package name => File
-}
-
-func (f *File) FindMessage(pkg string, typeName []string) (*Message, error) {
-	if pkg == f.PkgName {
-		for _, msg := range f.Messages {
-			if len(typeName) != len(msg.TypeName) {
-				continue
-			}
-			if sameTypeNames(msg.TypeName, typeName) {
-				return msg, nil
-			}
-		}
-	}
-	for _, imp := range f.Imports {
-		if imp.PkgName == pkg {
-			return imp.FindMessage(pkg, typeName)
-		}
-	}
-	return nil, NotFoundErr
-}
-func (f *File) GetMap(mapField *proto.MapField) (*Map, error) {
-	for _, mp := range f.Maps {
-		if mp.Field == mapField {
-			return mp, nil
-		}
-	}
-	return nil, NotFoundErr
-}
-func (f *File) FindEnum(pkg string, typeName []string) (*Enum, error) {
-	if pkg == f.PkgName {
-		for _, enum := range f.Enums {
-			if sameTypeNames(enum.TypeName, typeName) {
-				return enum, nil
-			}
-		}
-	}
-	for _, imp := range f.Imports {
-		if imp.PkgName == pkg {
-			return imp.FindEnum(pkg, typeName)
-		}
-	}
-	return nil, NotFoundErr
+	Imports            []*File
+	ParsedFiles        *[]*File
 }
 
 type Service struct {
@@ -202,16 +160,17 @@ func (f *File) resolveMapValueType(msg *Message, valType string) (*ProtoType, er
 	typ := &ProtoType{
 		File: file,
 	}
+
 	switch t.(type) {
 	case *proto.Message:
-		m, err := f.FindMessage(file.PkgName, typename)
-		if err != nil {
+		m, ok := file.MessageByTypeName(typename)
+		if !ok {
 			return nil, errors.Errorf("can't find message (pkg: %s, TypeName: %v)", file.PkgName, typename)
 		}
 		typ.Message = m
 	case *proto.Enum:
-		enum, err := f.FindEnum(file.PkgName, typename)
-		if err != nil {
+		enum, ok := file.EnumByTypeName(typename)
+		if !ok {
 			return nil, errors.Errorf("can't find enum (pkg: %s, TypeName: %v)", file.PkgName, typename)
 		}
 		typ.Enum = enum
@@ -222,9 +181,8 @@ func (f *File) resolveMapValueType(msg *Message, valType string) (*ProtoType, er
 }
 
 func (f *File) resolveFieldType(message *Message, field proto.Visitee, optional bool) (*ProtoType, error) {
-
 	if mapField, ok := field.(*proto.MapField); ok {
-		m, err := f.GetMap(mapField)
+		m, err := f.MapByField(mapField)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to find map")
 		}
@@ -262,18 +220,16 @@ func (f *File) resolveFieldType(message *Message, field proto.Visitee, optional 
 		return nil, errors.Wrapf(err, "failed to find Field %s type", fld.Name)
 	}
 	typ.File = file
-	switch val := t.(type) {
+	switch t.(type) {
 	case *proto.Message:
-		m, err := f.FindMessage(file.PkgName, typename)
-		if err != nil {
-			m, err = f.FindMessage(file.PkgName, typename)
+		m, ok := file.MessageByTypeName(typename)
+		if !ok {
 			return nil, errors.Errorf("can't find message (pkg: %s, TypeName: %v)", file.PkgName, typename)
 		}
 		typ.Message = m
 	case *proto.Enum:
-		f.getTypename(val)
-		enum, err := f.FindEnum(file.PkgName, typename)
-		if err != nil {
+		enum, ok := file.EnumByTypeName(typename)
+		if !ok {
 			return nil, errors.Errorf("can't find enum (pkg: %s, TypeName: %v)", file.PkgName, typename)
 		}
 		typ.Enum = enum
@@ -282,7 +238,17 @@ func (f *File) resolveFieldType(message *Message, field proto.Visitee, optional 
 	}
 	return typ, nil
 }
-func (f *File) messageByTypeName(typeName []string) (*Message, bool) {
+
+func (f *File) MapByField(mapField *proto.MapField) (*Map, error) {
+	for _, mp := range f.Maps {
+		if mp.Field == mapField {
+			return mp, nil
+		}
+	}
+	return nil, NotFoundErr
+}
+
+func (f *File) MessageByTypeName(typeName []string) (*Message, bool) {
 	for _, msg := range f.Messages {
 		if sameTypeNames(typeName, msg.TypeName) {
 			return msg, true
@@ -290,7 +256,7 @@ func (f *File) messageByTypeName(typeName []string) (*Message, bool) {
 	}
 	return nil, false
 }
-func (f *File) enumByTypeName(typeName []string) (*Enum, bool) {
+func (f *File) EnumByTypeName(typeName []string) (*Enum, bool) {
 	for _, e := range f.Enums {
 		if sameTypeNames(typeName, e.TypeName) {
 			return e, true
@@ -305,12 +271,12 @@ func (f *File) parseAllUsedInServicesEntities() error {
 		if _, ok := hc[msg]; ok {
 			return nil
 		}
-		typename, err := file.getTypename(msg)
+		typename, err := getVisiteeTypename(msg)
 		if err != nil {
 			return errors.Wrap(err, "failed to get TypeName")
 		}
 		hc[msg] = true
-		m, handled := file.messageByTypeName(typename)
+		m, handled := file.MessageByTypeName(typename)
 		if !handled {
 			m = &Message{
 				file:          file,
@@ -328,7 +294,6 @@ func (f *File) parseAllUsedInServicesEntities() error {
 		if isOutput {
 			m.OutputMessage = true
 		}
-
 		// handling submessages
 		for _, el := range msg.Elements {
 			switch fld := el.(type) {
@@ -347,7 +312,7 @@ func (f *File) parseAllUsedInServicesEntities() error {
 						return errors.Wrapf(err, "failed to handle type %s", fld.Type)
 					}
 				case *proto.Enum:
-					if _, ok := file.enumByTypeName(typename); !ok {
+					if _, ok := file.EnumByTypeName(typename); !ok {
 						file.Enums = append(file.Enums, f.prepareEnum(file, tv, typename))
 					}
 				}
@@ -372,7 +337,7 @@ func (f *File) parseAllUsedInServicesEntities() error {
 							return errors.Wrapf(err, "failed to message type %s", typename)
 						}
 					case *proto.Enum:
-						if _, ok := file.enumByTypeName(typename); !ok {
+						if _, ok := file.EnumByTypeName(typename); !ok {
 							file.Enums = append(file.Enums, f.prepareEnum(file, tv, typename))
 						}
 					}
@@ -393,7 +358,7 @@ func (f *File) parseAllUsedInServicesEntities() error {
 						return errors.Wrapf(err, "failed to handle message %s", tv.Name)
 					}
 				case *proto.Enum:
-					if _, ok := file.enumByTypeName(typename); !ok {
+					if _, ok := file.EnumByTypeName(typename); !ok {
 						file.Enums = append(file.Enums, f.prepareEnum(file, tv, typename))
 					}
 				}
@@ -498,31 +463,6 @@ func (f *File) parseMessagesFields() error {
 	return nil
 }
 
-func (f *File) getTypename(v proto.Visitee) ([]string, error) {
-	var res []string
-	prependType := func(typ string) {
-		res = append(res, "")
-		copy(res[1:], res)
-		res[0] = typ
-	}
-	switch v.(type) {
-	case *proto.Message, *proto.Enum:
-		vv := v
-		for {
-			if msg, ok := vv.(*proto.Message); ok {
-				prependType(msg.Name)
-				vv = msg.Parent
-			} else if enum, ok := vv.(*proto.Enum); ok {
-				prependType(enum.Name)
-				vv = enum.Parent
-			} else {
-				return res, nil
-			}
-		}
-
-	}
-	return nil, errors.Errorf("can't get TypeName of %T", v)
-}
 func (f *File) findTypeInMessage(msg *Message, typ string) (*File, []string, proto.Visitee, error) {
 	m := msg.Descriptor
 	mels := m.Elements
@@ -533,7 +473,7 @@ func (f *File) findTypeInMessage(msg *Message, typ string) (*File, []string, pro
 				if v.Name != typ {
 					continue
 				}
-				typename, err := f.getTypename(v)
+				typename, err := getVisiteeTypename(v)
 				if err != nil {
 					return nil, nil, nil, errors.Wrapf(err, "failed to get TypeName of message %s", v.Name)
 				}
@@ -542,7 +482,7 @@ func (f *File) findTypeInMessage(msg *Message, typ string) (*File, []string, pro
 				if v.Name != typ {
 					continue
 				}
-				typename, err := f.getTypename(v)
+				typename, err := getVisiteeTypename(v)
 				if err != nil {
 					return nil, nil, nil, errors.Wrapf(err, "failed to get TypeName of message %s", v.Name)
 				}
@@ -562,17 +502,17 @@ func (f *File) findTypeInMessage(msg *Message, typ string) (*File, []string, pro
 func (f *File) findType(typ string) (*File, []string, proto.Visitee, error) {
 	parts := strings.Split(typ, ".")
 	if len(parts) == 1 {
-		return f.TypeNamed(f.PkgName, []string{typ})
+		return f.findTypenameInPackage(f.PkgName, []string{typ})
 	}
 	for i := 0; i < len(parts)-1; i++ {
-		file, typename, res, err := f.TypeNamed(strings.Join(parts[:i+1], "."), parts[i+1:])
+		file, typename, res, err := f.findTypenameInPackage(strings.Join(parts[:i+1], "."), parts[i+1:])
 		if err != NotFoundErr {
 			return file, typename, res, err
 		}
 	}
 	return nil, nil, nil, NotFoundErr
 }
-func (f *File) TypeNamed(pkg string, typename []string) (*File, []string, proto.Visitee, error) {
+func (f *File) findTypenameInPackage(pkg string, typename []string) (*File, []string, proto.Visitee, error) {
 	if pkg == "" || pkg == f.PkgName {
 		var scanVisite func(el proto.Visitee, needle []string) proto.Visitee
 		var handleEls func([]proto.Visitee, []string) proto.Visitee
@@ -606,7 +546,7 @@ func (f *File) TypeNamed(pkg string, typename []string) (*File, []string, proto.
 			return nil
 		}
 		if v := handleEls(f.file.Elements, typename); v != nil {
-			tn, err := f.getTypename(v)
+			tn, err := getVisiteeTypename(v)
 			if err != nil {
 				return nil, nil, nil, errors.Wrap(err, "failed to resolve TypeName")
 			}
@@ -615,7 +555,7 @@ func (f *File) TypeNamed(pkg string, typename []string) (*File, []string, proto.
 
 		for _, imp := range f.Imports {
 			if imp.PkgName == "" || imp.PkgName == pkg {
-				file, typename, typ, err := imp.TypeNamed(pkg, typename)
+				file, typename, typ, err := imp.findTypenameInPackage(pkg, typename)
 				if err != nil {
 					if err == NotFoundErr {
 						continue
@@ -629,7 +569,7 @@ func (f *File) TypeNamed(pkg string, typename []string) (*File, []string, proto.
 	}
 	for _, imp := range f.Imports {
 		if imp.PkgName == pkg {
-			file, typename, typ, err := imp.TypeNamed(pkg, typename)
+			file, typename, typ, err := imp.findTypenameInPackage(pkg, typename)
 			if err != nil {
 				if err == NotFoundErr {
 					continue
@@ -660,16 +600,16 @@ func (f *File) parseServices() error {
 			if err != nil {
 				return errors.Errorf("can't find request message %s", method.RequestType)
 			}
-			imsg, err := f.FindMessage(file.PkgName, typename)
-			if err != nil {
+			imsg, ok := file.MessageByTypeName(typename)
+			if !ok {
 				return errors.Errorf("can't find parsed request message %s (pkg %s:, TypeName: %v)", method.RequestType, file.PkgName, typename)
 			}
 			file, typename, _, err = f.findType(method.ReturnsType)
 			if err != nil {
 				return errors.Errorf("can't find response message %s", method.ReturnsType)
 			}
-			omsg, err := f.FindMessage(file.PkgName, typename)
-			if err != nil {
+			omsg, ok := file.MessageByTypeName(typename)
+			if !ok {
 				return errors.Errorf("can't find parsed response message %s (pkg %s:, TypeName: %v)", method.ReturnsType, file.PkgName, typename)
 			}
 			mtd := Method{
@@ -732,8 +672,9 @@ func (f *File) parseMaps() error {
 				ValueType: vt,
 				File:      f,
 				Field:     mapField,
+				Type:      &ProtoType{File: f},
 			}
-			m.Type = &ProtoType{Map: m, File: f}
+			m.Type.Map = m
 			f.Maps = append(f.Maps, m)
 		}
 
