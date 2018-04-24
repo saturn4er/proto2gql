@@ -87,6 +87,7 @@ func CamelCase(s string) string {
 // be joined with "_".
 func CamelCaseSlice(elem []string) string      { return CamelCase(strings.Join(elem, "")) }
 func SnakeCamelCaseSlice(elem []string) string { return CamelCase(strings.Join(elem, "_")) }
+
 func isSamePackage(f1, f2 *parser.File) bool {
 	return f1.PkgName == f2.PkgName && filepath.Dir(f1.FilePath) == filepath.Dir(f2.FilePath)
 }

@@ -27,14 +27,13 @@ type generatedFile struct {
 	Generator        *protoGenerator
 }
 type generator struct {
-	config          *GenerateConfig
-	importingParams map[*parser.File]*generatedFile
+	config *GenerateConfig
 }
 
-func (g *generator) importImportingParams(imp *parser.File) (dir, pkg string, rerr error) {
-	path := filepath.Dir(imp.FilePath)
-	if g.config.VendorPath != "" && strings.HasPrefix(path, g.config.VendorPath) {
-		relPath, err := filepath.Rel(g.config.VendorPath, path)
+func (g *generator) importDirAndPkg(importFile *parser.File) (dir, pkg string, rerr error) {
+	pth := filepath.Dir(importFile.FilePath)
+	if g.config.VendorPath != "" && strings.HasPrefix(pth, g.config.VendorPath) {
+		relPath, err := filepath.Rel(g.config.VendorPath, pth)
 		if err != nil {
 			return "", "", errors.Wrap(err, "failed to resolve import relative path")
 		}
@@ -48,10 +47,10 @@ func (g *generator) importImportingParams(imp *parser.File) (dir, pkg string, re
 		}
 		return outDir, pkg, nil
 	}
-	if !strings.HasPrefix(path, filepath.Join(build.Default.GOPATH, "src")) {
+	if !strings.HasPrefix(pth, filepath.Join(build.Default.GOPATH, "src")) {
 		return "", "", errors.New("import File is outside GOPATH directory:")
 	}
-	relPath, err := filepath.Rel(filepath.Join(build.Default.GOPATH, "src"), path)
+	relPath, err := filepath.Rel(filepath.Join(build.Default.GOPATH, "src"), pth)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve import relative path")
 	}
@@ -65,7 +64,6 @@ func (g *generator) importImportingParams(imp *parser.File) (dir, pkg string, re
 	}
 	return outDir, pkg, nil
 }
-
 func (g *generator) generate() error {
 	var parsedFiles = new([]*parser.File)
 	// Resolving what to generate
@@ -140,7 +138,7 @@ func (g *generator) generate() error {
 				})
 				continue
 			}
-			dir, pkg, err := g.importImportingParams(imp)
+			dir, pkg, err := g.importDirAndPkg(imp)
 			if err != nil {
 				return errors.Wrap(err, "failed to resolve import importing params")
 			}
@@ -192,6 +190,7 @@ func (g *generator) normalizePaths() error {
 	g.config.Imports.Settings = importsSettings
 	return nil
 }
+
 func Generate(gc *GenerateConfig) error {
 	var g = generator{
 		config: gc,

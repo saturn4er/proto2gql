@@ -601,9 +601,19 @@ const methodTemplate = `
 							{{$errFld := (call $.MessageErrorField $method.OutputMessage) -}}
 							{{$errType := (call $.MessageErrorFieldType $method.OutputMessage) -}}
 							{{if $errFld -}}
-								if res != nil {{- if or ($errType.IsMap) ($errType.Array) -}} && len(res.{{call $.ccase $errFld}}) > 0 {{- end -}} {
-									ctx.PayloadError =  res.{{call $.ccase $errFld}}
-								}
+								{{if or ($errType.IsMap) ($errType.Array) -}} 
+									if res != nil && len(res.{{call $.ccase $errFld}}) > 0 {
+										ctx.PayloadError =  res.{{call $.ccase $errFld}}
+									}
+								{{ else  if $errType.IsMessage -}}
+									if res != nil && res.{{call $.ccase $errFld}} !=nil {
+										ctx.PayloadError =  res.{{call $.ccase $errFld}}
+									}
+								{{ else -}}
+									if res != nil {
+										ctx.PayloadError =  res.{{call $.ccase $errFld}}
+									}
+								{{ end -}}
 							{{end -}}
 							return res, err				
 						})

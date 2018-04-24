@@ -23,7 +23,6 @@ type protoGenerator struct {
 	file           *generatedFile
 	imports        importer
 	generatedFiles []*generatedFile
-	generatedNames *[]string
 }
 
 func (g *protoGenerator) gqlEnumVarName(i *parser.Enum) string {
@@ -180,7 +179,7 @@ func (g *protoGenerator) methodIsQuery(m *parser.Method) bool {
 }
 
 func (g *protoGenerator) serviceName(m *parser.Service) string {
-	if srvCfg, ok := g.file.Services[m.Name]; ok {
+	if srvCfg, ok := g.file.Services[m.Name]; ok && srvCfg.Alias != "" {
 		return srvCfg.Alias
 	}
 	return m.Name
