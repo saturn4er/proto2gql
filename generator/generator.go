@@ -33,6 +33,21 @@ type generator struct {
 
 func (g *generator) importImportingParams(imp *parser.File) (dir, pkg string, rerr error) {
 	path := filepath.Dir(imp.FilePath)
+	if g.config.VendorPath != "" && strings.HasPrefix(path, g.config.VendorPath) {
+		relPath, err := filepath.Rel(g.config.VendorPath, path)
+		if err != nil {
+			return "", "", errors.Wrap(err, "failed to resolve import relative path")
+		}
+		outDir, err := filepath.Abs(filepath.Join(g.config.Imports.OutputPath, relPath))
+		if err != nil {
+			return "", "", errors.Wrap(err, "failed to resolve import absolute path")
+		}
+		pkg, err = resolveGoPkg(g.config.VendorPath, outDir)
+		if err != nil {
+			return "", "", errors.Wrap(err, "failed to resolve import Go package")
+		}
+		return outDir, pkg, nil
+	}
 	if !strings.HasPrefix(path, filepath.Join(build.Default.GOPATH, "src")) {
 		return "", "", errors.New("import File is outside GOPATH directory:")
 	}
@@ -40,17 +55,15 @@ func (g *generator) importImportingParams(imp *parser.File) (dir, pkg string, re
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve import relative path")
 	}
-	outDir, err := filepath.Abs(g.config.Imports.OutputPath)
+	outDir, err := filepath.Abs(filepath.Join(g.config.Imports.OutputPath, relPath))
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve import absolute path")
 	}
-
-	res := filepath.Join(outDir, relPath)
-	pkg, err = resolveGoPkg(res)
+	pkg, err = resolveGoPkg(g.config.VendorPath, outDir)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve import Go package")
 	}
-	return res, pkg, nil
+	return outDir, pkg, nil
 }
 
 func (g *generator) generate() error {
@@ -72,11 +85,11 @@ func (g *generator) generate() error {
 		if err != nil {
 			return errors.Wrap(err, "failed to resolve File absolute path")
 		}
-		pkg, err := resolveGoPkg(outDir)
+		pkg, err := resolveGoPkg(g.config.VendorPath, outDir)
 		if err != nil {
 			return errors.Wrap(err, "failed to resolve go pkg")
 		}
-		goProtoPkg, err := resolveGoPkg(filepath.Dir(file.FilePath))
+		goProtoPkg, err := resolveGoPkg(g.config.VendorPath, filepath.Dir(file.FilePath))
 		if err != nil {
 			return errors.Wrap(err, "failed to resolve go pkg")
 		}
@@ -104,7 +117,7 @@ func (g *generator) generate() error {
 			if v, ok := g.config.Imports.Settings[imp.FilePath]; ok && v.GoPackage != "" {
 				goProtoPkg = v.GoPackage
 			} else {
-				v, err := resolveGoPkg(filepath.Dir(imp.FilePath))
+				v, err := resolveGoPkg(g.config.VendorPath, filepath.Dir(imp.FilePath))
 				if err != nil {
 					return errors.Wrap(err, "failed to resolve go pkg")
 				}
@@ -160,9 +173,32 @@ func (g *generator) generate() error {
 	a++
 	return nil
 }
+func (g *generator) normalizePaths() error {
+	if g.config.VendorPath != "" {
+		vp, err := filepath.Abs(g.config.VendorPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to normalize vendor path")
+		}
+		g.config.VendorPath = vp
+	}
+	var importsSettings = make(map[string]ImportConfig)
+	for key, s := range g.config.Imports.Settings {
+		p, err := filepath.Abs(key)
+		if err != nil {
+			return errors.Wrap(err, "failed to normalize import path")
+		}
+		importsSettings[p] = s
+	}
+	g.config.Imports.Settings = importsSettings
+	return nil
+}
 func Generate(gc *GenerateConfig) error {
 	var g = generator{
 		config: gc,
+	}
+	err := g.normalizePaths()
+	if err != nil {
+		return errors.Wrap(err, "failed to normalize config paths")
 	}
 	if err := g.generate(); err != nil {
 		return errors.Wrap(err, "failed to generate schema")

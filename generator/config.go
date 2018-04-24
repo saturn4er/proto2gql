@@ -1,10 +1,5 @@
 package generator
 
-import (
-	"github.com/imdario/mergo"
-	"gopkg.in/yaml.v1"
-)
-
 const (
 	MethodTypeMutation = "MUTATION"
 	MethodTypeQuery    = "QUERY"
@@ -41,38 +36,22 @@ type ProtoConfig struct {
 	Messages         map[string]MessageConfig `yaml:"messages"`
 	Enums            map[string]EnumConfig    `yaml:"enums"`
 }
-
-func (p ProtoConfig) Copy() ProtoConfig {
-	yml, err := yaml.Marshal(p)
-	if err != nil {
-		panic("Can't marshal ProtoConfig:" + err.Error())
-	}
-	var res ProtoConfig
-	err = yaml.Unmarshal(yml, &res)
-	if err != nil {
-		panic("Can't unmarshal ProtoConfig:" + err.Error())
-	}
-	return res
+type ImportConfig struct {
+	GoPackage        string                   `yaml:"go_package"`
+	GQLEnumsPrefix   string                   `yaml:"gql_enums_prefix"`
+	GQLMessagePrefix string                   `yaml:"gql_messages_prefix"`
+	Services         map[string]ServiceConfig `yaml:"services"`
+	Enums            map[string]EnumConfig    `yaml:"enums"`
 }
-func (p *ProtoConfig) Merge(cfg ProtoConfig) {
-	err := mergo.Merge(p, cfg)
-	panic(err)
-}
-
 type ImportsConfig struct {
-	OutputPkg  string            `yaml:"output_package"`
-	OutputPath string            `yaml:"output_path"`
-	Aliases    map[string]string `yaml:"aliases"`
-	Settings   map[string]struct {
-		GoPackage        string                   `yaml:"go_package"`
-		GQLEnumsPrefix   string                   `yaml:"gql_enums_prefix"`
-		GQLMessagePrefix string                   `yaml:"gql_messages_prefix"`
-		Services         map[string]ServiceConfig `yaml:"services"`
-		Enums            map[string]EnumConfig    `yaml:"enums"`
-	} `yaml:"settings"`
+	OutputPkg  string                  `yaml:"output_package"`
+	OutputPath string                  `yaml:"output_path"`
+	Aliases    map[string]string       `yaml:"aliases"`
+	Settings   map[string]ImportConfig `yaml:"settings"`
 }
 type GenerateConfig struct {
 	Tracer     bool           `yaml:"generate_tracer"`
+	VendorPath string         `yaml:"vendor_path"`
 	Imports    ImportsConfig  `yaml:"imports"`
 	Paths      []string       `yaml:"paths"`
 	Protos     []*ProtoConfig `yaml:"protos"`

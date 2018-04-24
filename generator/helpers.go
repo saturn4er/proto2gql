@@ -91,12 +91,18 @@ func isSamePackage(f1, f2 *parser.File) bool {
 	return f1.PkgName == f2.PkgName && filepath.Dir(f1.FilePath) == filepath.Dir(f2.FilePath)
 }
 
-func resolveGoPkg(dir string) (string, error) {
+func resolveGoPkg(vendorPath, dir string) (string, error) {
 	absPath, err := filepath.Abs(dir)
 	if err != nil {
 		return "", err
 	}
-	if !strings.HasPrefix(absPath, filepath.Join(build.Default.GOPATH, "src")) {
+	if vendorPath != "" && strings.HasPrefix(absPath, vendorPath) {
+		pkg, err := filepath.Rel(vendorPath, absPath)
+		if err != nil {
+			return "", errors.Wrap(err, "failed to resolve dir vendor relative path")
+		}
+		return pkg, nil
+	} else if !strings.HasPrefix(absPath, filepath.Join(build.Default.GOPATH, "src")) {
 		return "", errors.New("dir is outside GOPATH")
 	}
 	pkg, err := filepath.Rel(filepath.Join(build.Default.GOPATH, "src"), absPath)

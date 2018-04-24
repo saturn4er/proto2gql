@@ -238,6 +238,31 @@ func (g *protoGenerator) messageErrorField(msg *parser.Message) string {
 	}
 	return ""
 }
+func (g *protoGenerator) messageErrorFieldType(msg *parser.Message) *parser.ProtoType {
+	m, ok := g.file.Messages[msg.Name]
+	if !ok || m.ErrorField == "" {
+		return nil
+	}
+	// Iterating over fields to be sure, that specified in config field exists
+	for _, f := range msg.Fields {
+		if f.Name == m.ErrorField {
+			return f.Type
+		}
+	}
+	for _, f := range msg.MapFields {
+		if f.Name == m.ErrorField {
+			return f.Type
+		}
+	}
+	for _, of := range msg.OneOffs {
+		for _, f := range of.Fields {
+			if f.Name == m.ErrorField {
+				return f.Type
+			}
+		}
+	}
+	return nil
+}
 func (g *protoGenerator) isErrorField(msg *parser.Message, name string) bool {
 	if m, ok := g.file.Messages[msg.Name]; ok {
 		return name == m.ErrorField
@@ -267,6 +292,7 @@ func (g *protoGenerator) templateContext() map[string]interface{} {
 
 		"FieldContextKey":              g.fieldContextKey,
 		"MessageErrorField":            g.messageErrorField,
+		"MessageErrorFieldType":        g.messageErrorFieldType,
 		"MessageHaveFieldsExceptError": g.messageHaveFieldsExceptError,
 		"IsErrorField":                 g.isErrorField,
 		"MethodName":                   g.methodName,
