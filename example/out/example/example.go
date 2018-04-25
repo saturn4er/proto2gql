@@ -3,19 +3,19 @@
 package example
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"runtime/debug"
-	"strconv"
+	context "context"
+	errors "errors"
+	fmt "fmt"
+	debug "runtime/debug"
+	strconv "strconv"
 
 	timestamp_1 "github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/graphql-go/graphql"
+	graphql "github.com/graphql-go/graphql"
 	opentracing_go "github.com/opentracing/opentracing-go"
-	"github.com/saturn4er/proto2gql/api/interceptors"
-	"github.com/saturn4er/proto2gql/api/scalars"
-	"github.com/saturn4er/proto2gql/example/out/imports/github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/saturn4er/proto2gql/example/proto"
+	interceptors "github.com/saturn4er/proto2gql/api/interceptors"
+	scalars "github.com/saturn4er/proto2gql/api/scalars"
+	timestamp "github.com/saturn4er/proto2gql/example/out/imports/github.com/golang/protobuf/ptypes/timestamp"
+	proto "github.com/saturn4er/proto2gql/example/proto"
 	"google.golang.org/grpc"
 )
 

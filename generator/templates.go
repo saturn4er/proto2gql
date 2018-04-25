@@ -592,19 +592,18 @@ const methodTemplate = `
 							}
 							res, err := c.{{call $.ccase .Name}}(ctx.Params.Context, r, opts...)
 							{{$errFld := (call $.MessageErrorField $method.OutputMessage) -}}
-							{{$errType := (call $.MessageErrorFieldType $method.OutputMessage) -}}
 							{{if $errFld -}}
-								{{if or ($errType.IsMap) -}}                  // TOOD: ARRAY
-									if res != nil && len(res.{{call $.ccase $errFld}}) > 0 {
-										ctx.PayloadError =  res.{{call $.ccase $errFld}}
+								{{if or ($errFld.Type.IsMap) $errFld.Repeated -}}                  // TOOD: ARRAY
+									if res != nil && len(res.{{call $.ccase $errFld.Name}}) > 0 {
+										ctx.PayloadError =  res.{{call $.ccase $errFld.Name}}
 									}
-								{{ else  if $errType.IsMessage -}}
-									if res != nil && res.{{call $.ccase $errFld}} !=nil {
-										ctx.PayloadError =  res.{{call $.ccase $errFld}}
+								{{ else  if $errFld.Type.IsMessage -}}
+									if res != nil && res.{{call $.ccase $errFld.Name}} !=nil {
+										ctx.PayloadError =  res.{{call $.ccase $errFld.Name}}
 									}
 								{{ else -}}
 									if res != nil {
-										ctx.PayloadError =  res.{{call $.ccase $errFld}}
+										ctx.PayloadError =  res.{{call $.ccase $errFld.Name}}
 									}
 								{{ end -}}
 							{{end -}}

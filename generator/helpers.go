@@ -44,7 +44,7 @@ func isASCIIDigit(c byte) bool {
 	return '0' <= c && c <= '9'
 }
 
-func CamelCase(s string) string {
+func camelCase(s string) string {
 	if s == "" {
 		return ""
 	}
@@ -83,10 +83,10 @@ func CamelCase(s string) string {
 	return string(t)
 }
 
-// CamelCaseSlice is like CamelCase, but the argument is a slice of strings to
+// camelCaseSlice is like camelCase, but the argument is a slice of strings to
 // be joined with "_".
-func CamelCaseSlice(elem []string) string      { return CamelCase(strings.Join(elem, "")) }
-func SnakeCamelCaseSlice(elem []string) string { return CamelCase(strings.Join(elem, "_")) }
+func camelCaseSlice(elem []string) string      { return camelCase(strings.Join(elem, "")) }
+func snakeCamelCaseSlice(elem []string) string { return camelCase(strings.Join(elem, "_")) }
 
 func isSamePackage(f1, f2 *parser.File) bool {
 	return f1.PkgName == f2.PkgName && filepath.Dir(f1.FilePath) == filepath.Dir(f2.FilePath)

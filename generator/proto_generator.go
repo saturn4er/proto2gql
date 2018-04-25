@@ -24,6 +24,11 @@ type protoGenerator struct {
 	imports        importer
 	generatedFiles []*generatedFile
 }
+type ErrorField struct {
+	Name     string
+	Repeated bool
+	Type     *parser.ProtoType
+}
 
 func (g *protoGenerator) gqlEnumVarName(i *parser.Enum) string {
 	return g.file.GQLEnumsPrefix + i.Name
@@ -101,22 +106,22 @@ func (g *protoGenerator) gqlInputTypeName(t *parser.ProtoType) string {
 		}
 		return res
 	}
-	if t.File != g.file.File {
+	if t.File != g.file.ParsedFile {
 		gf, err := g.findGeneratedFile(t.File)
 		if err != nil {
 			panic("Can't find generated import" + err.Error())
 		}
-		if gf.GoPkg != g.file.GoPkg {
-			return g.imports.New(gf.GoPkg) + "." + gf.Generator.gqlInputTypeName(t)
+		if gf.OutGoPkg != g.file.OutGoPkg {
+			return g.imports.New(gf.OutGoPkg) + "." + gf.Generator.gqlInputTypeName(t)
 		}
 	}
 	switch {
 	case t.IsMessage():
-		return g.file.GQLMessagePrefix + CamelCaseSlice(t.Message.TypeName) + "Input"
+		return g.file.GQLMessagePrefix + camelCaseSlice(t.Message.TypeName) + "Input"
 	case t.IsEnum():
-		return g.file.GQLEnumsPrefix + CamelCaseSlice(t.Enum.TypeName)
+		return g.file.GQLEnumsPrefix + camelCaseSlice(t.Enum.TypeName)
 	case t.IsMap():
-		return g.file.GQLMessagePrefix + CamelCaseSlice(t.Map.Message.TypeName) + CamelCase(t.Map.Field.Name) + "MapInput"
+		return g.file.GQLMessagePrefix + camelCaseSlice(t.Map.Message.TypeName) + camelCase(t.Map.Field.Name) + "MapInput"
 	}
 	panic(t.String() + " is not handled in gqlInputTypeName")
 }
@@ -132,40 +137,40 @@ func (g *protoGenerator) gqlOutputTypeName(t *parser.ProtoType) string {
 		}
 		return res
 	}
-	if t.File != g.file.File {
+	if t.File != g.file.ParsedFile {
 		gf, err := g.findGeneratedFile(t.File)
 		if err != nil {
 			panic("Can't find generated import" + err.Error())
 		}
-		if gf.GoPkg != g.file.GoPkg {
-			return g.imports.New(gf.GoPkg) + "." + gf.Generator.gqlOutputTypeName(t)
+		if gf.OutGoPkg != g.file.OutGoPkg {
+			return g.imports.New(gf.OutGoPkg) + "." + gf.Generator.gqlOutputTypeName(t)
 		}
 	}
 	switch {
 	case t.IsMessage():
-		return g.file.GQLMessagePrefix + CamelCaseSlice(t.Message.TypeName)
+		return g.file.GQLMessagePrefix + camelCaseSlice(t.Message.TypeName)
 	case t.IsEnum():
-		return g.file.GQLEnumsPrefix + CamelCaseSlice(t.Enum.TypeName)
+		return g.file.GQLEnumsPrefix + camelCaseSlice(t.Enum.TypeName)
 	case t.IsMap():
-		return g.file.GQLMessagePrefix + CamelCaseSlice(t.Map.Message.TypeName) + CamelCase(t.Map.Field.Name) + "Map"
+		return g.file.GQLMessagePrefix + camelCaseSlice(t.Map.Message.TypeName) + camelCase(t.Map.Field.Name) + "Map"
 	}
 	panic(t.String() + " is not handled in gqlOutputTypeName")
 }
 func (g *protoGenerator) gqlOutputTypeResolverResolver(t *parser.ProtoType) string {
-	if t.File != g.file.File {
+	if t.File != g.file.ParsedFile {
 		gf, err := g.findGeneratedFile(t.File)
 		if err != nil {
 			panic("Can't find generated import" + err.Error())
 		}
-		if gf.GoPkg != g.file.GoPkg {
-			return g.imports.New(gf.GoPkg) + "." + gf.Generator.gqlOutputTypeResolverResolver(t)
+		if gf.OutGoPkg != g.file.OutGoPkg {
+			return g.imports.New(gf.OutGoPkg) + "." + gf.Generator.gqlOutputTypeResolverResolver(t)
 		}
 	}
 	switch {
 	case t.Message != nil:
-		return "Resolve" + CamelCaseSlice(t.Message.TypeName)
+		return "Resolve" + camelCaseSlice(t.Message.TypeName)
 	case t.Map != nil:
-		return "Resolve" + CamelCaseSlice(t.Map.Message.TypeName) + CamelCase(t.Map.Field.Name) + "Map"
+		return "Resolve" + camelCaseSlice(t.Map.Message.TypeName) + camelCase(t.Map.Field.Name) + "Map"
 	}
 	panic(t.String() + " is not handled in gqlOutputTypeResolverResolver")
 }
@@ -210,32 +215,48 @@ func (g *protoGenerator) serviceHaveMutations(m *parser.Service) bool {
 	return false
 }
 func (g *protoGenerator) messageHaveFieldsExceptError(msg *parser.Message) bool {
-	return msg.HaveFieldsExcept(g.messageErrorField(msg))
+	ef := g.messageErrorField(msg)
+	if ef == nil {
+		return msg.HaveFields()
+	}
+	return msg.HaveFieldsExcept(ef.Name)
 }
-func (g *protoGenerator) messageErrorField(msg *parser.Message) string {
+func (g *protoGenerator) messageErrorField(msg *parser.Message) *ErrorField {
 	m, ok := g.file.Messages[msg.Name]
 	if !ok || m.ErrorField == "" {
-		return ""
+		return nil
 	}
 	// Iterating over fields to be sure, that specified in config field exists
 	for _, f := range msg.Fields {
 		if f.Name == m.ErrorField {
-			return f.Name
+			return &ErrorField{
+				Name:     f.Name,
+				Repeated: f.Repeated,
+				Type:     f.Type,
+			}
 		}
 	}
 	for _, f := range msg.MapFields {
 		if f.Name == m.ErrorField {
-			return f.Name
+			return &ErrorField{
+				Name:     f.Name,
+				Repeated: false,
+				Type:     f.Type,
+			}
 		}
 	}
 	for _, of := range msg.OneOffs {
 		for _, f := range of.Fields {
 			if f.Name == m.ErrorField {
-				return f.Name
+				return &ErrorField{
+					Name:     f.Name,
+					Repeated: f.Repeated,
+					Type:     f.Type,
+				}
 			}
 		}
 	}
-	return ""
+	return nil
 }
 func (g *protoGenerator) messageErrorFieldType(msg *parser.Message) *parser.ProtoType {
 	m, ok := g.file.Messages[msg.Name]
@@ -273,8 +294,8 @@ func (g *protoGenerator) fieldContextKey(msg *parser.Message, name string) strin
 }
 func (g *protoGenerator) templateContext() map[string]interface{} {
 	return map[string]interface{}{
-		"File":            g.file.File,
-		"pkg":             g.file.PkgName,
+		"File":            g.file.ParsedFile,
+		"pkg":             g.file.OutGoPkgName,
 		"protoPkg":        g.imports.New(g.file.GoProtoPkg),
 		"gqlpkg":          g.imports.New(graphqlPkgPath),
 		"interceptorspkg": g.imports.New(interceptorsPkgPath),
@@ -291,7 +312,6 @@ func (g *protoGenerator) templateContext() map[string]interface{} {
 
 		"FieldContextKey":              g.fieldContextKey,
 		"MessageErrorField":            g.messageErrorField,
-		"MessageErrorFieldType":        g.messageErrorFieldType,
 		"MessageHaveFieldsExceptError": g.messageHaveFieldsExceptError,
 		"IsErrorField":                 g.isErrorField,
 		"MethodName":                   g.methodName,
@@ -305,9 +325,10 @@ func (g *protoGenerator) templateContext() map[string]interface{} {
 		"GQLOutputTypeResolver":        g.gqlOutputTypeResolverResolver,
 	}
 }
+
 func (g *protoGenerator) findGeneratedFile(f *parser.File) (*generatedFile, error) {
 	for _, fl := range g.generatedFiles {
-		if fl.File == f {
+		if fl.ParsedFile == f {
 			return fl, nil
 		}
 	}
@@ -322,7 +343,7 @@ func (g *protoGenerator) goTypeResolver(t *parser.ProtoType) string {
 			panic("Can't find generated import" + err.Error())
 		}
 		pkgPrefix = g.imports.New(gf.GoProtoPkg) + "."
-		return pkgPrefix + SnakeCamelCaseSlice(t.Message.TypeName)
+		return pkgPrefix + snakeCamelCaseSlice(t.Message.TypeName)
 	case t.Enum != nil:
 		var pkgPrefix string
 		gf, err := g.findGeneratedFile(t.File)
@@ -330,7 +351,7 @@ func (g *protoGenerator) goTypeResolver(t *parser.ProtoType) string {
 			panic("Can't find generated import" + err.Error())
 		}
 		pkgPrefix = g.imports.New(gf.GoProtoPkg) + "."
-		return pkgPrefix + SnakeCamelCaseSlice(t.Enum.TypeName)
+		return pkgPrefix + snakeCamelCaseSlice(t.Enum.TypeName)
 	case t.Map != nil:
 		kgt := g.goTypeResolver(t.Map.KeyType)
 		vgt := g.goTypeResolver(t.Map.ValueType)
@@ -368,17 +389,17 @@ func (g *protoGenerator) generate() error {
 		panic(err)
 	}
 	r := bytes.Join([][]byte{headres.Bytes(), res.Bytes()}, nil)
-	r, err = imports.Process(g.file.FilePath, r, &imports.Options{
+	r, err = imports.Process(g.file.OutFilePath, r, &imports.Options{
 		Comments: true,
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to format generated code")
 	}
-	err = os.MkdirAll(g.file.Dir, 0777)
+	err = os.MkdirAll(g.file.OutDir, 0777)
 	if err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile(g.file.FilePath, r, 0600)
+	err = ioutil.WriteFile(g.file.OutFilePath, r, 0600)
 	return err
 }
 

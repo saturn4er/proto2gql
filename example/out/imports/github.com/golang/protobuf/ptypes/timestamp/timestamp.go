@@ -3,17 +3,17 @@
 package timestamp
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"runtime/debug"
-	"strconv"
+	context "context"
+	errors "errors"
+	fmt "fmt"
+	debug "runtime/debug"
+	strconv "strconv"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/graphql-go/graphql"
+	timestamp "github.com/golang/protobuf/ptypes/timestamp"
+	graphql "github.com/graphql-go/graphql"
 	opentracing_go "github.com/opentracing/opentracing-go"
-	"github.com/saturn4er/proto2gql/api/interceptors"
-	"github.com/saturn4er/proto2gql/api/scalars"
+	interceptors "github.com/saturn4er/proto2gql/api/interceptors"
+	scalars "github.com/saturn4er/proto2gql/api/scalars"
 )
 
 var (
