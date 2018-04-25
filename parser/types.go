@@ -1,13 +1,11 @@
 package parser
 
 type ProtoType struct {
-	File     *File
-	Message  *Message
-	Enum     *Enum
-	Scalar   string
-	Map      *Map
-	Array    bool
-	Optional bool
+	File    *File
+	Message *Message
+	Enum    *Enum
+	Scalar  string
+	Map     *Map
 }
 
 func (p *ProtoType) IsScalar() bool {
@@ -26,24 +24,16 @@ func (p *ProtoType) IsMap() bool {
 }
 
 func (p *ProtoType) String() string {
-	var res string
-	if p.Array {
-		res += "repeated "
-	}
-	if p.Optional {
-		res += "optional "
-	}
 	switch {
 	case p.IsMessage():
-		res += p.Message.Name + " message"
+		return p.Message.Name + " message"
 	case p.IsMap():
-		res += p.Map.Message.Name + "." + p.Map.Field.Name + " map"
+		return p.Map.Message.Name + "." + p.Map.Field.Name + " map"
 	case p.IsEnum():
-		res += p.Enum.Name + " enum"
+		return p.Enum.Name + " enum"
 	case p.IsScalar():
-		res += p.Scalar
+		return p.Scalar
 	default:
 		return "unknown type"
 	}
-	return res
 }

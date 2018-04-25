@@ -65,13 +65,13 @@ func (g *generator) importDirAndPkg(importFile *parser.File) (dir, pkg string, r
 	return outDir, pkg, nil
 }
 func (g *generator) generate() error {
-	var parsedFiles = new([]*parser.File)
+	p := parser.New(g.config.Imports.Aliases, g.config.Paths)
 	// Resolving what to generate
 	var filesToGenerate []*generatedFile
 	for _, cfg := range g.config.Protos {
-		paths := mergePathsConfig(g.config.Paths, cfg.Paths)
-		aliases := mergeAlieses(g.config.Imports.Aliases, cfg.ImportsAliases)
-		file, err := parser.ParseFile(parsedFiles, aliases, paths, cfg.ProtoPath, true)
+		p.Paths = mergePathsConfig(g.config.Paths, cfg.Paths)
+		p.ImportAliases = mergeAlieses(g.config.Imports.Aliases, cfg.ImportsAliases)
+		file, err := p.Parse(cfg.ProtoPath)
 		if err != nil {
 			return errors.Wrap(err, "failed to parse File")
 		}

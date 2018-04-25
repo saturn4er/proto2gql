@@ -72,7 +72,7 @@ func ResolveTimestamp(ctx context.Context, i interface{}) (_ *timestamp.Timestam
 }
 
 // Maps
-
+// <no value>
 func init() {
 	// Adding fields to output messages
 	// Timestamp message fields

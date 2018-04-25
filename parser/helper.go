@@ -108,3 +108,50 @@ func getVisiteeTypename(v proto.Visitee) ([]string, error) {
 	}
 	return nil, errors.Errorf("can't get TypeName of %T", v)
 }
+
+func resolveFilePkgName(file *proto.Proto) string {
+	for _, el := range file.Elements {
+		if p, ok := el.(*proto.Package); ok {
+			return p.Name
+		}
+	}
+	return ""
+}
+
+func message(file *File, msg *proto.Message, typeName []string, parent *Message) *Message {
+	m := &Message{
+		Name:          msg.Name,
+		QuotedComment: quoteComment(msg.Comment),
+		Descriptor:    msg,
+		Type:          &ProtoType{File: file},
+		TypeName:      typeName,
+		file:          file,
+		parentMsg:     parent,
+	}
+	m.Type.Message = m
+	return m
+}
+
+func enum(file *File, enum *proto.Enum, typeName []string) *Enum {
+	m := &Enum{
+		Name:          enum.Name,
+		QuotedComment: quoteComment(enum.Comment),
+		Descriptor:    enum,
+		Type:          &ProtoType{File: file},
+		TypeName:      typeName,
+		file:          file,
+	}
+	m.Type.Enum = m
+	for _, v := range enum.Elements {
+		value, ok := v.(*proto.EnumField)
+		if !ok {
+			continue
+		}
+		m.Values = append(m.Values, &EnumValue{
+			Name:          value.Name,
+			Value:         value.Integer,
+			QuotedComment: quoteComment(value.Comment),
+		})
+	}
+	return m
+}

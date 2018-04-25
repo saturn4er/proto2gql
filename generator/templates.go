@@ -46,14 +46,14 @@ const bodyTemplate = `
 {{end}}
 // Messages
 {{ range $msg := .File.Messages -}}
-	{{if and $msg.OutputMessage (call $.MessageHaveFieldsExceptError $msg) -}}
+	{{if and (call $.MessageHaveFieldsExceptError $msg) -}}
 		var {{call $.GQLOutputTypeName .Type}} = {{$.gqlpkg}}.NewObject({{$.gqlpkg}}.ObjectConfig{
 			Name: "{{call $.GQLOutputTypeName  .Type}}",
             Fields: {{$.gqlpkg}}.Fields{
 			},
 		})
 	{{end -}}
-    {{if and $msg.InputMessage (call $.MessageHaveFieldsExceptError $msg) -}}
+    {{if and (call $.MessageHaveFieldsExceptError $msg) -}}
         var {{call $.GQLInputTypeName .Type}} = {{$.gqlpkg}}.NewInputObject({{$.gqlpkg}}.InputObjectConfig{
             Name: "{{call $.GQLInputTypeName .Type}}",
             Fields: {{$.gqlpkg}}.InputObjectConfigFieldMapThunk(func() {{$.gqlpkg}}.InputObjectConfigFieldMap {
@@ -61,7 +61,7 @@ const bodyTemplate = `
                     {{range $msg.Fields -}}
                         {{if not (call $.FieldContextKey $msg .Name) -}}
                             "{{.Name}}": &{{$.gqlpkg}}.InputObjectFieldConfig{
-                                {{ if .Type.Array -}}
+                                {{ if .Repeated -}}
 									Type: {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{call $.GQLInputTypeName .Type}})),
 								{{ else -}}
 									Type: {{call $.GQLInputTypeName .Type}},
@@ -72,18 +72,14 @@ const bodyTemplate = `
 					{{range $msg.MapFields -}}
                         {{if not (call $.FieldContextKey $msg .Name) -}}
                             "{{.Name}}": &{{$.gqlpkg}}.InputObjectFieldConfig{
-                                {{ if .Type.Array -}}
-									Type: {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{call $.GQLInputTypeName .Type}})),
-								{{ else -}}
-									Type: {{call $.GQLInputTypeName .Type}},
-								{{ end -}}
+								Type: {{call $.GQLInputTypeName .Type}},
                             },
                         {{end -}}
                     {{end -}}
                     {{range .OneOffs -}}
                         {{range .Fields -}}
                             "{{.Name}}": &{{$.gqlpkg}}.InputObjectFieldConfig{
-                            	{{ if .Type.Array -}}
+                            	{{ if .Repeated -}}
 									Type: {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{call $.GQLInputTypeName .Type}})),
 								{{ else -}}
 									Type: {{call $.GQLInputTypeName .Type}},
@@ -276,113 +272,111 @@ const bodyTemplate = `
 
 
 // Maps
-{{ range $map := .File.Maps -}}
-	{{ if $map.Message.OutputMessage -}}
-		{{ if not (call $.IsErrorField .Message .Field.Name) -}}
-    		var {{call $.GQLOutputTypeName .Type}} = {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{$.gqlpkg}}.NewObject({{$.gqlpkg}}.ObjectConfig{
-    			Name:   "{{call $.GQLOutputTypeName .Type}}",
-    			Fields: {{$.gqlpkg}}.Fields{
-					"key": &{{$.gqlpkg}}.Field{
-						Name: "key",
-						Type: {{call $.GQLOutputTypeName $map.KeyType}},
-						Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
-							src := p.Source.(map[string]interface{})
-							if src == nil {
-								return nil, nil
-							}
-							return src["key"].({{call $.GoType $map.KeyType}}), nil
+// {{ .Messages }}
+{{ range $message := .File.Messages -}}
+	{{ range $fld := .MapFields }}
+			{{ if not (call $.IsErrorField $message $fld.Map.Field.Name) -}}
+    			var {{call $.GQLOutputTypeName .Type}} = {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{$.gqlpkg}}.NewObject({{$.gqlpkg}}.ObjectConfig{
+    				Name:   "{{call $.GQLOutputTypeName .Type}}",
+    				Fields: {{$.gqlpkg}}.Fields{
+						"key": &{{$.gqlpkg}}.Field{
+							Name: "key",
+							Type: {{call $.GQLOutputTypeName $fld.Map.KeyType}},
+							Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
+								src := p.Source.(map[string]interface{})
+								if src == nil {
+									return nil, nil
+								}
+								return src["key"].({{call $.GoType $fld.Map.KeyType}}), nil
+							},
+						},
+						"value": &{{$.gqlpkg}}.Field{
+							Name: "value",
+							Type: {{call $.GQLOutputTypeName $fld.Map.ValueType}},
+							Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
+								src := p.Source.(map[string]interface{})
+								if src == nil {
+									return nil, nil
+								}
+								return src["value"].({{call $.GoType $fld.Map.ValueType}}), nil
+							},
 						},
 					},
-					"value": &{{$.gqlpkg}}.Field{
-						Name: "value",
-						Type: {{call $.GQLOutputTypeName $map.ValueType}},
-						Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
-							src := p.Source.(map[string]interface{})
-							if src == nil {
-								return nil, nil
-							}
-							return src["value"].({{call $.GoType $map.ValueType}}), nil
-						},
+    			})))
+			{{end}}
+			// MAP {{$message.Name}}
+    	    var {{call $.GQLInputTypeName .Type}} = {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{$.gqlpkg}}.NewInputObject({{$.gqlpkg}}.InputObjectConfig{
+    	        Name: "{{call $.GQLInputTypeName .Type}}",
+    	        Fields: {{$.gqlpkg}}.InputObjectConfigFieldMap{
+					"key": &{{$.gqlpkg}}.InputObjectFieldConfig{
+						Type: {{call $.GQLInputTypeName .Type.Map.KeyType}},
 					},
-				},
-    		})))
-		{{end}}
-	{{end}}
-    {{ if $map.Message.InputMessage -}}
-		// {{$map.Message.Name}}
-        var {{call $.GQLInputTypeName .Type}} = {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{$.gqlpkg}}.NewInputObject({{$.gqlpkg}}.InputObjectConfig{
-            Name: "{{call $.GQLInputTypeName .Type}}",
-            Fields: {{$.gqlpkg}}.InputObjectConfigFieldMap{
-				"key": &{{$.gqlpkg}}.InputObjectFieldConfig{
-					Type: {{call $.GQLInputTypeName .Type.Map.KeyType}},
-				},
-                "value": &{{$.gqlpkg}}.InputObjectFieldConfig{
-                    Type: {{call $.GQLInputTypeName .Type.Map.ValueType}},
-                },
-            },
-        })))
-        func {{call $.GQLOutputTypeResolver .Type}}({{ if $.tracerEnabled }} tr {{$.tracerpkg}}.Tracer, {{end}}ctx {{$.ctxpkg}}.Context, i interface{}) (_ {{call $.GoType $map.Type}}, rerr error){
-        	{{ if $.tracerEnabled -}}
-					span := tr.CreateChildSpanFromContext(ctx, "{{call $.GQLOutputTypeResolver .Type}}")
-					defer span.Finish()
-					defer func(){
-						if perr := recover(); perr != nil {
-							span.SetTag("error", "true")
-							span.SetTag("error_message", perr)
-							span.SetTag("error_stack", string({{$.debugpkg}}.Stack()))
-						}
-						if rerr != nil {
-							span.SetTag("error", "true")
-							span.SetTag("error_message", rerr.Error())
-						}
-					}()
-				{{end -}}
-				if i == nil {
-					return nil, nil
-				}
-				result := make({{call $.GoType $map.Type}})
-				vals := i.([]interface{})
-				{{ if $map.ValueType.IsMessage -}}
-					for iv, v := range vals {
-						args := v.(map[string]interface{})
-						{{ if $.tracerEnabled }}
-							vv, err := {{call $.GQLOutputTypeResolver $map.ValueType}}(tr,  tr.ContextWithSpan(ctx, span), args["value"])
-						{{ else }}
-							vv, err := {{call $.GQLOutputTypeResolver $map.ValueType}}(ctx, args["value"])
-						{{ end }}
-						if err != nil {
-							return nil, {{$.errorspkg}}.New("failed to parse {{call $.GQLOutputTypeName .Type}}["+{{$.strconvpkg}}.Itoa(iv)+"]: " + err.Error())
-						}
-						result[args["key"].({{call $.GoType $map.KeyType}})] = vv
+    	            "value": &{{$.gqlpkg}}.InputObjectFieldConfig{
+    	                Type: {{call $.GQLInputTypeName .Type.Map.ValueType}},
+    	            },
+    	        },
+    	    })))
+    	    func {{call $.GQLOutputTypeResolver .Type}}({{ if $.tracerEnabled }} tr {{$.tracerpkg}}.Tracer, {{end}}ctx {{$.ctxpkg}}.Context, i interface{}) (_ {{call $.GoType $fld.Map.Type}}, rerr error){
+    	    	{{ if $.tracerEnabled -}}
+						span := tr.CreateChildSpanFromContext(ctx, "{{call $.GQLOutputTypeResolver .Type}}")
+						defer span.Finish()
+						defer func(){
+							if perr := recover(); perr != nil {
+								span.SetTag("error", "true")
+								span.SetTag("error_message", perr)
+								span.SetTag("error_stack", string({{$.debugpkg}}.Stack()))
+							}
+							if rerr != nil {
+								span.SetTag("error", "true")
+								span.SetTag("error_message", rerr.Error())
+							}
+						}()
+					{{end -}}
+					if i == nil {
+						return nil, nil
 					}
-				{{ else if $map.ValueType.IsEnum -}}
-					for _, v := range vals {
-						args := v.(map[string]interface{})
-						result[args["key"].({{call $.GoType $map.KeyType}})] = {{call $.GoType $map.ValueType}}(args["value"].(int))
-					}
-				{{else -}}
-					for _, v := range vals {
-						args := v.(map[string]interface{})
-						result[args["key"].({{call $.GoType $map.KeyType}})] = args["value"].({{call $.GoType $map.ValueType}})
-					}
-				{{end -}}
-
-
-				return result, nil
-		}
-    {{ end }}
-{{end}}
+					result := make({{call $.GoType $fld.Map.Type}})
+					vals := i.([]interface{})
+					{{ if $fld.Map.ValueType.IsMessage -}}
+						for iv, v := range vals {
+							args := v.(map[string]interface{})
+							{{ if $.tracerEnabled }}
+								vv, err := {{call $.GQLOutputTypeResolver $fld.Map.ValueType}}(tr,  tr.ContextWithSpan(ctx, span), args["value"])
+							{{ else }}
+								vv, err := {{call $.GQLOutputTypeResolver $fld.Map.ValueType}}(ctx, args["value"])
+							{{ end }}
+							if err != nil {
+								return nil, {{$.errorspkg}}.New("failed to parse {{call $.GQLOutputTypeName .Type}}["+{{$.strconvpkg}}.Itoa(iv)+"]: " + err.Error())
+							}
+							result[args["key"].({{call $.GoType $fld.Map.KeyType}})] = vv
+						}
+					{{ else if $fld.Map.ValueType.IsEnum -}}
+						for _, v := range vals {
+							args := v.(map[string]interface{})
+							result[args["key"].({{call $.GoType $fld.Map.KeyType}})] = {{call $.GoType $fld.Map.ValueType}}(args["value"].(int))
+						}
+					{{else -}}
+						for _, v := range vals {
+							args := v.(map[string]interface{})
+							result[args["key"].({{call $.GoType $fld.Map.KeyType}})] = args["value"].({{call $.GoType $fld.Map.ValueType}})
+						}
+					{{end -}}
+    	
+    	
+					return result, nil
+			}
+    {{ end -}}
+{{end -}}
 
 func init() {
 	 // Adding fields to output messages
 	{{ range $msg := .File.Messages -}}
-		{{if $msg.OutputMessage -}}
 			// {{$msg.Name}} message fields
 			{{range .Fields -}}
 				{{ if not (call $.IsErrorField $msg .Name) -}}
 					{{call $.GQLOutputTypeName $msg.Type}}.AddFieldConfig("{{.Name}}", &{{$.gqlpkg}}.Field{
 						Name: "{{.Name}}",
-						{{ if .Type.Array -}}
+						{{ if .Repeated -}}
 							Type: {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{call $.GQLOutputTypeName .Type}})),
 						{{ else -}}
 							Type: {{call $.GQLOutputTypeName .Type}},
@@ -392,7 +386,7 @@ func init() {
 							if src == nil {
 								return nil, nil
 							}
-							{{ if and  .Type.Array .Type.IsEnum -}}
+							{{ if and  .Repeated .Type.IsEnum -}}
 								source := src.{{call $.ccase  .Name}}
 								var result = make([]int, len(source))
 								for i, val := range source {
@@ -469,7 +463,6 @@ func init() {
 					})
 				{{end -}}
 			{{ end -}}
-		{{end -}}
 	{{end -}}
 }
 {{ range $service := .File.Services }}
@@ -518,7 +511,7 @@ const methodTemplate = `
 									{{if ne .QuotedComment "\"\"" -}}
 										Description: {{.QuotedComment}},
 									{{- end -}}
-									{{ if .Type.Array -}}
+									{{ if .Repeated -}}
 										Type: {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{call $.GQLInputTypeName .Type}})),
 									{{ else -}}
 										Type: {{call $.GQLInputTypeName .Type}},
@@ -601,7 +594,7 @@ const methodTemplate = `
 							{{$errFld := (call $.MessageErrorField $method.OutputMessage) -}}
 							{{$errType := (call $.MessageErrorFieldType $method.OutputMessage) -}}
 							{{if $errFld -}}
-								{{if or ($errType.IsMap) ($errType.Array) -}} 
+								{{if or ($errType.IsMap) -}}                  // TOOD: ARRAY
 									if res != nil && len(res.{{call $.ccase $errFld}}) > 0 {
 										ctx.PayloadError =  res.{{call $.ccase $errFld}}
 									}

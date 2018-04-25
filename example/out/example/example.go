@@ -64,232 +64,6 @@ var ExmplAsomeEnum3 = graphql.NewEnum(graphql.EnumConfig{
 })
 
 // Messages
-var ExmplAOneOffs = graphql.NewObject(graphql.ObjectConfig{
-	Name:   "ExmplAOneOffs",
-	Fields: graphql.Fields{},
-})
-var ExmplAOneOffsInput = graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "ExmplAOneOffsInput",
-	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
-		return graphql.InputObjectConfigFieldMap{
-			"e_n_r_enum": &graphql.InputObjectFieldConfig{
-				Type: ExmplSomeEnum,
-			},
-			"e_n_r_scalar": &graphql.InputObjectFieldConfig{
-				Type: scalars.GraphQLInt32Scalar,
-			},
-			"e_n_r_msg": &graphql.InputObjectFieldConfig{
-				Type: timestamp.TimestampInput,
-			},
-			"s_n_r_scalar": &graphql.InputObjectFieldConfig{
-				Type: scalars.GraphQLInt32Scalar,
-			},
-			"s_n_r_enum": &graphql.InputObjectFieldConfig{
-				Type: ExmplSomeEnum,
-			},
-			"s_n_r_msg": &graphql.InputObjectFieldConfig{
-				Type: timestamp.TimestampInput,
-			},
-			"m_n_r_msg": &graphql.InputObjectFieldConfig{
-				Type: timestamp.TimestampInput,
-			},
-			"m_n_r_scalar": &graphql.InputObjectFieldConfig{
-				Type: scalars.GraphQLInt32Scalar,
-			},
-			"m_n_r_enum": &graphql.InputObjectFieldConfig{
-				Type: ExmplSomeEnum,
-			},
-		}
-	}),
-})
-
-// Output msg resolver
-func ResolveAOneOffs(ctx context.Context, i interface{}) (_ *proto.AOneOffs, rerr error) {
-	if i == nil {
-		return nil, nil
-	}
-	args := i.(map[string]interface{})
-	_ = args
-	var result = new(proto.AOneOffs)
-	//Generated oneoff
-	if e_n_r_enum_, ok := args["e_n_r_enum"]; ok && e_n_r_enum_ != nil { // Non-repeated enum
-		result.FirstEnum = &proto.AOneOffs_ENREnum{proto.SomeEnum(e_n_r_enum_.(int))}
-	} else if e_n_r_scalar_, ok := args["e_n_r_scalar"]; ok && e_n_r_scalar_ != nil {
-		// Non-repeated scalar
-		result.FirstEnum = &proto.AOneOffs_ENRScalar{e_n_r_scalar_.(int32)}
-	} else if e_n_r_msg_, ok := args["e_n_r_msg"]; ok && e_n_r_msg_ != nil {
-		// Non-repeated message
-
-		e_n_r_msg_r, err := timestamp.ResolveTimestamp(ctx, e_n_r_msg_)
-
-		if err != nil {
-			return nil, errors.New("failed to parse e_n_r_msg: " + err.Error())
-		}
-		result.FirstEnum = &proto.AOneOffs_ENRMsg{e_n_r_msg_r}
-	} //Generated oneoff
-	if s_n_r_scalar_, ok := args["s_n_r_scalar"]; ok && s_n_r_scalar_ != nil { // Non-repeated scalar
-		result.FirstScalar = &proto.AOneOffs_SNRScalar{s_n_r_scalar_.(int32)}
-	} else if s_n_r_enum_, ok := args["s_n_r_enum"]; ok && s_n_r_enum_ != nil {
-		// Non-repeated enum
-		result.FirstScalar = &proto.AOneOffs_SNREnum{proto.SomeEnum(s_n_r_enum_.(int))}
-	} else if s_n_r_msg_, ok := args["s_n_r_msg"]; ok && s_n_r_msg_ != nil {
-		// Non-repeated message
-
-		s_n_r_msg_r, err := timestamp.ResolveTimestamp(ctx, s_n_r_msg_)
-
-		if err != nil {
-			return nil, errors.New("failed to parse s_n_r_msg: " + err.Error())
-		}
-		result.FirstScalar = &proto.AOneOffs_SNRMsg{s_n_r_msg_r}
-	} //Generated oneoff
-	if m_n_r_msg_, ok := args["m_n_r_msg"]; ok && m_n_r_msg_ != nil { // Non-repeated message
-
-		m_n_r_msg_r, err := timestamp.ResolveTimestamp(ctx, m_n_r_msg_)
-
-		if err != nil {
-			return nil, errors.New("failed to parse m_n_r_msg: " + err.Error())
-		}
-		result.FirstMessage = &proto.AOneOffs_MNRMsg{m_n_r_msg_r}
-	} else if m_n_r_scalar_, ok := args["m_n_r_scalar"]; ok && m_n_r_scalar_ != nil {
-		// Non-repeated scalar
-		result.FirstMessage = &proto.AOneOffs_MNRScalar{m_n_r_scalar_.(int32)}
-	} else if m_n_r_enum_, ok := args["m_n_r_enum"]; ok && m_n_r_enum_ != nil {
-		// Non-repeated enum
-		result.FirstMessage = &proto.AOneOffs_MNREnum{proto.SomeEnum(m_n_r_enum_.(int))}
-	}
-	return result, nil
-}
-
-var ExmplB = graphql.NewObject(graphql.ObjectConfig{
-	Name:   "ExmplB",
-	Fields: graphql.Fields{},
-})
-var ExmplBInput = graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "ExmplBInput",
-	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
-		return graphql.InputObjectConfigFieldMap{
-			"r_msg": &graphql.InputObjectFieldConfig{
-				Type: graphql.NewList(graphql.NewNonNull(timestamp.TimestampInput)),
-			},
-			"r_scalar": &graphql.InputObjectFieldConfig{
-				Type: graphql.NewList(graphql.NewNonNull(scalars.GraphQLInt32Scalar)),
-			},
-			"r_enum": &graphql.InputObjectFieldConfig{
-				Type: graphql.NewList(graphql.NewNonNull(ExmplSomeEnum)),
-			},
-			"n_r_enum": &graphql.InputObjectFieldConfig{
-				Type: ExmplSomeEnum,
-			},
-			"n_r_scalar": &graphql.InputObjectFieldConfig{
-				Type: scalars.GraphQLInt32Scalar,
-			},
-			"n_r_msg": &graphql.InputObjectFieldConfig{
-				Type: timestamp.TimestampInput,
-			},
-			"map_enum": &graphql.InputObjectFieldConfig{
-				Type: ExmplBMapEnumMapInput,
-			},
-			"map_scalar": &graphql.InputObjectFieldConfig{
-				Type: ExmplBMapScalarMapInput,
-			},
-			"map_msg": &graphql.InputObjectFieldConfig{
-				Type: ExmplBMapMsgMapInput,
-			},
-		}
-	}),
-})
-
-// Output msg resolver
-func ResolveB(ctx context.Context, i interface{}) (_ *proto.B, rerr error) {
-	if i == nil {
-		return nil, nil
-	}
-	args := i.(map[string]interface{})
-	_ = args
-	var result = new(proto.B)
-	// Repeated Message
-	if args["r_msg"] != nil {
-		var r_msg_list = args["r_msg"].([]interface{})
-		var r_msg_ = make([]*timestamp_1.Timestamp, len(r_msg_list))
-		for i, r_msg_item := range r_msg_list {
-
-			r_msg_r, err := timestamp.ResolveTimestamp(ctx, r_msg_item)
-
-			if err != nil {
-				return nil, errors.New("failed to parse r_msg[" + strconv.Itoa(i) + "]: " + err.Error())
-			}
-			r_msg_[i] = r_msg_r
-		}
-		result.RMsg = r_msg_
-	}
-	// Repeated Scalar type
-	if args["r_scalar"] != nil {
-		var r_scalar_list = args["r_scalar"].([]interface{})
-		var r_scalar_ = make([]int32, len(r_scalar_list))
-		for i, r_scalar_item := range r_scalar_list {
-			r_scalar_r, ok := r_scalar_item.(int32)
-			if !ok {
-				return nil, errors.New("failed to parse r_scalar[" + strconv.Itoa(i) + "]")
-			}
-			r_scalar_[i] = r_scalar_r
-		}
-		result.RScalar = r_scalar_
-	}
-	// Repeated Enum
-	if args["r_enum"] != nil {
-		var r_enum_list = args["r_enum"].([]interface{})
-		var r_enum_ = make([]proto.SomeEnum, len(r_enum_list))
-		for i, r_enum_item := range r_enum_list {
-			r_enum_r, ok := r_enum_item.(int)
-			if !ok {
-				return nil, errors.New("failed to parse r_enum[" + strconv.Itoa(i) + "]")
-			}
-			r_enum_[i] = proto.SomeEnum(r_enum_r)
-		}
-		result.REnum = r_enum_
-	}
-	// Non-repeated enum
-	if args["n_r_enum"] != nil {
-		result.NREnum = proto.SomeEnum(args["n_r_enum"].(int))
-	}
-	// Non-repeated scalar
-	if args["n_r_scalar"] != nil {
-		result.NRScalar = args["n_r_scalar"].(int32)
-	}
-	// Non-repeated message
-	n_r_msg_r, err := timestamp.ResolveTimestamp(ctx, args["n_r_msg"])
-	if err != nil {
-		return nil, errors.New("failed to parse n_r_msg: " + err.Error())
-	}
-	result.NRMsg = n_r_msg_r
-	// Map
-	map_enum_, err := ResolveBMapEnumMap(ctx, args["map_enum"])
-	if err != nil {
-		return nil, errors.New("failed to parse map_enum: " + err.Error())
-	}
-	if map_enum_ != nil {
-		result.MapEnum = map_enum_
-	}
-	// Map
-	map_scalar_, err := ResolveBMapScalarMap(ctx, args["map_scalar"])
-	if err != nil {
-		return nil, errors.New("failed to parse map_scalar: " + err.Error())
-	}
-	if map_scalar_ != nil {
-		result.MapScalar = map_scalar_
-	}
-	// Map
-	map_msg_, err := ResolveBMapMsgMap(ctx, args["map_msg"])
-	if err != nil {
-		return nil, errors.New("failed to parse map_msg: " + err.Error())
-	}
-	if map_msg_ != nil {
-		result.MapMsg = map_msg_
-	}
-
-	return result, nil
-}
-
 var ExmplA = graphql.NewObject(graphql.ObjectConfig{
 	Name:   "ExmplA",
 	Fields: graphql.Fields{},
@@ -452,6 +226,102 @@ func ResolveA(ctx context.Context, i interface{}) (_ *proto.A, rerr error) {
 	return result, nil
 }
 
+var ExmplAOneOffs = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplAOneOffs",
+	Fields: graphql.Fields{},
+})
+var ExmplAOneOffsInput = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplAOneOffsInput",
+	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
+		return graphql.InputObjectConfigFieldMap{
+			"e_n_r_enum": &graphql.InputObjectFieldConfig{
+				Type: ExmplSomeEnum,
+			},
+			"e_n_r_scalar": &graphql.InputObjectFieldConfig{
+				Type: scalars.GraphQLInt32Scalar,
+			},
+			"e_n_r_msg": &graphql.InputObjectFieldConfig{
+				Type: timestamp.TimestampInput,
+			},
+			"s_n_r_scalar": &graphql.InputObjectFieldConfig{
+				Type: scalars.GraphQLInt32Scalar,
+			},
+			"s_n_r_enum": &graphql.InputObjectFieldConfig{
+				Type: ExmplSomeEnum,
+			},
+			"s_n_r_msg": &graphql.InputObjectFieldConfig{
+				Type: timestamp.TimestampInput,
+			},
+			"m_n_r_msg": &graphql.InputObjectFieldConfig{
+				Type: timestamp.TimestampInput,
+			},
+			"m_n_r_scalar": &graphql.InputObjectFieldConfig{
+				Type: scalars.GraphQLInt32Scalar,
+			},
+			"m_n_r_enum": &graphql.InputObjectFieldConfig{
+				Type: ExmplSomeEnum,
+			},
+		}
+	}),
+})
+
+// Output msg resolver
+func ResolveAOneOffs(ctx context.Context, i interface{}) (_ *proto.AOneOffs, rerr error) {
+	if i == nil {
+		return nil, nil
+	}
+	args := i.(map[string]interface{})
+	_ = args
+	var result = new(proto.AOneOffs)
+	//Generated oneoff
+	if e_n_r_enum_, ok := args["e_n_r_enum"]; ok && e_n_r_enum_ != nil { // Non-repeated enum
+		result.FirstEnum = &proto.AOneOffs_ENREnum{proto.SomeEnum(e_n_r_enum_.(int))}
+	} else if e_n_r_scalar_, ok := args["e_n_r_scalar"]; ok && e_n_r_scalar_ != nil {
+		// Non-repeated scalar
+		result.FirstEnum = &proto.AOneOffs_ENRScalar{e_n_r_scalar_.(int32)}
+	} else if e_n_r_msg_, ok := args["e_n_r_msg"]; ok && e_n_r_msg_ != nil {
+		// Non-repeated message
+
+		e_n_r_msg_r, err := timestamp.ResolveTimestamp(ctx, e_n_r_msg_)
+
+		if err != nil {
+			return nil, errors.New("failed to parse e_n_r_msg: " + err.Error())
+		}
+		result.FirstEnum = &proto.AOneOffs_ENRMsg{e_n_r_msg_r}
+	} //Generated oneoff
+	if s_n_r_scalar_, ok := args["s_n_r_scalar"]; ok && s_n_r_scalar_ != nil { // Non-repeated scalar
+		result.FirstScalar = &proto.AOneOffs_SNRScalar{s_n_r_scalar_.(int32)}
+	} else if s_n_r_enum_, ok := args["s_n_r_enum"]; ok && s_n_r_enum_ != nil {
+		// Non-repeated enum
+		result.FirstScalar = &proto.AOneOffs_SNREnum{proto.SomeEnum(s_n_r_enum_.(int))}
+	} else if s_n_r_msg_, ok := args["s_n_r_msg"]; ok && s_n_r_msg_ != nil {
+		// Non-repeated message
+
+		s_n_r_msg_r, err := timestamp.ResolveTimestamp(ctx, s_n_r_msg_)
+
+		if err != nil {
+			return nil, errors.New("failed to parse s_n_r_msg: " + err.Error())
+		}
+		result.FirstScalar = &proto.AOneOffs_SNRMsg{s_n_r_msg_r}
+	} //Generated oneoff
+	if m_n_r_msg_, ok := args["m_n_r_msg"]; ok && m_n_r_msg_ != nil { // Non-repeated message
+
+		m_n_r_msg_r, err := timestamp.ResolveTimestamp(ctx, m_n_r_msg_)
+
+		if err != nil {
+			return nil, errors.New("failed to parse m_n_r_msg: " + err.Error())
+		}
+		result.FirstMessage = &proto.AOneOffs_MNRMsg{m_n_r_msg_r}
+	} else if m_n_r_scalar_, ok := args["m_n_r_scalar"]; ok && m_n_r_scalar_ != nil {
+		// Non-repeated scalar
+		result.FirstMessage = &proto.AOneOffs_MNRScalar{m_n_r_scalar_.(int32)}
+	} else if m_n_r_enum_, ok := args["m_n_r_enum"]; ok && m_n_r_enum_ != nil {
+		// Non-repeated enum
+		result.FirstMessage = &proto.AOneOffs_MNREnum{proto.SomeEnum(m_n_r_enum_.(int))}
+	}
+	return result, nil
+}
+
 var ExmplMsgWithEmpty = graphql.NewObject(graphql.ObjectConfig{
 	Name:   "ExmplMsgWithEmpty",
 	Fields: graphql.Fields{},
@@ -481,174 +351,138 @@ func ResolveMsgWithEmpty(ctx context.Context, i interface{}) (_ *proto.MsgWithEm
 	return result, nil
 }
 
-// Maps
-var ExmplBMapEnumMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
-	Name: "ExmplBMapEnumMap",
-	Fields: graphql.Fields{
-		"key": &graphql.Field{
-			Name: "key",
-			Type: scalars.GraphQLInt32Scalar,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				src := p.Source.(map[string]interface{})
-				if src == nil {
-					return nil, nil
-				}
-				return src["key"].(int32), nil
+var ExmplB = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplB",
+	Fields: graphql.Fields{},
+})
+var ExmplBInput = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplBInput",
+	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
+		return graphql.InputObjectConfigFieldMap{
+			"r_msg": &graphql.InputObjectFieldConfig{
+				Type: graphql.NewList(graphql.NewNonNull(timestamp.TimestampInput)),
 			},
-		},
-		"value": &graphql.Field{
-			Name: "value",
-			Type: ExmplSomeEnum,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				src := p.Source.(map[string]interface{})
-				if src == nil {
-					return nil, nil
-				}
-				return src["value"].(proto.SomeEnum), nil
+			"r_scalar": &graphql.InputObjectFieldConfig{
+				Type: graphql.NewList(graphql.NewNonNull(scalars.GraphQLInt32Scalar)),
 			},
-		},
-	},
-})))
-
-// B
-var ExmplBMapEnumMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "ExmplBMapEnumMapInput",
-	Fields: graphql.InputObjectConfigFieldMap{
-		"key": &graphql.InputObjectFieldConfig{
-			Type: scalars.GraphQLInt32Scalar,
-		},
-		"value": &graphql.InputObjectFieldConfig{
-			Type: ExmplSomeEnum,
-		},
-	},
-})))
-
-func ResolveBMapEnumMap(ctx context.Context, i interface{}) (_ map[int32]proto.SomeEnum, rerr error) {
-	if i == nil {
-		return nil, nil
-	}
-	result := make(map[int32]proto.SomeEnum)
-	vals := i.([]interface{})
-	for _, v := range vals {
-		args := v.(map[string]interface{})
-		result[args["key"].(int32)] = proto.SomeEnum(args["value"].(int))
-	}
-	return result, nil
-}
-
-var ExmplBMapScalarMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
-	Name: "ExmplBMapScalarMap",
-	Fields: graphql.Fields{
-		"key": &graphql.Field{
-			Name: "key",
-			Type: scalars.GraphQLInt32Scalar,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				src := p.Source.(map[string]interface{})
-				if src == nil {
-					return nil, nil
-				}
-				return src["key"].(int32), nil
+			"r_enum": &graphql.InputObjectFieldConfig{
+				Type: graphql.NewList(graphql.NewNonNull(ExmplSomeEnum)),
 			},
-		},
-		"value": &graphql.Field{
-			Name: "value",
-			Type: scalars.GraphQLInt32Scalar,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				src := p.Source.(map[string]interface{})
-				if src == nil {
-					return nil, nil
-				}
-				return src["value"].(int32), nil
+			"n_r_enum": &graphql.InputObjectFieldConfig{
+				Type: ExmplSomeEnum,
 			},
-		},
-	},
-})))
-
-// B
-var ExmplBMapScalarMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "ExmplBMapScalarMapInput",
-	Fields: graphql.InputObjectConfigFieldMap{
-		"key": &graphql.InputObjectFieldConfig{
-			Type: scalars.GraphQLInt32Scalar,
-		},
-		"value": &graphql.InputObjectFieldConfig{
-			Type: scalars.GraphQLInt32Scalar,
-		},
-	},
-})))
-
-func ResolveBMapScalarMap(ctx context.Context, i interface{}) (_ map[int32]int32, rerr error) {
-	if i == nil {
-		return nil, nil
-	}
-	result := make(map[int32]int32)
-	vals := i.([]interface{})
-	for _, v := range vals {
-		args := v.(map[string]interface{})
-		result[args["key"].(int32)] = args["value"].(int32)
-	}
-	return result, nil
-}
-
-var ExmplBMapMsgMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
-	Name: "ExmplBMapMsgMap",
-	Fields: graphql.Fields{
-		"key": &graphql.Field{
-			Name: "key",
-			Type: scalars.GraphQLInt32Scalar,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				src := p.Source.(map[string]interface{})
-				if src == nil {
-					return nil, nil
-				}
-				return src["key"].(int32), nil
+			"n_r_scalar": &graphql.InputObjectFieldConfig{
+				Type: scalars.GraphQLInt32Scalar,
 			},
-		},
-		"value": &graphql.Field{
-			Name: "value",
-			Type: timestamp.Timestamp,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				src := p.Source.(map[string]interface{})
-				if src == nil {
-					return nil, nil
-				}
-				return src["value"].(timestamp_1.Timestamp), nil
+			"n_r_msg": &graphql.InputObjectFieldConfig{
+				Type: timestamp.TimestampInput,
 			},
-		},
-	},
-})))
-
-// B
-var ExmplBMapMsgMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "ExmplBMapMsgMapInput",
-	Fields: graphql.InputObjectConfigFieldMap{
-		"key": &graphql.InputObjectFieldConfig{
-			Type: scalars.GraphQLInt32Scalar,
-		},
-		"value": &graphql.InputObjectFieldConfig{
-			Type: timestamp.TimestampInput,
-		},
-	},
-})))
-
-func ResolveBMapMsgMap(ctx context.Context, i interface{}) (_ map[int32]*timestamp_1.Timestamp, rerr error) {
-	if i == nil {
-		return nil, nil
-	}
-	result := make(map[int32]*timestamp_1.Timestamp)
-	vals := i.([]interface{})
-	for iv, v := range vals {
-		args := v.(map[string]interface{})
-
-		vv, err := timestamp.ResolveTimestamp(ctx, args["value"])
-
-		if err != nil {
-			return nil, errors.New("failed to parse ExmplBMapMsgMap[" + strconv.Itoa(iv) + "]: " + err.Error())
+			"map_enum": &graphql.InputObjectFieldConfig{
+				Type: ExmplBMapEnumMapInput,
+			},
+			"map_scalar": &graphql.InputObjectFieldConfig{
+				Type: ExmplBMapScalarMapInput,
+			},
+			"map_msg": &graphql.InputObjectFieldConfig{
+				Type: ExmplBMapMsgMapInput,
+			},
 		}
-		result[args["key"].(int32)] = vv
+	}),
+})
+
+// Output msg resolver
+func ResolveB(ctx context.Context, i interface{}) (_ *proto.B, rerr error) {
+	if i == nil {
+		return nil, nil
 	}
+	args := i.(map[string]interface{})
+	_ = args
+	var result = new(proto.B)
+	// Repeated Message
+	if args["r_msg"] != nil {
+		var r_msg_list = args["r_msg"].([]interface{})
+		var r_msg_ = make([]*timestamp_1.Timestamp, len(r_msg_list))
+		for i, r_msg_item := range r_msg_list {
+
+			r_msg_r, err := timestamp.ResolveTimestamp(ctx, r_msg_item)
+
+			if err != nil {
+				return nil, errors.New("failed to parse r_msg[" + strconv.Itoa(i) + "]: " + err.Error())
+			}
+			r_msg_[i] = r_msg_r
+		}
+		result.RMsg = r_msg_
+	}
+	// Repeated Scalar type
+	if args["r_scalar"] != nil {
+		var r_scalar_list = args["r_scalar"].([]interface{})
+		var r_scalar_ = make([]int32, len(r_scalar_list))
+		for i, r_scalar_item := range r_scalar_list {
+			r_scalar_r, ok := r_scalar_item.(int32)
+			if !ok {
+				return nil, errors.New("failed to parse r_scalar[" + strconv.Itoa(i) + "]")
+			}
+			r_scalar_[i] = r_scalar_r
+		}
+		result.RScalar = r_scalar_
+	}
+	// Repeated Enum
+	if args["r_enum"] != nil {
+		var r_enum_list = args["r_enum"].([]interface{})
+		var r_enum_ = make([]proto.SomeEnum, len(r_enum_list))
+		for i, r_enum_item := range r_enum_list {
+			r_enum_r, ok := r_enum_item.(int)
+			if !ok {
+				return nil, errors.New("failed to parse r_enum[" + strconv.Itoa(i) + "]")
+			}
+			r_enum_[i] = proto.SomeEnum(r_enum_r)
+		}
+		result.REnum = r_enum_
+	}
+	// Non-repeated enum
+	if args["n_r_enum"] != nil {
+		result.NREnum = proto.SomeEnum(args["n_r_enum"].(int))
+	}
+	// Non-repeated scalar
+	if args["n_r_scalar"] != nil {
+		result.NRScalar = args["n_r_scalar"].(int32)
+	}
+	// Non-repeated message
+	n_r_msg_r, err := timestamp.ResolveTimestamp(ctx, args["n_r_msg"])
+	if err != nil {
+		return nil, errors.New("failed to parse n_r_msg: " + err.Error())
+	}
+	result.NRMsg = n_r_msg_r
+	// Map
+	map_enum_, err := ResolveBMapEnumMap(ctx, args["map_enum"])
+	if err != nil {
+		return nil, errors.New("failed to parse map_enum: " + err.Error())
+	}
+	if map_enum_ != nil {
+		result.MapEnum = map_enum_
+	}
+	// Map
+	map_scalar_, err := ResolveBMapScalarMap(ctx, args["map_scalar"])
+	if err != nil {
+		return nil, errors.New("failed to parse map_scalar: " + err.Error())
+	}
+	if map_scalar_ != nil {
+		result.MapScalar = map_scalar_
+	}
+	// Map
+	map_msg_, err := ResolveBMapMsgMap(ctx, args["map_msg"])
+	if err != nil {
+		return nil, errors.New("failed to parse map_msg: " + err.Error())
+	}
+	if map_msg_ != nil {
+		result.MapMsg = map_msg_
+	}
+
 	return result, nil
 }
+
+// Maps
+// <no value>
 
 var ExmplAMapEnumMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
 	Name: "ExmplAMapEnumMap",
@@ -678,7 +512,7 @@ var ExmplAMapEnumMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(grap
 	},
 })))
 
-// A
+// MAP A
 var ExmplAMapEnumMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "ExmplAMapEnumMapInput",
 	Fields: graphql.InputObjectConfigFieldMap{
@@ -732,7 +566,7 @@ var ExmplAMapScalarMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(gr
 	},
 })))
 
-// A
+// MAP A
 var ExmplAMapScalarMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "ExmplAMapScalarMapInput",
 	Fields: graphql.InputObjectConfigFieldMap{
@@ -786,7 +620,7 @@ var ExmplAMapMsgMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graph
 	},
 })))
 
-// A
+// MAP A
 var ExmplAMapMsgMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "ExmplAMapMsgMapInput",
 	Fields: graphql.InputObjectConfigFieldMap{
@@ -818,246 +652,175 @@ func ResolveAMapMsgMap(ctx context.Context, i interface{}) (_ map[int32]*timesta
 	return result, nil
 }
 
+var ExmplBMapEnumMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
+	Name: "ExmplBMapEnumMap",
+	Fields: graphql.Fields{
+		"key": &graphql.Field{
+			Name: "key",
+			Type: scalars.GraphQLInt32Scalar,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["key"].(int32), nil
+			},
+		},
+		"value": &graphql.Field{
+			Name: "value",
+			Type: ExmplSomeEnum,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["value"].(proto.SomeEnum), nil
+			},
+		},
+	},
+})))
+
+// MAP B
+var ExmplBMapEnumMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplBMapEnumMapInput",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"key": &graphql.InputObjectFieldConfig{
+			Type: scalars.GraphQLInt32Scalar,
+		},
+		"value": &graphql.InputObjectFieldConfig{
+			Type: ExmplSomeEnum,
+		},
+	},
+})))
+
+func ResolveBMapEnumMap(ctx context.Context, i interface{}) (_ map[int32]proto.SomeEnum, rerr error) {
+	if i == nil {
+		return nil, nil
+	}
+	result := make(map[int32]proto.SomeEnum)
+	vals := i.([]interface{})
+	for _, v := range vals {
+		args := v.(map[string]interface{})
+		result[args["key"].(int32)] = proto.SomeEnum(args["value"].(int))
+	}
+	return result, nil
+}
+
+var ExmplBMapScalarMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
+	Name: "ExmplBMapScalarMap",
+	Fields: graphql.Fields{
+		"key": &graphql.Field{
+			Name: "key",
+			Type: scalars.GraphQLInt32Scalar,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["key"].(int32), nil
+			},
+		},
+		"value": &graphql.Field{
+			Name: "value",
+			Type: scalars.GraphQLInt32Scalar,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["value"].(int32), nil
+			},
+		},
+	},
+})))
+
+// MAP B
+var ExmplBMapScalarMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplBMapScalarMapInput",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"key": &graphql.InputObjectFieldConfig{
+			Type: scalars.GraphQLInt32Scalar,
+		},
+		"value": &graphql.InputObjectFieldConfig{
+			Type: scalars.GraphQLInt32Scalar,
+		},
+	},
+})))
+
+func ResolveBMapScalarMap(ctx context.Context, i interface{}) (_ map[int32]int32, rerr error) {
+	if i == nil {
+		return nil, nil
+	}
+	result := make(map[int32]int32)
+	vals := i.([]interface{})
+	for _, v := range vals {
+		args := v.(map[string]interface{})
+		result[args["key"].(int32)] = args["value"].(int32)
+	}
+	return result, nil
+}
+
+var ExmplBMapMsgMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
+	Name: "ExmplBMapMsgMap",
+	Fields: graphql.Fields{
+		"key": &graphql.Field{
+			Name: "key",
+			Type: scalars.GraphQLInt32Scalar,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["key"].(int32), nil
+			},
+		},
+		"value": &graphql.Field{
+			Name: "value",
+			Type: timestamp.Timestamp,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["value"].(timestamp_1.Timestamp), nil
+			},
+		},
+	},
+})))
+
+// MAP B
+var ExmplBMapMsgMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplBMapMsgMapInput",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"key": &graphql.InputObjectFieldConfig{
+			Type: scalars.GraphQLInt32Scalar,
+		},
+		"value": &graphql.InputObjectFieldConfig{
+			Type: timestamp.TimestampInput,
+		},
+	},
+})))
+
+func ResolveBMapMsgMap(ctx context.Context, i interface{}) (_ map[int32]*timestamp_1.Timestamp, rerr error) {
+	if i == nil {
+		return nil, nil
+	}
+	result := make(map[int32]*timestamp_1.Timestamp)
+	vals := i.([]interface{})
+	for iv, v := range vals {
+		args := v.(map[string]interface{})
+
+		vv, err := timestamp.ResolveTimestamp(ctx, args["value"])
+
+		if err != nil {
+			return nil, errors.New("failed to parse ExmplBMapMsgMap[" + strconv.Itoa(iv) + "]: " + err.Error())
+		}
+		result[args["key"].(int32)] = vv
+	}
+	return result, nil
+}
 func init() {
 	// Adding fields to output messages
-	// AOneOffs message fields
-	// One OFF output
-	ExmplAOneOffs.AddFieldConfig("e_n_r_enum", &graphql.Field{
-		Name: "e_n_r_enum",
-		Type: ExmplSomeEnum,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.AOneOffs)
-			if src == nil {
-				return nil, nil
-			}
-			return int(src.GetENREnum()), nil
-		},
-	})
-	// One OFF output
-	ExmplAOneOffs.AddFieldConfig("e_n_r_scalar", &graphql.Field{
-		Name: "e_n_r_scalar",
-		Type: scalars.GraphQLInt32Scalar,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.AOneOffs)
-			if src == nil {
-				return nil, nil
-			}
-			return src.GetENRScalar(), nil
-		},
-	})
-	// One OFF output
-	ExmplAOneOffs.AddFieldConfig("e_n_r_msg", &graphql.Field{
-		Name: "e_n_r_msg",
-		Type: timestamp.Timestamp,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.AOneOffs)
-			if src == nil {
-				return nil, nil
-			}
-			return src.GetENRMsg(), nil
-		},
-	})
-	// One OFF output
-	ExmplAOneOffs.AddFieldConfig("s_n_r_scalar", &graphql.Field{
-		Name: "s_n_r_scalar",
-		Type: scalars.GraphQLInt32Scalar,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.AOneOffs)
-			if src == nil {
-				return nil, nil
-			}
-			return src.GetSNRScalar(), nil
-		},
-	})
-	// One OFF output
-	ExmplAOneOffs.AddFieldConfig("s_n_r_enum", &graphql.Field{
-		Name: "s_n_r_enum",
-		Type: ExmplSomeEnum,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.AOneOffs)
-			if src == nil {
-				return nil, nil
-			}
-			return int(src.GetSNREnum()), nil
-		},
-	})
-	// One OFF output
-	ExmplAOneOffs.AddFieldConfig("s_n_r_msg", &graphql.Field{
-		Name: "s_n_r_msg",
-		Type: timestamp.Timestamp,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.AOneOffs)
-			if src == nil {
-				return nil, nil
-			}
-			return src.GetSNRMsg(), nil
-		},
-	})
-	// One OFF output
-	ExmplAOneOffs.AddFieldConfig("m_n_r_msg", &graphql.Field{
-		Name: "m_n_r_msg",
-		Type: timestamp.Timestamp,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.AOneOffs)
-			if src == nil {
-				return nil, nil
-			}
-			return src.GetMNRMsg(), nil
-		},
-	})
-	// One OFF output
-	ExmplAOneOffs.AddFieldConfig("m_n_r_scalar", &graphql.Field{
-		Name: "m_n_r_scalar",
-		Type: scalars.GraphQLInt32Scalar,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.AOneOffs)
-			if src == nil {
-				return nil, nil
-			}
-			return src.GetMNRScalar(), nil
-		},
-	})
-	// One OFF output
-	ExmplAOneOffs.AddFieldConfig("m_n_r_enum", &graphql.Field{
-		Name: "m_n_r_enum",
-		Type: ExmplSomeEnum,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.AOneOffs)
-			if src == nil {
-				return nil, nil
-			}
-			return int(src.GetMNREnum()), nil
-		},
-	})
-	// B message fields
-	ExmplB.AddFieldConfig("r_msg", &graphql.Field{
-		Name: "r_msg",
-		Type: graphql.NewList(graphql.NewNonNull(timestamp.Timestamp)),
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.B)
-			if src == nil {
-				return nil, nil
-			}
-			return src.RMsg, nil
-		},
-	})
-	ExmplB.AddFieldConfig("r_scalar", &graphql.Field{
-		Name: "r_scalar",
-		Type: graphql.NewList(graphql.NewNonNull(scalars.GraphQLInt32Scalar)),
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.B)
-			if src == nil {
-				return nil, nil
-			}
-			return src.RScalar, nil
-		},
-	})
-	ExmplB.AddFieldConfig("r_enum", &graphql.Field{
-		Name: "r_enum",
-		Type: graphql.NewList(graphql.NewNonNull(ExmplSomeEnum)),
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.B)
-			if src == nil {
-				return nil, nil
-			}
-			source := src.REnum
-			var result = make([]int, len(source))
-			for i, val := range source {
-				result[i] = int(val)
-			}
-			return result, nil
-		},
-	})
-	ExmplB.AddFieldConfig("n_r_enum", &graphql.Field{
-		Name: "n_r_enum",
-		Type: ExmplSomeEnum,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.B)
-			if src == nil {
-				return nil, nil
-			}
-			return int(src.NREnum), nil
-		},
-	})
-	ExmplB.AddFieldConfig("n_r_scalar", &graphql.Field{
-		Name: "n_r_scalar",
-		Type: scalars.GraphQLInt32Scalar,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.B)
-			if src == nil {
-				return nil, nil
-			}
-			return src.NRScalar, nil
-		},
-	})
-	ExmplB.AddFieldConfig("n_r_msg", &graphql.Field{
-		Name: "n_r_msg",
-		Type: timestamp.Timestamp,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.B)
-			if src == nil {
-				return nil, nil
-			}
-			return src.NRMsg, nil
-		},
-	})
-	// Map field
-	ExmplB.AddFieldConfig("map_enum", &graphql.Field{
-		Name: "map_enum",
-		Type: ExmplBMapEnumMap,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.B)
-			if src == nil {
-				return nil, nil
-			}
-			var res []map[string]interface{}
-			for k, v := range src.MapEnum {
-				res = append(res, map[string]interface{}{
-					"key":   k,
-					"value": v,
-				})
-			}
-			return res, nil
-		},
-	})
-	// Map field
-	ExmplB.AddFieldConfig("map_scalar", &graphql.Field{
-		Name: "map_scalar",
-		Type: ExmplBMapScalarMap,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.B)
-			if src == nil {
-				return nil, nil
-			}
-			var res []map[string]interface{}
-			for k, v := range src.MapScalar {
-				res = append(res, map[string]interface{}{
-					"key":   k,
-					"value": v,
-				})
-			}
-			return res, nil
-		},
-	})
-	// Map field
-	ExmplB.AddFieldConfig("map_msg", &graphql.Field{
-		Name: "map_msg",
-		Type: ExmplBMapMsgMap,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*proto.B)
-			if src == nil {
-				return nil, nil
-			}
-			var res []map[string]interface{}
-			for k, v := range src.MapMsg {
-				res = append(res, map[string]interface{}{
-					"key":   k,
-					"value": v,
-				})
-			}
-			return res, nil
-		},
-	})
 	// A message fields
 	ExmplA.AddFieldConfig("r_msg", &graphql.Field{
 		Name: "r_msg",
@@ -1231,6 +994,115 @@ func init() {
 			return res, nil
 		},
 	})
+	// AOneOffs message fields
+	// One OFF output
+	ExmplAOneOffs.AddFieldConfig("e_n_r_enum", &graphql.Field{
+		Name: "e_n_r_enum",
+		Type: ExmplSomeEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.AOneOffs)
+			if src == nil {
+				return nil, nil
+			}
+			return int(src.GetENREnum()), nil
+		},
+	})
+	// One OFF output
+	ExmplAOneOffs.AddFieldConfig("e_n_r_scalar", &graphql.Field{
+		Name: "e_n_r_scalar",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.AOneOffs)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetENRScalar(), nil
+		},
+	})
+	// One OFF output
+	ExmplAOneOffs.AddFieldConfig("e_n_r_msg", &graphql.Field{
+		Name: "e_n_r_msg",
+		Type: timestamp.Timestamp,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.AOneOffs)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetENRMsg(), nil
+		},
+	})
+	// One OFF output
+	ExmplAOneOffs.AddFieldConfig("s_n_r_scalar", &graphql.Field{
+		Name: "s_n_r_scalar",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.AOneOffs)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetSNRScalar(), nil
+		},
+	})
+	// One OFF output
+	ExmplAOneOffs.AddFieldConfig("s_n_r_enum", &graphql.Field{
+		Name: "s_n_r_enum",
+		Type: ExmplSomeEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.AOneOffs)
+			if src == nil {
+				return nil, nil
+			}
+			return int(src.GetSNREnum()), nil
+		},
+	})
+	// One OFF output
+	ExmplAOneOffs.AddFieldConfig("s_n_r_msg", &graphql.Field{
+		Name: "s_n_r_msg",
+		Type: timestamp.Timestamp,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.AOneOffs)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetSNRMsg(), nil
+		},
+	})
+	// One OFF output
+	ExmplAOneOffs.AddFieldConfig("m_n_r_msg", &graphql.Field{
+		Name: "m_n_r_msg",
+		Type: timestamp.Timestamp,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.AOneOffs)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetMNRMsg(), nil
+		},
+	})
+	// One OFF output
+	ExmplAOneOffs.AddFieldConfig("m_n_r_scalar", &graphql.Field{
+		Name: "m_n_r_scalar",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.AOneOffs)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetMNRScalar(), nil
+		},
+	})
+	// One OFF output
+	ExmplAOneOffs.AddFieldConfig("m_n_r_enum", &graphql.Field{
+		Name: "m_n_r_enum",
+		Type: ExmplSomeEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.AOneOffs)
+			if src == nil {
+				return nil, nil
+			}
+			return int(src.GetMNREnum()), nil
+		},
+	})
 	// MsgWithEmpty message fields
 	ExmplMsgWithEmpty.AddFieldConfig("empty_field", &graphql.Field{
 		Name: "empty_field",
@@ -1244,6 +1116,135 @@ func init() {
 		},
 	})
 	// Empty message fields
+	// B message fields
+	ExmplB.AddFieldConfig("r_msg", &graphql.Field{
+		Name: "r_msg",
+		Type: graphql.NewList(graphql.NewNonNull(timestamp.Timestamp)),
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.B)
+			if src == nil {
+				return nil, nil
+			}
+			return src.RMsg, nil
+		},
+	})
+	ExmplB.AddFieldConfig("r_scalar", &graphql.Field{
+		Name: "r_scalar",
+		Type: graphql.NewList(graphql.NewNonNull(scalars.GraphQLInt32Scalar)),
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.B)
+			if src == nil {
+				return nil, nil
+			}
+			return src.RScalar, nil
+		},
+	})
+	ExmplB.AddFieldConfig("r_enum", &graphql.Field{
+		Name: "r_enum",
+		Type: graphql.NewList(graphql.NewNonNull(ExmplSomeEnum)),
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.B)
+			if src == nil {
+				return nil, nil
+			}
+			source := src.REnum
+			var result = make([]int, len(source))
+			for i, val := range source {
+				result[i] = int(val)
+			}
+			return result, nil
+		},
+	})
+	ExmplB.AddFieldConfig("n_r_enum", &graphql.Field{
+		Name: "n_r_enum",
+		Type: ExmplSomeEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.B)
+			if src == nil {
+				return nil, nil
+			}
+			return int(src.NREnum), nil
+		},
+	})
+	ExmplB.AddFieldConfig("n_r_scalar", &graphql.Field{
+		Name: "n_r_scalar",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.B)
+			if src == nil {
+				return nil, nil
+			}
+			return src.NRScalar, nil
+		},
+	})
+	ExmplB.AddFieldConfig("n_r_msg", &graphql.Field{
+		Name: "n_r_msg",
+		Type: timestamp.Timestamp,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.B)
+			if src == nil {
+				return nil, nil
+			}
+			return src.NRMsg, nil
+		},
+	})
+	// Map field
+	ExmplB.AddFieldConfig("map_enum", &graphql.Field{
+		Name: "map_enum",
+		Type: ExmplBMapEnumMap,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.B)
+			if src == nil {
+				return nil, nil
+			}
+			var res []map[string]interface{}
+			for k, v := range src.MapEnum {
+				res = append(res, map[string]interface{}{
+					"key":   k,
+					"value": v,
+				})
+			}
+			return res, nil
+		},
+	})
+	// Map field
+	ExmplB.AddFieldConfig("map_scalar", &graphql.Field{
+		Name: "map_scalar",
+		Type: ExmplBMapScalarMap,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.B)
+			if src == nil {
+				return nil, nil
+			}
+			var res []map[string]interface{}
+			for k, v := range src.MapScalar {
+				res = append(res, map[string]interface{}{
+					"key":   k,
+					"value": v,
+				})
+			}
+			return res, nil
+		},
+	})
+	// Map field
+	ExmplB.AddFieldConfig("map_msg", &graphql.Field{
+		Name: "map_msg",
+		Type: ExmplBMapMsgMap,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*proto.B)
+			if src == nil {
+				return nil, nil
+			}
+			var res []map[string]interface{}
+			for k, v := range src.MapMsg {
+				res = append(res, map[string]interface{}{
+					"key":   k,
+					"value": v,
+				})
+			}
+			return res, nil
+		},
+	})
 }
 
 func GetServiceExampleGraphQLQueriesFields(c proto.ServiceExampleClient, ih *interceptors.InterceptorHandler) graphql.Fields {
