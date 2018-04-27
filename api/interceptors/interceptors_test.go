@@ -2,9 +2,10 @@ package interceptors
 
 import (
 	"fmt"
+	"testing"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"testing"
 )
 
 func TestDefaultInterceptor_OnCall(t *testing.T) {

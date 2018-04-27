@@ -5,14 +5,19 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/graphql-go/graphql"
 	"github.com/saturn4er/proto2gql/example/out/example"
-	"github.com/saturn4er/proto2gql/example/proto"
+	proto "github.com/saturn4er/proto2gql/example/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 type FakeClient struct {
+}
+
+func (FakeClient) GetEmptiesMsg(ctx context.Context, in *timestamp.Timestamp, opts ...grpc.CallOption) (*proto.Empty, error) {
+	panic("implement me")
 }
 
 func (FakeClient) GetQueryMethod(ctx context.Context, in *proto.AOneOffs, opts ...grpc.CallOption) (*proto.B, error) {
@@ -28,10 +33,6 @@ func (FakeClient) QueryMethod(ctx context.Context, in *proto.A, opts ...grpc.Cal
 }
 
 func (FakeClient) GetMutatuionMethod(ctx context.Context, in *proto.MsgWithEmpty, opts ...grpc.CallOption) (*proto.MsgWithEmpty, error) {
-	return nil, nil
-}
-
-func (FakeClient) GetEmptiesMsg(ctx context.Context, in *proto.Empty, opts ...grpc.CallOption) (*proto.Empty, error) {
 	return nil, nil
 }
 

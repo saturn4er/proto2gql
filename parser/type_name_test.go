@@ -2,6 +2,8 @@ package parser
 
 import (
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestTypeName(t *testing.T) {

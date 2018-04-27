@@ -2,6 +2,7 @@ package tracer
 
 import (
 	"context"
+
 	"github.com/opentracing/opentracing-go"
 )
 

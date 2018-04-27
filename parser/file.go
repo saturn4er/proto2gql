@@ -8,122 +8,16 @@ import (
 )
 
 type File struct {
-	FilePath           string
-	protoFile          *proto.Proto
-	PkgName            string
-	importAliases      map[string]string
-	paths              []string
-	gqlPkg, scalarsPkg string
-	Services           []*Service
-	Messages           []*Message
-	Enums              []*Enum
-	Imports            []*File
-	ParsedFiles        *[]*File
+	FilePath  string
+	protoFile *proto.Proto
+	PkgName   string
+	Services  []*Service
+	Messages  []*Message
+	Enums     []*Enum
+	Imports   []*File
 }
 
-type Service struct {
-	Name          string
-	QuotedComment string
-	Methods       []*Method
-}
-type EnumValue struct {
-	Name          string
-	Value         int
-	QuotedComment string
-}
-type Enum struct {
-	Name          string
-	QuotedComment string
-	Values        []*EnumValue
-	Type          *ProtoType
-	file          *File
-	TypeName      TypeName
-	Descriptor    *proto.Enum
-}
-
-type Method struct {
-	Name          string
-	QuotedComment string
-	InputMessage  *Message
-	OutputMessage *Message
-	Service       *Service
-}
-type Message struct {
-	Name          string
-	QuotedComment string
-	Fields        []*Field
-	MapFields     []*MapField
-	OneOffs       []*OneOf
-	Type          *ProtoType
-	Descriptor    *proto.Message `json:"-"`
-	TypeName      TypeName
-	file          *File
-	parentMsg     *Message
-}
-
-func (m *Message) HaveFields() bool {
-	if len(m.Fields) > 0 || len(m.MapFields) > 0 {
-		return true
-	}
-	for _, of := range m.OneOffs {
-		if len(of.Fields) > 0 {
-			return true
-		}
-	}
-	return false
-}
-func (m *Message) HaveFieldsExcept(field string) bool {
-	for _, f := range m.Fields {
-		if f.Name != field {
-			return true
-		}
-	}
-	for _, f := range m.MapFields {
-		if f.Name != field {
-			return true
-		}
-	}
-	for _, of := range m.OneOffs {
-		for _, f := range of.Fields {
-			if f.Name != field {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-type Map struct {
-	Type      *ProtoType
-	Message   *Message
-	KeyType   *ProtoType
-	ValueType *ProtoType
-	Field     *proto.MapField
-	File      *File
-}
-
-type Field struct {
-	Name          string
-	QuotedComment string
-	Repeated      bool
-	descriptor    *proto.Field `json:"-"`
-	Type          *ProtoType
-}
-
-type MapField struct {
-	Name          string
-	QuotedComment string
-	descriptor    *proto.MapField `json:"-"`
-	Type          *ProtoType
-	Map           *Map
-}
-
-type OneOf struct {
-	Name   string
-	Fields []*Field
-}
-
-func (f *File) MessageByTypeName(typeName TypeName) (*Message, bool) {
+func (f *File) messageByTypeName(typeName TypeName) (*Message, bool) {
 	for _, msg := range f.Messages {
 		if msg.TypeName.Equal(typeName) {
 			return msg, true
@@ -131,7 +25,8 @@ func (f *File) MessageByTypeName(typeName TypeName) (*Message, bool) {
 	}
 	return nil, false
 }
-func (f *File) EnumByTypeName(typeName TypeName) (*Enum, bool) {
+
+func (f *File) enumByTypeName(typeName TypeName) (*Enum, bool) {
 	for _, e := range f.Enums {
 		if e.TypeName.Equal(typeName) {
 			return e, true
@@ -139,41 +34,41 @@ func (f *File) EnumByTypeName(typeName TypeName) (*Enum, bool) {
 	}
 	return nil, false
 }
-func (f *File) FindTypeInMessage(msg *Message, typ string) (*ProtoType, bool) {
+func (f *File) findTypeInMessage(msg *Message, typ string) (*Type, bool) {
 	if typeIsScalar(typ) {
-		return &ProtoType{Scalar: typ, File: f}, true
+		return &Type{Scalar: typ, File: f}, true
 	}
-	ms, ok := f.MessageByTypeName(msg.TypeName.NewSubTypeName(typ))
+	ms, ok := f.messageByTypeName(msg.TypeName.NewSubTypeName(typ))
 	if ok {
 		return ms.Type, true
 	}
 
-	enum, ok := f.EnumByTypeName(msg.TypeName.NewSubTypeName(typ))
+	enum, ok := f.enumByTypeName(msg.TypeName.NewSubTypeName(typ))
 	if ok {
 		return enum.Type, true
 	}
 	if msg.parentMsg != nil {
-		return f.FindTypeInMessage(msg.parentMsg, typ)
+		return f.findTypeInMessage(msg.parentMsg, typ)
 	}
-	return f.FindType(typ)
+	return f.findType(typ)
 }
 
-func (f *File) FindType(typ string) (*ProtoType, bool) {
+func (f *File) findType(typ string) (*Type, bool) {
 	if typeIsScalar(typ) {
-		return &ProtoType{Scalar: typ, File: f}, true
+		return &Type{Scalar: typ, File: f}, true
 	}
 	parts := strings.Split(typ, ".")
-	msg, ok := f.MessageByTypeName(parts)
+	msg, ok := f.messageByTypeName(parts)
 	if ok {
 		return msg.Type, true
 	}
-	en, ok := f.EnumByTypeName(parts)
+	en, ok := f.enumByTypeName(parts)
 	if ok {
 		return en.Type, true
 	}
 	for _, imp := range f.Imports {
 		if imp.PkgName == f.PkgName {
-			it, ok := imp.FindType(typ)
+			it, ok := imp.findType(typ)
 			if ok {
 				return it, true
 			}
@@ -183,12 +78,13 @@ func (f *File) FindType(typ string) (*ProtoType, bool) {
 		pkg, typ := strings.Join(parts[:i+1], "."), strings.Join(parts[i+1:], ".")
 		for _, imp := range f.Imports {
 			if imp.PkgName == pkg {
-				return imp.FindType(typ)
+				return imp.findType(typ)
 			}
 		}
 	}
 	return nil, false
 }
+
 func (f *File) parseServices() error {
 	for _, el := range f.protoFile.Elements {
 		service, ok := el.(*proto.Service)
@@ -204,11 +100,11 @@ func (f *File) parseServices() error {
 			if !ok {
 				continue
 			}
-			reqTyp, ok := f.FindType(method.RequestType)
+			reqTyp, ok := f.findType(method.RequestType)
 			if !ok {
 				return errors.Errorf("can't find request message %s", method.RequestType)
 			}
-			retTyp, ok := f.FindType(method.ReturnsType)
+			retTyp, ok := f.findType(method.ReturnsType)
 			if !ok {
 				return errors.Errorf("can't find request message %s", method.RequestType)
 			}
@@ -225,12 +121,13 @@ func (f *File) parseServices() error {
 	}
 	return nil
 }
-func (f *File) ParseMessagesFields() error {
+
+func (f *File) parseMessagesFields() error {
 	for _, msg := range f.Messages {
 		for _, el := range msg.Descriptor.Elements {
 			switch fld := el.(type) {
 			case *proto.NormalField:
-				typ, ok := f.FindTypeInMessage(msg, fld.Type)
+				typ, ok := f.findTypeInMessage(msg, fld.Type)
 				if !ok {
 					return errors.Errorf("failed to find message %s field %s type", strings.Join(msg.TypeName, "."), fld.Name)
 				}
@@ -243,11 +140,11 @@ func (f *File) ParseMessagesFields() error {
 				}
 				msg.Fields = append(msg.Fields, fl)
 			case *proto.MapField:
-				ktyp, ok := f.FindTypeInMessage(msg, fld.KeyType)
+				ktyp, ok := f.findTypeInMessage(msg, fld.KeyType)
 				if !ok {
 					return errors.Errorf("failed to find message %s field %s type", strings.Join(msg.TypeName, "."), fld.Name)
 				}
-				vtyp, ok := f.FindTypeInMessage(msg, fld.Type)
+				vtyp, ok := f.findTypeInMessage(msg, fld.Type)
 				if !ok {
 					return errors.Errorf("failed to find message %s field %s type", strings.Join(msg.TypeName, "."), fld.Name)
 				}
@@ -258,7 +155,7 @@ func (f *File) ParseMessagesFields() error {
 					Field:     fld,
 					File:      f,
 				}
-				t := &ProtoType{Map: mp, File: f}
+				t := &Type{Map: mp, File: f}
 				mp.Type = t
 				mf := &MapField{
 					Name:          fld.Name,
@@ -277,7 +174,7 @@ func (f *File) ParseMessagesFields() error {
 					if !ok {
 						continue
 					}
-					typ, ok := f.FindTypeInMessage(msg, fld.Type)
+					typ, ok := f.findTypeInMessage(msg, fld.Type)
 					if !ok {
 						return errors.Errorf("failed to find message %s field %s type", strings.Join(msg.TypeName, "."), fld.Name)
 					}
@@ -295,6 +192,7 @@ func (f *File) ParseMessagesFields() error {
 	}
 	return nil
 }
+
 func (f *File) parseMessages() {
 	for _, el := range f.protoFile.Elements {
 		msg, ok := el.(*proto.Message)
@@ -306,6 +204,7 @@ func (f *File) parseMessages() {
 		f.parseMessagesInMessage(TypeName{msg.Name}, m)
 	}
 }
+
 func (f *File) parseMessagesInMessage(msgTypeName TypeName, msg *Message) {
 	for _, el := range msg.Descriptor.Elements {
 		switch elv := el.(type) {
@@ -322,7 +221,7 @@ func (f *File) parseEnums() {
 	for _, el := range f.protoFile.Elements {
 		switch val := el.(type) {
 		case *proto.Enum:
-			f.Enums = append(f.Enums, enum(f, val, TypeName{val.Name}))
+			f.Enums = append(f.Enums, newEnum(f, val, TypeName{val.Name}))
 		case *proto.Message:
 			f.parseEnumsInMessage(TypeName{val.Name}, val)
 		}
@@ -336,7 +235,7 @@ func (f *File) parseEnumsInMessage(msgTypeName TypeName, msg *proto.Message) {
 		case *proto.Message:
 			f.parseEnumsInMessage(msgTypeName.NewSubTypeName(elv.Name), elv)
 		case *proto.Enum:
-			f.Enums = append(f.Enums, enum(f, elv, msgTypeName.NewSubTypeName(elv.Name)))
+			f.Enums = append(f.Enums, newEnum(f, elv, msgTypeName.NewSubTypeName(elv.Name)))
 		}
 	}
 }

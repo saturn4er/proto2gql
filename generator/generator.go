@@ -1,12 +1,13 @@
 package generator
 
 import (
-	"github.com/pkg/errors"
-	"github.com/saturn4er/proto2gql/parser"
 	"go/build"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/saturn4er/proto2gql/parser"
 )
 
 type generatedFile struct {

@@ -1,11 +1,12 @@
 package generator
 
 import (
-	"github.com/pkg/errors"
-	"github.com/saturn4er/proto2gql/parser"
 	"go/build"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/saturn4er/proto2gql/parser"
 )
 
 func mergePathsConfig(in ...[]string) []string {

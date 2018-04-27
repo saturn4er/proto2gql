@@ -1,10 +1,11 @@
 package parser
 
 import (
-	"github.com/emicklei/proto"
-	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
+
+	"github.com/emicklei/proto"
+	"github.com/pkg/errors"
 )
 
 type Parser struct {
@@ -46,7 +47,7 @@ func (p *Parser) parseFileImports(file *File) error {
 		}
 		absImprtPath, err := filepath.Abs(imprtPath)
 		if err != nil {
-			return errors.Wrap(err, "failed to resolve import absolute file path")
+			return errors.Wrapf(err, "failed to resolve import(%s) absolute file path", imprt.Filename)
 		}
 		if fl, ok := p.parsedFile(absImprtPath); ok {
 			file.Imports = append(file.Imports, fl)
@@ -54,7 +55,7 @@ func (p *Parser) parseFileImports(file *File) error {
 		}
 		importFile, err := p.Parse(absImprtPath)
 		if err != nil {
-			return errors.Wrap(err, "can't parse import")
+			return errors.Wrapf(err, "can't parse import %s", imprtPath)
 		}
 		file.Imports = append(file.Imports, importFile)
 	}
@@ -66,10 +67,14 @@ func (p *Parser) Parse(path string) (*File, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve file absolute path")
 	}
+	if pf, ok := p.parsedFile(absPath); ok {
+		return pf, nil
+	}
 	file, err := os.Open(absPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open file")
 	}
+
 	f, err := proto.NewParser(file).Parse()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse file")
@@ -89,7 +94,7 @@ func (p *Parser) Parse(path string) (*File, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse file services")
 	}
-	err = result.ParseMessagesFields()
+	err = result.parseMessagesFields()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse messages fields")
 	}

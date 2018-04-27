@@ -1,11 +1,12 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+
 	"github.com/saturn4er/proto2gql/generator"
 	"gopkg.in/urfave/cli.v1"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"os"
 )
 
 func main() {

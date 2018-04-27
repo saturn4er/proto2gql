@@ -1,8 +1,9 @@
 package generator
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestImporter_New(t *testing.T) {

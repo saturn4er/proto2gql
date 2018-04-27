@@ -1,6 +1,6 @@
 package parser
 
-type ProtoType struct {
+type Type struct {
 	File    *File
 	Message *Message
 	Enum    *Enum
@@ -8,22 +8,22 @@ type ProtoType struct {
 	Map     *Map
 }
 
-func (p *ProtoType) IsScalar() bool {
+func (p *Type) IsScalar() bool {
 	return p.Scalar != ""
 }
-func (p *ProtoType) IsMessage() bool {
+func (p *Type) IsMessage() bool {
 	return p.Message != nil
 }
 
-func (p *ProtoType) IsEnum() bool {
+func (p *Type) IsEnum() bool {
 	return p.Enum != nil
 }
 
-func (p *ProtoType) IsMap() bool {
+func (p *Type) IsMap() bool {
 	return p.Map != nil
 }
 
-func (p *ProtoType) String() string {
+func (p *Type) String() string {
 	switch {
 	case p.IsMessage():
 		return p.Message.Name + " message"

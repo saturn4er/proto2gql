@@ -1,0 +1,11 @@
+syntax = "proto3";
+package common;
+
+// Service, which do smth
+message CommonMessage {
+    int32 scalar = 1;
+}
+enum CommonEnum {
+    CommonEnumVal0 = 0;
+    CommonEnumVal1 = 1;
+}
