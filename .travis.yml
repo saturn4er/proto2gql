@@ -7,8 +7,12 @@ go:
   - master
 
 install:
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/mattn/goveralls
   - go get github.com/golang/dep/cmd/dep
   - dep ensure -vendor-only
 
 script:
   - go test ./...
+  - go test -v -covermode=count -coverprofile=coverage.out
+  - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
