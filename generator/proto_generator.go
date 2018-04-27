@@ -297,13 +297,13 @@ func (g *protoGenerator) serviceHaveMutations(m *parser.Service) bool {
 	return false
 }
 func (g *protoGenerator) messageHaveFieldsExceptError(msg *parser.Message) bool {
-	ef := g.messageErrorField(msg)
+	ef := g.errorFieldOfMessage(msg)
 	if ef == nil {
 		return msg.HaveFields()
 	}
 	return msg.HaveFieldsExcept(ef.Name)
 }
-func (g *protoGenerator) messageErrorField(msg *parser.Message) *ErrorField {
+func (g *protoGenerator) errorFieldOfMessage(msg *parser.Message) *ErrorField {
 	m, ok := g.file.Messages[msg.Name]
 	if !ok || m.ErrorField == "" {
 		return nil
@@ -340,74 +340,53 @@ func (g *protoGenerator) messageErrorField(msg *parser.Message) *ErrorField {
 	}
 	return nil
 }
-func (g *protoGenerator) messageErrorFieldType(msg *parser.Message) *parser.ProtoType {
-	m, ok := g.file.Messages[msg.Name]
-	if !ok || m.ErrorField == "" {
-		return nil
-	}
-	// Iterating over fields to be sure, that specified in config field exists
-	for _, f := range msg.Fields {
-		if f.Name == m.ErrorField {
-			return f.Type
-		}
-	}
-	for _, f := range msg.MapFields {
-		if f.Name == m.ErrorField {
-			return f.Type
-		}
-	}
-	for _, of := range msg.OneOffs {
-		for _, f := range of.Fields {
-			if f.Name == m.ErrorField {
-				return f.Type
-			}
-		}
-	}
-	return nil
-}
 func (g *protoGenerator) isErrorField(msg *parser.Message, name string) bool {
 	if m, ok := g.file.Messages[msg.Name]; ok {
 		return name == m.ErrorField
 	}
 	return false
 }
+
 func (g *protoGenerator) fieldContextKey(msg *parser.Message, name string) string {
 	return g.file.Messages[msg.Name].Fields[name].ContextKey
 }
-func (g *protoGenerator) templateContext() map[string]interface{} {
+
+func (g *protoGenerator) templateContext(imports *importer) map[string]interface{} {
 	return map[string]interface{}{
 		"File":            g.file.ParsedFile,
 		"pkg":             g.file.OutGoPkgName,
-		"protoPkg":        g.imports.New(g.file.GoProtoPkg),
-		"gqlpkg":          g.imports.New(graphqlPkgPath),
-		"interceptorspkg": g.imports.New(interceptorsPkgPath),
-		"opentracingpkg":  g.imports.New(opentracingPkgPath),
-		"tracerpkg":       g.imports.New(tracerPkg),
-		"errorspkg":       g.imports.New("errors"),
-		"ctxpkg":          g.imports.New("context"),
-		"strconvpkg":      g.imports.New("strconv"),
-		"debugpkg":        g.imports.New("runtime/debug"),
-		"fmtpkg":          g.imports.New("fmt"),
-		"ccase":           parser.CamelCase,
-		"imports":         g.imports.Imports(),
+		"protoPkg":        imports.New(g.file.GoProtoPkg),
+		"gqlpkg":          imports.New(graphqlPkgPath),
+		"interceptorspkg": imports.New(interceptorsPkgPath),
+		"opentracingpkg":  imports.New(opentracingPkgPath),
+		"tracerpkg":       imports.New(tracerPkg),
+		"errorspkg":       imports.New("errors"),
+		"ctxpkg":          imports.New("context"),
+		"strconvpkg":      imports.New("strconv"),
+		"debugpkg":        imports.New("runtime/debug"),
+		"fmtpkg":          imports.New("fmt"),
+		"ccase":           camelCase,
+		"imports":         imports.Imports(),
 		"tracerEnabled":   g.file.TracerEnabled,
 
-		"FieldContextKey":              g.fieldContextKey,
-		"MessageErrorField":            g.messageErrorField,
-		"MessageHaveFieldsExceptError": g.messageHaveFieldsExceptError,
-		"IsErrorField":                 g.isErrorField,
-		"MethodName":                   g.methodName,
-		"ServiceName":                  g.serviceName,
-		"MethodIsQuery":                g.methodIsQuery,
-		"ServiceHaveQueries":           g.serviceHaveQueries,
-		"ServiceHaveMutations":         g.serviceHaveMutations,
-		"GoType":                       g.goTypeResolver,
-		"GQLInputTypeName":             g.gqlInputTypeName,
-		"GQLOutputTypeName":            g.gqlOutputTypeName,
-		"GQLOutputTypeResolver":        g.gqlOutputTypeResolverResolver,
+		"FieldContextKey":                    g.fieldContextKey,
+		"MessageErrorField":                  g.errorFieldOfMessage,
+		"MessageHaveFieldsExceptError":       g.messageHaveFieldsExceptError,
+		"IsErrorField":                       g.isErrorField,
+		"MethodName":                         g.methodName,
+		"ServiceName":                        g.serviceName,
+		"MethodIsQuery":                      g.methodIsQuery,
+		"ServiceHaveQueries":                 g.serviceHaveQueries,
+		"ServiceHaveMutations":               g.serviceHaveMutations,
+		"GoType":                             g.goTypeResolver(imports),
+		"GQLInputTypeName":                   g.gqlInputTypeName(imports),
+		"GQLInputTypeResolver":               g.gqlOutputTypeResolverResolver(imports),
+		"GQLOutputTypeName":                  g.gqlOutputTypeName(imports),
+		"NeedToGenerateTypeGQLInput":         g.needToGenerateTypeInputObject,
+		"NeedToGenerateTypeGQLInputResolver": g.needToGenerateTypeInputObjectResolver,
+		"NeedToGenerateTypeGQLOutput":        g.needToGenerateTypeOutputObject,
 	}
 }
-
 func (g *protoGenerator) findGeneratedFile(f *parser.File) (*generatedFile, error) {
 	for _, fl := range g.generatedFiles {
 		if fl.ParsedFile == f {
@@ -458,8 +437,9 @@ func (g *protoGenerator) generate() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to parse template")
 	}
+	var imprts = new(importer)
 	res := bytes.NewBuffer(nil)
-	err = tpl.Execute(res, g.templateContext())
+	err = tpl.Execute(res, g.templateContext(imprts))
 	if err != nil {
 		return errors.Wrap(err, "failed to execute template")
 	}
@@ -468,7 +448,7 @@ func (g *protoGenerator) generate() error {
 	if err != nil {
 		panic(err)
 	}
-	err = hdtpd.Execute(headres, g.templateContext())
+	err = hdtpd.Execute(headres, g.templateContext(imprts))
 	if err != nil {
 		panic(err)
 	}

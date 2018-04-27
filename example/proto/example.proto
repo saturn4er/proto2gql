@@ -9,7 +9,7 @@ service ServiceExample {
     rpc mutationMethod (B) returns (A); // methods without prefix "get" is mutation
     rpc queryMethod (A) returns (B); // in generate.yml we mark, that this method is QUERY
     rpc getMutatuionMethod (MsgWithEmpty) returns (MsgWithEmpty); // in generate.yml we mark, that this method is MUTATION
-    rpc getEmptiesMsg (Empty) returns (Empty);
+    rpc getEmptiesMsg (google.protobuf.Timestamp) returns (Empty);
 
 
 }

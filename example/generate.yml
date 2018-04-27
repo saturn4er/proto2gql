@@ -18,3 +18,7 @@ protos:
     output_package: "example"
     gql_messages_prefix: "Exmpl"
     gql_enums_prefix: "Exmpl"
+    messages:
+      A:
+        fields:
+          message_with_oneoffs: {context_key: "a_msg_with_oneoffs"}

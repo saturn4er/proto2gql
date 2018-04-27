@@ -33,6 +33,8 @@ var GraphQLInt64Scalar = graphql.NewScalar(graphql.ScalarConfig{
 				return nil
 			}
 			return value
+		case int64:
+			return val
 		case float64:
 			return int64(val)
 		}
@@ -72,6 +74,10 @@ var GraphQLInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 				return nil
 			}
 			return int32(value)
+		case int32:
+			return value
+		case int64:
+			return value
 		case float64:
 			return int32(val)
 		}
@@ -82,6 +88,7 @@ var GraphQLInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 		case kinds.IntValue, kinds.StringValue:
 			val, err := strconv.ParseInt(valueAST.GetValue().(string), 10, 32)
 			if err != nil {
+				fmt.Println(err)
 				return nil
 			}
 			return int32(val)
@@ -114,6 +121,8 @@ var GraphQLUInt64Scalar = graphql.NewScalar(graphql.ScalarConfig{
 				return nil
 			}
 			return value
+		case uint64:
+			return val
 		case float64:
 			return uint64(val)
 		}

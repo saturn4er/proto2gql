@@ -46,14 +46,14 @@ const bodyTemplate = `
 {{end}}
 // Messages
 {{ range $msg := .File.Messages -}}
-	{{if and (call $.MessageHaveFieldsExceptError $msg) -}}
+	{{if and (call $.MessageHaveFieldsExceptError $msg) (call $.NeedToGenerateTypeGQLOutput $msg.Type) -}}
 		var {{call $.GQLOutputTypeName .Type}} = {{$.gqlpkg}}.NewObject({{$.gqlpkg}}.ObjectConfig{
 			Name: "{{call $.GQLOutputTypeName  .Type}}",
             Fields: {{$.gqlpkg}}.Fields{
 			},
 		})
 	{{end -}}
-    {{if and (call $.MessageHaveFieldsExceptError $msg) -}}
+    {{if and (call $.MessageHaveFieldsExceptError $msg) (call $.NeedToGenerateTypeGQLInput $msg.Type) -}}
         var {{call $.GQLInputTypeName .Type}} = {{$.gqlpkg}}.NewInputObject({{$.gqlpkg}}.InputObjectConfig{
             Name: "{{call $.GQLInputTypeName .Type}}",
             Fields: {{$.gqlpkg}}.InputObjectConfigFieldMapThunk(func() {{$.gqlpkg}}.InputObjectConfigFieldMap {
@@ -90,10 +90,12 @@ const bodyTemplate = `
                 }
             }),
         })
-		// Output msg resolver
-		func {{call $.GQLOutputTypeResolver .Type}}({{ if $.tracerEnabled }} tr {{$.tracerpkg}}.Tracer, {{end}}ctx {{$.ctxpkg}}.Context, i interface{}) (_ *{{call $.GoType $msg.Type}}, rerr error){
+	{{end -}}
+	{{if and (call $.MessageHaveFieldsExceptError $msg) (call $.NeedToGenerateTypeGQLInputResolver $msg.Type) -}}
+		// {{$msg.TypeName}} Input resolver
+		func {{call $.GQLInputTypeResolver .Type}}({{ if $.tracerEnabled }} tr {{$.tracerpkg}}.Tracer, {{end}}ctx {{$.ctxpkg}}.Context, i interface{}) (_ *{{call $.GoType $msg.Type}}, rerr error){
 			{{ if $.tracerEnabled -}}
-				span := tr.CreateChildSpanFromContext(ctx, "{{call $.GQLOutputTypeResolver .Type}}")
+				span := tr.CreateChildSpanFromContext(ctx, "{{call $.GQLInputTypeResolver .Type}}")
 				defer span.Finish()
 				defer func(){
 					if perr := recover(); perr != nil {
@@ -118,7 +120,7 @@ const bodyTemplate = `
 				{{if $ctxkey -}}
 					{{.Name}}_ctx := ctx.Value("{{$ctxkey}}")
 					if {{.Name}}_ctx != nil{
-						if val, ok := {{.Name}}_ctx.({{call $.GoType .Type}}); ok {
+						if val, ok := {{.Name}}_ctx.({{- if .Type.IsMessage -}}*{{- end -}}{{call $.GoType .Type}}); ok {
 							result.{{call $.ccase .Name}} = val
 						}else{
 							panic("bad value type for field {{$msg.Name}}.{{.Name}}. Should be {{call $.GoType .Type}}, found: "+ {{$.fmtpkg}}.Sprintf("%T", {{.Name}}_ctx))
@@ -133,9 +135,9 @@ const bodyTemplate = `
 								var {{$field.Name}}_  = make([]*{{ call $.GoType $field.Type}}, len({{$field.Name}}_list))
 								for i, {{$field.Name}}_item := range {{$field.Name}}_list {
 									{{ if $.tracerEnabled }}
-										{{$field.Name}}_r, err := {{call $.GQLOutputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{$field.Name}}_item)
+										{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{$field.Name}}_item)
 									{{ else }}
-										{{$field.Name}}_r, err := {{call $.GQLOutputTypeResolver $field.Type}}(ctx, {{$field.Name}}_item)
+										{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{$field.Name}}_item)
 									{{ end }}
 									if err != nil {
 										return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}["+{{$.strconvpkg}}.Itoa(i)+"]: " + err.Error())
@@ -183,9 +185,9 @@ const bodyTemplate = `
 							// Non-repeated message
                             {{ if $field.Type.Message.HaveFields -}}
                                 {{ if $.tracerEnabled -}}
-                                    {{$field.Name}}_r, err := {{call $.GQLOutputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), args["{{.Name}}"])
+                                    {{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), args["{{.Name}}"])
                                 {{ else -}}
-                                    {{$field.Name}}_r, err := {{call $.GQLOutputTypeResolver $field.Type}}(ctx, args["{{.Name}}"])
+                                    {{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, args["{{.Name}}"])
                                 {{ end -}}
                                 if err != nil {
                                     return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}: " + err.Error())
@@ -207,9 +209,9 @@ const bodyTemplate = `
 			{{range $field := $msg.MapFields -}}
 				// Map
 				{{ if $.tracerEnabled -}}
-					{{$field.Name}}_, err := {{call $.GQLOutputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), args["{{.Name}}"])
+					{{$field.Name}}_, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), args["{{.Name}}"])
 				{{ else -}}
-					{{$field.Name}}_, err := {{call $.GQLOutputTypeResolver $field.Type}}(ctx, args["{{.Name}}"])
+					{{$field.Name}}_, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, args["{{.Name}}"])
 				{{ end -}}
 				if err != nil {
 					return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}: " + err.Error())
@@ -229,9 +231,9 @@ const bodyTemplate = `
 							{{- else if $field.Type.IsMessage -}}
 								// Non-repeated message
 								{{ if $.tracerEnabled }}
-									{{$field.Name}}_r, err := {{call $.GQLOutputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{.Name}}_)
+									{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{.Name}}_)
 								{{ else }}
-									{{$field.Name}}_r, err := {{call $.GQLOutputTypeResolver $field.Type}}(ctx, {{.Name}}_)
+									{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{.Name}}_)
 								{{ end }}
 								if err != nil {
 									return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}: " + err.Error())
@@ -248,9 +250,9 @@ const bodyTemplate = `
 							{{else if $field.Type.IsMessage -}}
 								// Non-repeated message
 								{{ if $.tracerEnabled }}
-									{{$field.Name}}_r, err := {{call $.GQLOutputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{.Name}}_)
+									{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{.Name}}_)
 								{{ else }}
-									{{$field.Name}}_r, err := {{call $.GQLOutputTypeResolver $field.Type}}(ctx, {{.Name}}_)
+									{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{.Name}}_)
 								{{ end }}
 
 								if err != nil {
@@ -271,14 +273,15 @@ const bodyTemplate = `
 {{end -}}
 
 
+
 // Maps
-// {{ .Messages }}
 {{ range $message := .File.Messages -}}
-	{{ range $fld := .MapFields }}
+	{{ if (call $.NeedToGenerateTypeGQLOutput $message.Type) -}}
+		{{ range $fld := .MapFields -}}
 			{{ if not (call $.IsErrorField $message $fld.Map.Field.Name) -}}
     			var {{call $.GQLOutputTypeName .Type}} = {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{$.gqlpkg}}.NewObject({{$.gqlpkg}}.ObjectConfig{
     				Name:   "{{call $.GQLOutputTypeName .Type}}",
-    				Fields: {{$.gqlpkg}}.Fields{
+    				Fields: {{$.gqlpkg}}.Fields{ 
 						"key": &{{$.gqlpkg}}.Field{
 							Name: "key",
 							Type: {{call $.GQLOutputTypeName $fld.Map.KeyType}},
@@ -304,7 +307,11 @@ const bodyTemplate = `
 					},
     			})))
 			{{end}}
-			// MAP {{$message.Name}}
+		{{ end -}}
+	{{ end -}}
+	{{ if (call $.NeedToGenerateTypeGQLInputResolver $message.Type) -}}
+		// Maps of {{$message.Name}}
+		{{ range $fld := .MapFields }}
     	    var {{call $.GQLInputTypeName .Type}} = {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{$.gqlpkg}}.NewInputObject({{$.gqlpkg}}.InputObjectConfig{
     	        Name: "{{call $.GQLInputTypeName .Type}}",
     	        Fields: {{$.gqlpkg}}.InputObjectConfigFieldMap{
@@ -316,9 +323,13 @@ const bodyTemplate = `
     	            },
     	        },
     	    })))
-    	    func {{call $.GQLOutputTypeResolver .Type}}({{ if $.tracerEnabled }} tr {{$.tracerpkg}}.Tracer, {{end}}ctx {{$.ctxpkg}}.Context, i interface{}) (_ {{call $.GoType $fld.Map.Type}}, rerr error){
+		{{ end -}}
+	{{ end -}}
+	{{ if (call $.NeedToGenerateTypeGQLInputResolver $message.Type) -}}
+		{{ range $fld := .MapFields -}}
+    	    func {{call $.GQLInputTypeResolver .Type}}({{ if $.tracerEnabled }} tr {{$.tracerpkg}}.Tracer, {{end}}ctx {{$.ctxpkg}}.Context, i interface{}) (_ {{call $.GoType $fld.Map.Type}}, rerr error){
     	    	{{ if $.tracerEnabled -}}
-						span := tr.CreateChildSpanFromContext(ctx, "{{call $.GQLOutputTypeResolver .Type}}")
+						span := tr.CreateChildSpanFromContext(ctx, "{{call $.GQLInputTypeResolver .Type}}")
 						defer span.Finish()
 						defer func(){
 							if perr := recover(); perr != nil {
@@ -341,9 +352,9 @@ const bodyTemplate = `
 						for iv, v := range vals {
 							args := v.(map[string]interface{})
 							{{ if $.tracerEnabled }}
-								vv, err := {{call $.GQLOutputTypeResolver $fld.Map.ValueType}}(tr,  tr.ContextWithSpan(ctx, span), args["value"])
+								vv, err := {{call $.GQLInputTypeResolver $fld.Map.ValueType}}(tr, tr.ContextWithSpan(ctx, span), args["value"])
 							{{ else }}
-								vv, err := {{call $.GQLOutputTypeResolver $fld.Map.ValueType}}(ctx, args["value"])
+								vv, err := {{call $.GQLInputTypeResolver $fld.Map.ValueType}}(ctx, args["value"])
 							{{ end }}
 							if err != nil {
 								return nil, {{$.errorspkg}}.New("failed to parse {{call $.GQLOutputTypeName .Type}}["+{{$.strconvpkg}}.Itoa(iv)+"]: " + err.Error())
@@ -365,104 +376,106 @@ const bodyTemplate = `
     	
 					return result, nil
 			}
+		{{ end -}}
     {{ end -}}
 {{end -}}
 
 func init() {
 	 // Adding fields to output messages
 	{{ range $msg := .File.Messages -}}
-			// {{$msg.Name}} message fields
-			{{range .Fields -}}
-				{{ if not (call $.IsErrorField $msg .Name) -}}
-					{{call $.GQLOutputTypeName $msg.Type}}.AddFieldConfig("{{.Name}}", &{{$.gqlpkg}}.Field{
-						Name: "{{.Name}}",
-						{{ if .Repeated -}}
-							Type: {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{call $.GQLOutputTypeName .Type}})),
-						{{ else -}}
-							Type: {{call $.GQLOutputTypeName .Type}},
-						{{ end -}}
-						Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
-                            src := p.Source.(*{{call $.GoType $msg.Type}})
-							if src == nil {
-								return nil, nil
-							}
-							{{ if and  .Repeated .Type.IsEnum -}}
-								source := src.{{call $.ccase  .Name}}
-								var result = make([]int, len(source))
-								for i, val := range source {
-									result[i] = int(val)
-								}
-								return result, nil
-							{{ else if .Type.IsMap -}}
-								var res []map[string]interface{}
-								for k, v := range src.{{call $.ccase  .Name}} {
-									res = append(res, map[string]interface{}{
-										"key": k,
-										"value": v,
-									})
-								}
-								return res, nil
-							{{ else if .Type.IsEnum -}}
-								return int(src.{{call $.ccase  .Name}}), nil
+			{{ if (call $.NeedToGenerateTypeGQLOutput $msg.Type) -}}
+				{{range .Fields -}}
+					{{ if not (call $.IsErrorField $msg .Name) -}}
+						{{call $.GQLOutputTypeName $msg.Type}}.AddFieldConfig("{{.Name}}", &{{$.gqlpkg}}.Field{
+							Name: "{{.Name}}",
+							{{ if .Repeated -}}
+								Type: {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{call $.GQLOutputTypeName .Type}})),
 							{{ else -}}
-								return src.{{call $.ccase  .Name}}, nil
-							{{end -}}
-						},
-					})
-				{{end -}}
-			{{end -}}
-            {{ range .MapFields -}}
-				{{ if not (call $.IsErrorField $msg .Name) -}}
-                	// Map field
-                	{{ call $.GQLOutputTypeName $msg.Type }}.AddFieldConfig("{{.Name}}", &{{$.gqlpkg}}.Field{
-                	    Name: "{{.Name}}",
-                	    Type: {{call $.GQLOutputTypeName .Type}},
-                	    Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
-                	        src := p.Source.(*{{ call $.GoType $msg.Type}})
-                	        if src == nil {
-                	            return nil, nil
-                	        }
-                	        var res []map[string]interface{}
-                	        for k, v := range src.{{call $.ccase  .Name}} {
-                	            res = append(res, map[string]interface{}{
-                	                "key": k,
-                	                "value": v,
-                	            })
-                	        }
-                	        return res, nil
-                	    },
-                	})
-				{{end -}}
-            {{end -}}
-			{{ range .OneOffs -}}
-				{{ range .Fields -}}
-                	// One OFF output
-					{{ call $.GQLOutputTypeName $msg.Type }}.AddFieldConfig("{{.Name}}", &{{$.gqlpkg}}.Field{
-						Name: "{{.Name}}",
-						Type: {{call $.GQLOutputTypeName .Type}},
-						Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
-							src := p.Source.(*{{ call $.GoType $msg.Type}})
-							if src == nil {
-								return nil, nil
-							}
-							{{if .Type.IsMap -}}
-								var res []map[string]interface{}
-								for k, v := range src.{{call $.ccase  .Name}} {
-									res = append(res, map[string]interface{}{
-										"key": k,
-										"value": v,
-									})
+								Type: {{call $.GQLOutputTypeName .Type}},
+							{{ end -}}
+							Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
+            	                src := p.Source.(*{{call $.GoType $msg.Type}})
+								if src == nil {
+									return nil, nil
 								}
-								return res, nil
-							{{else if .Type.IsEnum -}}
-                            	return int(src.Get{{call $.ccase  .Name}}()), nil
-							{{else -}}
-								return src.Get{{call $.ccase  .Name}}(), nil
-							{{end -}}
-						},
-					})
+								{{ if and  .Repeated .Type.IsEnum -}}
+									source := src.{{call $.ccase  .Name}}
+									var result = make([]int, len(source))
+									for i, val := range source {
+										result[i] = int(val)
+									}
+									return result, nil
+								{{ else if .Type.IsMap -}}
+									var res []map[string]interface{}
+									for k, v := range src.{{call $.ccase  .Name}} {
+										res = append(res, map[string]interface{}{
+											"key": k,
+											"value": v,
+										})
+									}
+									return res, nil
+								{{ else if .Type.IsEnum -}}
+									return int(src.{{call $.ccase  .Name}}), nil
+								{{ else -}}
+									return src.{{call $.ccase  .Name}}, nil
+								{{end -}}
+							},
+						})
+					{{end -}}
 				{{end -}}
-			{{ end -}}
+            	{{ range .MapFields -}}
+					{{ if not (call $.IsErrorField $msg .Name) -}}
+            	    	// Map field
+            	    	{{ call $.GQLOutputTypeName $msg.Type }}.AddFieldConfig("{{.Name}}", &{{$.gqlpkg}}.Field{
+            	    	    Name: "{{.Name}}",
+            	    	    Type: {{call $.GQLOutputTypeName .Type}},
+            	    	    Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
+            	    	        src := p.Source.(*{{ call $.GoType $msg.Type}})
+            	    	        if src == nil {
+            	    	            return nil, nil
+            	    	        }
+            	    	        var res []map[string]interface{}
+            	    	        for k, v := range src.{{call $.ccase  .Name}} {
+            	    	            res = append(res, map[string]interface{}{
+            	    	                "key": k,
+            	    	                "value": v,
+            	    	            })
+            	    	        }
+            	    	        return res, nil
+            	    	    },
+            	    	})
+					{{end -}}
+            	{{end -}}
+				{{ range .OneOffs -}}
+					{{ range .Fields -}}
+            	    	// One OFF output
+						{{ call $.GQLOutputTypeName $msg.Type }}.AddFieldConfig("{{.Name}}", &{{$.gqlpkg}}.Field{
+							Name: "{{.Name}}",
+							Type: {{call $.GQLOutputTypeName .Type}},
+							Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
+								src := p.Source.(*{{ call $.GoType $msg.Type}})
+								if src == nil {
+									return nil, nil
+								}
+								{{if .Type.IsMap -}}
+									var res []map[string]interface{}
+									for k, v := range src.{{call $.ccase  .Name}} {
+										res = append(res, map[string]interface{}{
+											"key": k,
+											"value": v,
+										})
+									}
+									return res, nil
+								{{else if .Type.IsEnum -}}
+            	                	return int(src.Get{{call $.ccase  .Name}}()), nil
+								{{else -}}
+									return src.Get{{call $.ccase  .Name}}(), nil
+								{{end -}}
+							},
+						})
+					{{end -}}
+				{{ end -}}
+			{{end -}}
 	{{end -}}
 }
 {{ range $service := .File.Services }}
@@ -554,9 +567,9 @@ const methodTemplate = `
 						if ih == nil {
 							{{ if .InputMessage.HaveFields -}}
 								{{ if $.tracerEnabled -}}	
-									req, err := {{call $.GQLOutputTypeResolver .InputMessage.Type}}(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+									req, err := {{call $.GQLInputTypeResolver .InputMessage.Type}}(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 								{{ else -}}
-									req, err := {{call $.GQLOutputTypeResolver .InputMessage.Type}}(p.Context, p.Args)
+									req, err := {{call $.GQLInputTypeResolver .InputMessage.Type}}(p.Context, p.Args)
 								{{ end -}}
 								if err != nil {
 									return nil, err
@@ -574,9 +587,9 @@ const methodTemplate = `
 						req, err := ih.ResolveArgs(ctx, func(ctx *{{$.interceptorspkg}}.Context, next {{$.interceptorspkg}}.ResolveArgsInvoker) (result interface{}, err error) {
 							{{ if .InputMessage.HaveFields -}}
 								{{ if $.tracerEnabled -}}	
-									return {{call $.GQLOutputTypeResolver .InputMessage.Type}}(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+									return {{call $.GQLInputTypeResolver .InputMessage.Type}}(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 								{{ else -}}
-									return {{call $.GQLOutputTypeResolver .InputMessage.Type}}(p.Context, p.Args)
+									return {{call $.GQLInputTypeResolver .InputMessage.Type}}(p.Context, p.Args)
 								{{ end -}}
 							{{ else -}}
 								return new({{call $.GoType .InputMessage.Type}}), nil
@@ -593,7 +606,7 @@ const methodTemplate = `
 							res, err := c.{{call $.ccase .Name}}(ctx.Params.Context, r, opts...)
 							{{$errFld := (call $.MessageErrorField $method.OutputMessage) -}}
 							{{if $errFld -}}
-								{{if or ($errFld.Type.IsMap) $errFld.Repeated -}}                  // TOOD: ARRAY
+								{{if or ($errFld.Type.IsMap) $errFld.Repeated -}}                  
 									if res != nil && len(res.{{call $.ccase $errFld.Name}}) > 0 {
 										ctx.PayloadError =  res.{{call $.ccase $errFld.Name}}
 									}

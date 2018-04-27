@@ -130,7 +130,7 @@ func (g *generator) generate() error {
 				OutGoPkgName:     filepath.Base(pkg),
 				GoProtoPkg:       goProtoPkg,
 				OutDir:           dir,
-				OutFilePath:      path.Join(dir, filename) + ".go",
+				OutFilePath:      path.Join(dir, filename),
 				ParsedFile:       imp,
 				GQLEnumsPrefix:   s.GQLEnumsPrefix,
 				GQLMessagePrefix: s.GQLMessagePrefix,
