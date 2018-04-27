@@ -3,8 +3,6 @@ package scalars
 import (
 	"strconv"
 
-	"fmt"
-
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
@@ -33,8 +31,12 @@ var GraphQLInt64Scalar = graphql.NewScalar(graphql.ScalarConfig{
 				return nil
 			}
 			return value
+		case int32:
+			return int64(val)
 		case int64:
 			return val
+		case float32:
+			return int64(val)
 		case float64:
 			return int64(val)
 		}
@@ -77,7 +79,9 @@ var GraphQLInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 		case int32:
 			return value
 		case int64:
-			return value
+			return int32(val)
+		case float32:
+			return int32(val)
 		case float64:
 			return int32(val)
 		}
@@ -88,7 +92,6 @@ var GraphQLInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 		case kinds.IntValue, kinds.StringValue:
 			val, err := strconv.ParseInt(valueAST.GetValue().(string), 10, 32)
 			if err != nil {
-				fmt.Println(err)
 				return nil
 			}
 			return int32(val)
@@ -102,7 +105,6 @@ var GraphQLUInt64Scalar = graphql.NewScalar(graphql.ScalarConfig{
 	Description: "The `UInt64` scalar type represents non-fractional unsigned whole numeric values. Int can represent values between 0 and 2^64 - 1.\n" +
 		"Can be passed like a string",
 	Serialize: func(value interface{}) interface{} {
-		// We need to convert uint64 to string, because javascript doesn't support it'
 		switch val := value.(type) {
 		case uint64:
 			return val
@@ -121,8 +123,12 @@ var GraphQLUInt64Scalar = graphql.NewScalar(graphql.ScalarConfig{
 				return nil
 			}
 			return value
+		case uint32:
+			return uint64(val)
 		case uint64:
 			return val
+		case float32:
+			return uint64(val)
 		case float64:
 			return uint64(val)
 		}
@@ -162,6 +168,10 @@ var GraphQLUInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 				return nil
 			}
 			return uint32(value)
+		case uint32:
+			return val
+		case float32:
+			return uint32(val)
 		case float64:
 			return uint32(val)
 		}
@@ -176,7 +186,6 @@ var GraphQLUInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 			}
 			return uint32(val)
 		}
-
 		return nil
 	},
 })
@@ -184,7 +193,6 @@ var GraphQLUInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 var GraphQLFloat32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 	Name: "Float32",
 	Serialize: func(value interface{}) interface{} {
-		// We need to convert uint64 to string, because javascript doesn't support it'
 		if val, ok := value.(float32); ok {
 			return val
 		}
@@ -200,8 +208,6 @@ var GraphQLFloat32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 			return float32(value)
 		case float32:
 			return val
-		case float64:
-			return float32(val)
 		}
 		return nil
 	},

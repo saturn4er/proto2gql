@@ -32,8 +32,8 @@ type generator struct {
 	config *GenerateConfig
 }
 
-func (g *generator) importDirAndPkg(importFile *parser.File) (dir, pkg string, rerr error) {
-	pth := filepath.Dir(importFile.FilePath)
+func (g *generator) importDirAndPkg(filePath string) (dir, pkg string, rerr error) {
+	pth := filepath.Dir(filePath)
 	var prefixPath string
 	if g.config.VendorPath != "" && strings.HasPrefix(pth, g.config.VendorPath) {
 		prefixPath = g.config.VendorPath
@@ -121,7 +121,7 @@ func (g *generator) generate() error {
 				})
 				continue
 			}
-			dir, pkg, err := g.importDirAndPkg(imp)
+			dir, pkg, err := g.importDirAndPkg(imp.FilePath)
 			if err != nil {
 				return errors.Wrap(err, "failed to resolve import importing params")
 			}
