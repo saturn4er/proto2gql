@@ -129,24 +129,28 @@ const bodyTemplate = `
 				{{else -}}
 					{{if .Repeated -}}
 						{{if .Type.IsMessage -}}
-							// Repeated Message       {{ $field.Type.Message.HaveFields }}
+							// Repeated Message      
 							if args["{{$field.Name}}"] != nil {
+								var {{$field.Name}}_list = args["{{$field.Name}}"].([]interface{})
+								var {{$field.Name}}_  = make([]*{{ call $.GoType $field.Type}}, len({{$field.Name}}_list))
 								{{ if $field.Type.Message.HaveFields -}}
-									var {{$field.Name}}_list = args["{{$field.Name}}"].([]interface{})
-									var {{$field.Name}}_  = make([]*{{ call $.GoType $field.Type}}, len({{$field.Name}}_list))
 									for i, {{$field.Name}}_item := range {{$field.Name}}_list {
-										{{ if $.tracerEnabled }}
-											{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{$field.Name}}_item)
-										{{ else }}
-											{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{$field.Name}}_item)
-										{{ end }}
-										if err != nil {
-											return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}["+{{$.strconvpkg}}.Itoa(i)+"]: " + err.Error())
-										}
-										{{$field.Name}}_[i] = {{$field.Name}}_r
+											{{ if $.tracerEnabled }}
+												{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{$field.Name}}_item)
+											{{ else }}
+												{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{$field.Name}}_item)
+											{{ end }}
+											if err != nil {
+												return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}["+{{$.strconvpkg}}.Itoa(i)+"]: " + err.Error())
+											}
+											{{$field.Name}}_[i] = {{$field.Name}}_r
 									}
-									result.{{call $.ccase .Name}} = {{$field.Name}}_
+								{{else -}}
+									for i := range {{$field.Name}}_ {
+                                    	{{$field.Name}}_[i] = new({{call $.GoType $field.Type}})
+									}
 								{{ end -}}
+								result.{{call $.ccase .Name}} = {{$field.Name}}_
 							}
 						{{else if .Type.IsEnum -}}
 							// Repeated Enum
@@ -311,7 +315,11 @@ const bodyTemplate = `
 								if src == nil {
 									return nil, nil
 								}
-								return src["value"].({{call $.GoType $fld.Map.ValueType}}), nil
+								{{ if $fld.Map.ValueType.IsMessage -}}
+									return src["value"].(*{{call $.GoType $fld.Map.ValueType}}), nil
+								{{ else -}}
+									return src["value"].({{call $.GoType $fld.Map.ValueType}}), nil
+								{{ end -}}
 							},
 						},
 					},
@@ -399,7 +407,15 @@ func init() {
 						{{call $.GQLOutputTypeName $msg.Type}}.AddFieldConfig("{{.Name}}", &{{$.gqlpkg}}.Field{
 							Name: "{{.Name}}",
 							{{ if .Repeated -}}
-								Type: {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{call $.GQLOutputTypeName .Type}})),
+								{{ if .Type.IsMessage -}}
+									{{ if not .Type.Message.HaveFields }}
+										Type: {{$.gqlpkg}}.NewList({{call $.GQLOutputTypeName .Type}}),
+									{{ else -}}
+										Type: {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{call $.GQLOutputTypeName .Type}})),
+									{{ end -}}
+								{{ else -}}
+									Type: {{$.gqlpkg}}.NewList({{$.gqlpkg}}.NewNonNull({{call $.GQLOutputTypeName .Type}})),
+								{{ end -}}
 							{{ else -}}
 								Type: {{call $.GQLOutputTypeName .Type}},
 							{{ end -}}
@@ -611,7 +627,7 @@ const methodTemplate = `
 						res, err := ih.Call(ctx, req, func(ctx *{{$.interceptorspkg}}.Context, req interface{}, next {{$.interceptorspkg}}.CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error) {
 							r, ok := req.(*{{call $.GoType .InputMessage.Type}})
 							if !ok {
-								return nil, {{$.errorspkg}}.New({{$.fmtpkg}}.Sprintf("resolve args interceptor returns bad request type(%T). Should be: *{{call $.GoType .InputMessage.Type}}", req))
+								return nil, {{$.errorspkg}}.New({{$.fmtpkg}}.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *{{call $.GoType .InputMessage.Type}}", req))
 							}
 							res, err := c.{{call $.ccase .Name}}(ctx.Params.Context, r, opts...)
 							{{$errFld := (call $.MessageErrorField $method.OutputMessage) -}}
@@ -632,9 +648,12 @@ const methodTemplate = `
 							{{end -}}
 							return res, err				
 						})
+						if err != nil {
+							return nil, err
+						}
 						rc, ok :=res.(*{{call $.GoType .OutputMessage.Type}})
 						if !ok {
-							return nil, {{$.errorspkg}}.New({{$.fmtpkg}}.Sprintf("Resolve Interceptor returns bad value type(%T). Should return *{{call $.GoType .OutputMessage.Type}}", res))
+							return nil, {{$.errorspkg}}.New({{$.fmtpkg}}.Sprintf("Call Interceptor returns bad value type(%T). Should return *{{call $.GoType .OutputMessage.Type}}", res))
 						}
 						return rc, err
 					},

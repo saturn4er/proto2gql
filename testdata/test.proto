@@ -6,7 +6,7 @@ option go_package = "github.com/saturn4er/proto2gql/testdata";
 
 // Service, which do smth
 service ServiceExample {
-    rpc getQueryMethod (RootMessage) returns (RootMessage2);
+    rpc getQueryMethod (RootMessage) returns (RootMessage);
     // rpc comment
     rpc mutationMethod (RootMessage2) returns (RootMessage.NestedMessage);
     rpc EmptyMsgs (Empty) returns (Empty);

@@ -30,7 +30,7 @@ func testFileInfo(file *File) *File {
 				Name:          "ServiceExample",
 				QuotedComment: `"Service, which do smth"`,
 				Methods: []*Method{
-					{Name: "getQueryMethod", InputMessage: RootMessage, OutputMessage: RootMessage2, QuotedComment: `""`},
+					{Name: "getQueryMethod", InputMessage: RootMessage, OutputMessage: RootMessage, QuotedComment: `""`},
 					{Name: "mutationMethod", InputMessage: RootMessage2, OutputMessage: NestedMessage, QuotedComment: `"rpc comment"`},
 					{Name: "EmptyMsgs", InputMessage: EmptyMessage, OutputMessage: EmptyMessage, QuotedComment: `""`},
 					{Name: "MsgsWithEpmty", InputMessage: MessageWithEmpty, OutputMessage: MessageWithEmpty, QuotedComment: `""`},
