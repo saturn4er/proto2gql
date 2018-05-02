@@ -24,7 +24,6 @@ type generatedFile struct {
 	GQLEnumsPrefix   string
 	GQLMessagePrefix string
 	Services         map[string]ServiceConfig
-	Enums            map[string]EnumConfig
 	Messages         map[string]MessageConfig
 	Generator        *protoGenerator
 }
@@ -50,7 +49,7 @@ func (g *generator) importDirAndPkg(filePath string) (dir, pkg string, rerr erro
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve import absolute path")
 	}
-	pkg, err = resolveGoPkg(g.config.VendorPath, outDir)
+	pkg, err = g.resolveGoPkg(outDir)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve import Go package")
 	}
@@ -69,11 +68,11 @@ func (g *generator) generate() error {
 		}
 		filename := strings.TrimSuffix(path.Base(file.FilePath), ".proto") + ".go"
 		outDir := mergeStringsConfig(g.config.OutputPath, cfg.OutputPath)
-		pkg, err := resolveGoPkg(g.config.VendorPath, outDir)
+		pkg, err := g.resolveGoPkg(outDir)
 		if err != nil {
 			return errors.Wrap(err, "failed to resolve go pkg")
 		}
-		goProtoPkg, err := resolveGoPkg(g.config.VendorPath, filepath.Dir(file.FilePath))
+		goProtoPkg, err := g.resolveGoPkg(filepath.Dir(file.FilePath))
 		if err != nil {
 			return errors.Wrap(err, "failed to resolve go pkg")
 		}
@@ -87,7 +86,6 @@ func (g *generator) generate() error {
 			GQLEnumsPrefix:   cfg.GQLEnumsPrefix,
 			GQLMessagePrefix: cfg.GQLMessagePrefix,
 			Services:         cfg.Services,
-			Enums:            cfg.Enums,
 			TracerEnabled:    g.config.Tracer,
 			Messages:         cfg.Messages,
 		})
@@ -98,7 +96,7 @@ func (g *generator) generate() error {
 			if v, ok := g.config.Imports.Settings[imp.FilePath]; ok && v.GoPackage != "" {
 				goProtoPkg = v.GoPackage
 			} else {
-				v, err := resolveGoPkg(g.config.VendorPath, filepath.Dir(imp.FilePath))
+				v, err := g.resolveGoPkg(filepath.Dir(imp.FilePath))
 				if err != nil {
 					return errors.Wrap(err, "failed to resolve go pkg")
 				}
@@ -115,8 +113,7 @@ func (g *generator) generate() error {
 					ParsedFile:       imp,
 					GQLEnumsPrefix:   s.GQLEnumsPrefix,
 					GQLMessagePrefix: s.GQLMessagePrefix,
-					Services:         s.Services,
-					Enums:            s.Enums,
+					Services:         nil,
 					TracerEnabled:    g.config.Tracer,
 				})
 				continue
@@ -134,8 +131,7 @@ func (g *generator) generate() error {
 				ParsedFile:       imp,
 				GQLEnumsPrefix:   s.GQLEnumsPrefix,
 				GQLMessagePrefix: s.GQLMessagePrefix,
-				Services:         s.Services,
-				Enums:            s.Enums,
+				Services:         nil,
 				TracerEnabled:    g.config.Tracer,
 			})
 		}
@@ -152,6 +148,27 @@ func (g *generator) generate() error {
 	}
 	return nil
 }
+func (g *generator) resolveGoPkg(dir string) (string, error) {
+	absPath, err := filepath.Abs(dir)
+	if err != nil {
+		return "", err
+	}
+	if g.config.VendorPath != "" && strings.HasPrefix(absPath, g.config.VendorPath) {
+		pkg, err := filepath.Rel(g.config.VendorPath, absPath)
+		if err != nil {
+			return "", errors.Wrap(err, "failed to resolve dir vendor relative path")
+		}
+		return pkg, nil
+	} else if !strings.HasPrefix(absPath, filepath.Join(build.Default.GOPATH, "src")) {
+		return "", errors.New("dir is outside GOPATH")
+	}
+	pkg, err := filepath.Rel(filepath.Join(build.Default.GOPATH, "src"), absPath)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to resolve dir relative path")
+	}
+	return pkg, nil
+}
+
 func (g *generator) normalizeConfigPaths() error {
 	if g.config.VendorPath != "" {
 		vp, err := filepath.Abs(g.config.VendorPath)

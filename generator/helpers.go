@@ -1,11 +1,9 @@
 package generator
 
 import (
-	"go/build"
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/parser"
 )
 
@@ -91,25 +89,4 @@ func snakeCamelCaseSlice(elem []string) string { return camelCase(strings.Join(e
 
 func isSamePackage(f1, f2 *parser.File) bool {
 	return f1.PkgName == f2.PkgName && filepath.Dir(f1.FilePath) == filepath.Dir(f2.FilePath)
-}
-
-func resolveGoPkg(vendorPath, dir string) (string, error) {
-	absPath, err := filepath.Abs(dir)
-	if err != nil {
-		return "", err
-	}
-	if vendorPath != "" && strings.HasPrefix(absPath, vendorPath) {
-		pkg, err := filepath.Rel(vendorPath, absPath)
-		if err != nil {
-			return "", errors.Wrap(err, "failed to resolve dir vendor relative path")
-		}
-		return pkg, nil
-	} else if !strings.HasPrefix(absPath, filepath.Join(build.Default.GOPATH, "src")) {
-		return "", errors.New("dir is outside GOPATH")
-	}
-	pkg, err := filepath.Rel(filepath.Join(build.Default.GOPATH, "src"), absPath)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to resolve dir relative path")
-	}
-	return pkg, nil
 }
