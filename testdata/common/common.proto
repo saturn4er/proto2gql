@@ -1,6 +1,8 @@
 syntax = "proto3";
 package common;
 
+option go_package = "github.com/saturn4er/proto2gql/testdata/common";
+
 // Service, which do smth
 message CommonMessage {
     int32 scalar = 1;

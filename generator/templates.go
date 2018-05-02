@@ -129,22 +129,24 @@ const bodyTemplate = `
 				{{else -}}
 					{{if .Repeated -}}
 						{{if .Type.IsMessage -}}
-							// Repeated Message
+							// Repeated Message       {{ $field.Type.Message.HaveFields }}
 							if args["{{$field.Name}}"] != nil {
-								var {{$field.Name}}_list = args["{{$field.Name}}"].([]interface{})
-								var {{$field.Name}}_  = make([]*{{ call $.GoType $field.Type}}, len({{$field.Name}}_list))
-								for i, {{$field.Name}}_item := range {{$field.Name}}_list {
-									{{ if $.tracerEnabled }}
-										{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{$field.Name}}_item)
-									{{ else }}
-										{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{$field.Name}}_item)
-									{{ end }}
-									if err != nil {
-										return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}["+{{$.strconvpkg}}.Itoa(i)+"]: " + err.Error())
+								{{ if $field.Type.Message.HaveFields -}}
+									var {{$field.Name}}_list = args["{{$field.Name}}"].([]interface{})
+									var {{$field.Name}}_  = make([]*{{ call $.GoType $field.Type}}, len({{$field.Name}}_list))
+									for i, {{$field.Name}}_item := range {{$field.Name}}_list {
+										{{ if $.tracerEnabled }}
+											{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{$field.Name}}_item)
+										{{ else }}
+											{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{$field.Name}}_item)
+										{{ end }}
+										if err != nil {
+											return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}["+{{$.strconvpkg}}.Itoa(i)+"]: " + err.Error())
+										}
+										{{$field.Name}}_[i] = {{$field.Name}}_r
 									}
-									{{$field.Name}}_[i] = {{$field.Name}}_r
-								}
-								result.{{call $.ccase .Name}} = {{$field.Name}}_
+									result.{{call $.ccase .Name}} = {{$field.Name}}_
+								{{ end -}}
 							}
 						{{else if .Type.IsEnum -}}
 							// Repeated Enum
@@ -182,7 +184,7 @@ const bodyTemplate = `
 								result.{{call $.ccase  .Name}} = args["{{.Name}}"].({{call $.GoType .Type}})
 							}
 						{{else if $field.Type.IsMessage -}}
-							// Non-repeated message
+							// Non-repeated message 
                             {{ if $field.Type.Message.HaveFields -}}
                                 {{ if $.tracerEnabled -}}
                                     {{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), args["{{.Name}}"])
@@ -230,15 +232,19 @@ const bodyTemplate = `
 								result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{.Name}}_.({{call $.GoType .Type}})}
 							{{- else if $field.Type.IsMessage -}}
 								// Non-repeated message
-								{{ if $.tracerEnabled }}
-									{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{.Name}}_)
-								{{ else }}
-									{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{.Name}}_)
-								{{ end }}
-								if err != nil {
-									return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}: " + err.Error())
-								}
-								result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{$field.Name}}_r}
+								{{ if $field.Type.Message.HaveFields -}}
+									{{ if $.tracerEnabled }}
+										{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{.Name}}_)
+									{{ else }}
+										{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{.Name}}_)
+									{{ end }}
+									if err != nil {
+										return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}: " + err.Error())
+									}
+									result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{$field.Name}}_r}
+								{{ else -}}
+									result.{{call $.ccase  $oneoff.Name}} = new({{call $.GoType $msg.Type}}_{{call $.ccase  .Name}})
+								{{ end -}}
 							{{- else if $field.Type.IsEnum -}}
 								// Non-repeated enum
 								result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{call $.GoType .Type}}({{.Name}}_.(int))}
@@ -248,17 +254,21 @@ const bodyTemplate = `
 								// Non-repeated scalar
 								result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{.Name}}_.({{call $.GoType .Type}})}
 							{{else if $field.Type.IsMessage -}}
-								// Non-repeated message
-								{{ if $.tracerEnabled }}
-									{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{.Name}}_)
-								{{ else }}
-									{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{.Name}}_)
-								{{ end }}
-
-								if err != nil {
-									return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}: " + err.Error())
-								}
-								result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{$field.Name}}_r}
+								{{ if $field.Type.Message.HaveFields -}}
+									// Non-repeated message
+									{{ if $.tracerEnabled }}
+										{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{.Name}}_)
+									{{ else }}
+										{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{.Name}}_)
+									{{ end }}
+                                	
+									if err != nil {
+										return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}: " + err.Error())
+									}
+									result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{$field.Name}}_r}
+								{{ else -}}
+									result.{{call $.ccase  $oneoff.Name}} = new({{call $.GoType $msg.Type}}_{{call $.ccase  .Name}})
+								{{ end -}}
 							{{- else if $field.Type.IsEnum -}}
 								// Non-repeated enum
 								result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{call $.GoType .Type}}({{.Name}}_.(int))}

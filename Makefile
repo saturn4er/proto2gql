@@ -6,5 +6,8 @@ install:
 build:
 	@go build -o ./bin/proto2gql ./cmd/proto2gql
 
-.PHONY:
-	install
+test:
+	go test ./...
+
+
+.PHONY: install testdata

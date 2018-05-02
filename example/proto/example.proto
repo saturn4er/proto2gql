@@ -7,9 +7,9 @@ import "google/protobuf/timestamp.proto";
 service ServiceExample {
     rpc getQueryMethod (AOneOffs) returns (B); // methods with prefix "get" is queries
     rpc mutationMethod (B) returns (A); // methods without prefix "get" is mutation
-    rpc queryMethod (A) returns (B); // in generate.yml we mark, that this method is QUERY
+    rpc queryMethod (google.protobuf.Timestamp) returns (google.protobuf.Timestamp); // in generate.yml we mark, that this method is QUERY
     rpc getMutatuionMethod (MsgWithEmpty) returns (MsgWithEmpty); // in generate.yml we mark, that this method is MUTATION
-    rpc getEmptiesMsg (google.protobuf.Timestamp) returns (Empty);
+    rpc getEmptiesMsg (Empty) returns (Empty);
 
 
 }

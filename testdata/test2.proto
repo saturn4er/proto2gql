@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "common/common.proto";
+option go_package = "github.com/saturn4er/proto2gql/testdata";
 
 // Service, which do smth
 service AnotherServiceExample {
