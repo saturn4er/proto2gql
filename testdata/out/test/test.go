@@ -14,6 +14,8 @@ import (
 	interceptors "github.com/saturn4er/proto2gql/api/interceptors"
 	scalars "github.com/saturn4er/proto2gql/api/scalars"
 	testdata "github.com/saturn4er/proto2gql/testdata"
+	common "github.com/saturn4er/proto2gql/testdata/common"
+	common_1 "github.com/saturn4er/proto2gql/testdata/out/imports/github.com/saturn4er/proto2gql/testdata/common"
 	"google.golang.org/grpc"
 )
 
@@ -44,116 +46,1182 @@ var ExmplRootEnum = graphql.NewEnum(graphql.EnumConfig{
 			Value:       1,
 			Description: "",
 		},
+		"RootEnumVal2": &graphql.EnumValueConfig{
+			Value:       2,
+			Description: "It's a RootEnumVal2",
+		},
+	},
+})
+var ExmplRootMessageNestedEnum = graphql.NewEnum(graphql.EnumConfig{
+	Name:        "ExmplRootMessageNestedEnum",
+	Description: "",
+	Values: graphql.EnumValueConfigMap{
+		"NestedEnumVal0": &graphql.EnumValueConfig{
+			Value:       0,
+			Description: "",
+		},
+		"NestedEnumVal1": &graphql.EnumValueConfig{
+			Value:       1,
+			Description: "",
+		},
+	},
+})
+var ExmplRootMessageNestedMessageNestedNestedEnum = graphql.NewEnum(graphql.EnumConfig{
+	Name:        "ExmplRootMessageNestedMessageNestedNestedEnum",
+	Description: "",
+	Values: graphql.EnumValueConfigMap{
+		"NestedNestedEnumVal0": &graphql.EnumValueConfig{
+			Value:       0,
+			Description: "",
+		},
+		"NestedNestedEnumVal1": &graphql.EnumValueConfig{
+			Value:       1,
+			Description: "",
+		},
+		"NestedNestedEnumVal2": &graphql.EnumValueConfig{
+			Value:       2,
+			Description: "",
+		},
+		"NestedNestedEnumVal3": &graphql.EnumValueConfig{
+			Value:       3,
+			Description: "",
+		},
 	},
 })
 
 // Messages
-var ExmplC = graphql.NewObject(graphql.ObjectConfig{
-	Name:   "ExmplC",
+var ExmplRootMessage = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplRootMessage",
 	Fields: graphql.Fields{},
 })
 
-// [C] Input resolver
-func ResolveC(ctx context.Context, i interface{}) (_ *testdata.C, rerr error) {
+// [RootMessage] Input resolver
+func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMessage, rerr error) {
 	if i == nil {
 		return nil, nil
 	}
 	args := i.(map[string]interface{})
 	_ = args
-	var result = new(testdata.C)
-	// Non-repeated scalar
-	if args["a"] != nil {
-		result.A = args["a"].(int32)
+	var result = new(testdata.RootMessage)
+	// Repeated Message
+	if args["r_msg"] != nil {
+		var r_msg_list = args["r_msg"].([]interface{})
+		var r_msg_ = make([]*testdata.RootMessage_NestedMessage, len(r_msg_list))
+		for i, r_msg_item := range r_msg_list {
+
+			r_msg_r, err := ResolveRootMessageNestedMessage(ctx, r_msg_item)
+
+			if err != nil {
+				return nil, errors.New("failed to parse r_msg[" + strconv.Itoa(i) + "]: " + err.Error())
+			}
+			r_msg_[i] = r_msg_r
+		}
+		result.RMsg = r_msg_
+	}
+	// Repeated Scalar type
+	if args["r_scalar"] != nil {
+		var r_scalar_list = args["r_scalar"].([]interface{})
+		var r_scalar_ = make([]int32, len(r_scalar_list))
+		for i, r_scalar_item := range r_scalar_list {
+			r_scalar_r, ok := r_scalar_item.(int32)
+			if !ok {
+				return nil, errors.New("failed to parse r_scalar[" + strconv.Itoa(i) + "]")
+			}
+			r_scalar_[i] = r_scalar_r
+		}
+		result.RScalar = r_scalar_
+	}
+	// Repeated Enum
+	if args["r_enum"] != nil {
+		var r_enum_list = args["r_enum"].([]interface{})
+		var r_enum_ = make([]testdata.RootEnum, len(r_enum_list))
+		for i, r_enum_item := range r_enum_list {
+			r_enum_r, ok := r_enum_item.(int)
+			if !ok {
+				return nil, errors.New("failed to parse r_enum[" + strconv.Itoa(i) + "]")
+			}
+			r_enum_[i] = testdata.RootEnum(r_enum_r)
+		}
+		result.REnum = r_enum_
+	}
+	// Repeated Message
+	if args["r_empty_msg"] != nil {
+		var r_empty_msg_list = args["r_empty_msg"].([]interface{})
+		var r_empty_msg_ = make([]*testdata.Empty, len(r_empty_msg_list))
+		for i := range r_empty_msg_ {
+			r_empty_msg_[i] = new(testdata.Empty)
+		}
+		result.REmptyMsg = r_empty_msg_
+	}
+	// Non-repeated enum
+	if args["n_r_enum"] != nil {
+		result.NREnum = common.CommonEnum(args["n_r_enum"].(int))
 	}
 	// Non-repeated scalar
-	if args["b"] != nil {
-		result.B = args["b"].(int32)
+	if args["n_r_scalar"] != nil {
+		result.NRScalar = args["n_r_scalar"].(int32)
+	}
+	// Non-repeated message
+	n_r_msg_r, err := common_1.ResolveCommonMessage(ctx, args["n_r_msg"])
+	if err != nil {
+		return nil, errors.New("failed to parse n_r_msg: " + err.Error())
+	}
+	result.NRMsg = n_r_msg_r
+	scalar_from_context_ctx := ctx.Value("ctx_key")
+	if scalar_from_context_ctx != nil {
+		if val, ok := scalar_from_context_ctx.(int32); ok {
+			result.ScalarFromContext = val
+		} else {
+			panic("bad value type for field RootMessage.scalar_from_context. Should be int32, found: " + fmt.Sprintf("%T", scalar_from_context_ctx))
+		}
+	}
+	// Non-repeated message
+	result.NREmptyMsg = new(testdata.Empty)
+	// Map
+	map_enum_, err := ResolveRootMessageMapEnumMap(ctx, args["map_enum"])
+	if err != nil {
+		return nil, errors.New("failed to parse map_enum: " + err.Error())
+	}
+	if map_enum_ != nil {
+		result.MapEnum = map_enum_
+	}
+	// Map
+	map_scalar_, err := ResolveRootMessageMapScalarMap(ctx, args["map_scalar"])
+	if err != nil {
+		return nil, errors.New("failed to parse map_scalar: " + err.Error())
+	}
+	if map_scalar_ != nil {
+		result.MapScalar = map_scalar_
+	}
+	// Map
+	map_msg_, err := ResolveRootMessageMapMsgMap(ctx, args["map_msg"])
+	if err != nil {
+		return nil, errors.New("failed to parse map_msg: " + err.Error())
+	}
+	if map_msg_ != nil {
+		result.MapMsg = map_msg_
+	}
+	//Generated oneoff
+	if e_f_o_e_, ok := args["e_f_o_e"]; ok && e_f_o_e_ != nil {
+		// Non-repeated enum
+		result.EnumFirstOneoff = &testdata.RootMessage_EFOE{common.CommonEnum(e_f_o_e_.(int))}
+	} else if e_f_o_s_, ok := args["e_f_o_s"]; ok && e_f_o_s_ != nil {
+		// Non-repeated scalar
+		result.EnumFirstOneoff = &testdata.RootMessage_EFOS{e_f_o_s_.(int32)}
+	} else if e_f_o_m_, ok := args["e_f_o_m"]; ok && e_f_o_m_ != nil {
+		// Non-repeated message
+		e_f_o_m_r, err := common_1.ResolveCommonMessage(ctx, e_f_o_m_)
+		if err != nil {
+			return nil, errors.New("failed to parse e_f_o_m: " + err.Error())
+		}
+		result.EnumFirstOneoff = &testdata.RootMessage_EFOM{e_f_o_m_r}
+	} else if e_f_o_em_, ok := args["e_f_o_em"]; ok && e_f_o_em_ != nil {
+		result.EnumFirstOneoff = new(testdata.RootMessage_EFOEm)
+	} //Generated oneoff
+	if s_f_o_s_, ok := args["s_f_o_s"]; ok && s_f_o_s_ != nil {
+		// Non-repeated scalar
+		result.ScalarFirstOneoff = &testdata.RootMessage_SFOS{s_f_o_s_.(int32)}
+	} else if s_f_o_e_, ok := args["s_f_o_e"]; ok && s_f_o_e_ != nil {
+		// Non-repeated enum
+		result.ScalarFirstOneoff = &testdata.RootMessage_SFOE{testdata.RootEnum(s_f_o_e_.(int))}
+	} else if s_f_o_mes_, ok := args["s_f_o_mes"]; ok && s_f_o_mes_ != nil {
+		// Non-repeated message
+		s_f_o_mes_r, err := ResolveRootMessage2(ctx, s_f_o_mes_)
+		if err != nil {
+			return nil, errors.New("failed to parse s_f_o_mes: " + err.Error())
+		}
+		result.ScalarFirstOneoff = &testdata.RootMessage_SFOMes{s_f_o_mes_r}
+	} else if s_f_o_m_, ok := args["s_f_o_m"]; ok && s_f_o_m_ != nil {
+		result.ScalarFirstOneoff = new(testdata.RootMessage_SFOM)
+	} //Generated oneoff
+	if m_f_o_m_, ok := args["m_f_o_m"]; ok && m_f_o_m_ != nil {
+		// Non-repeated message
+
+		m_f_o_m_r, err := ResolveRootMessage2(ctx, m_f_o_m_)
+
+		if err != nil {
+			return nil, errors.New("failed to parse m_f_o_m: " + err.Error())
+		}
+		result.MessageFirstOneoff = &testdata.RootMessage_MFOM{m_f_o_m_r}
+	} else if m_f_o_s_, ok := args["m_f_o_s"]; ok && m_f_o_s_ != nil {
+		// Non-repeated scalar
+		result.MessageFirstOneoff = &testdata.RootMessage_MFOS{m_f_o_s_.(int32)}
+	} else if m_f_o_e_, ok := args["m_f_o_e"]; ok && m_f_o_e_ != nil {
+		// Non-repeated enum
+		result.MessageFirstOneoff = &testdata.RootMessage_MFOE{testdata.RootEnum(m_f_o_e_.(int))}
+	} else if m_f_o_em_, ok := args["m_f_o_em"]; ok && m_f_o_em_ != nil {
+		result.MessageFirstOneoff = new(testdata.RootMessage_MFOEm)
+	} //Generated oneoff
+	if em_f_o_em_, ok := args["em_f_o_em"]; ok && em_f_o_em_ != nil {
+		// Non-repeated message
+		result.EmptyFirstOneoff = new(testdata.RootMessage_EmFOEm)
+	} else if em_f_o_s_, ok := args["em_f_o_s"]; ok && em_f_o_s_ != nil {
+		// Non-repeated scalar
+		result.EmptyFirstOneoff = &testdata.RootMessage_EmFOS{em_f_o_s_.(int32)}
+	} else if em_f_o_en_, ok := args["em_f_o_en"]; ok && em_f_o_en_ != nil {
+		// Non-repeated enum
+		result.EmptyFirstOneoff = &testdata.RootMessage_EmFOEn{testdata.RootEnum(em_f_o_en_.(int))}
+	} else if em_f_o_m_, ok := args["em_f_o_m"]; ok && em_f_o_m_ != nil {
+		// Non-repeated message
+		em_f_o_m_r, err := ResolveRootMessage2(ctx, em_f_o_m_)
+		if err != nil {
+			return nil, errors.New("failed to parse em_f_o_m: " + err.Error())
+		}
+		result.EmptyFirstOneoff = &testdata.RootMessage_EmFOM{em_f_o_m_r}
+	}
+	return result, nil
+}
+
+var ExmplRootMessageNestedMessage = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplRootMessageNestedMessage",
+	Fields: graphql.Fields{},
+})
+var ExmplRootMessageNestedMessageInput = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplRootMessageNestedMessageInput",
+	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
+		return graphql.InputObjectConfigFieldMap{
+			"sub_r_enum": &graphql.InputObjectFieldConfig{
+				Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageNestedEnum)),
+			},
+			"sub_sub_r_enum": &graphql.InputObjectFieldConfig{
+				Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageNestedMessageNestedNestedEnum)),
+			},
+		}
+	}),
+})
+
+// [RootMessage NestedMessage] Input resolver
+func ResolveRootMessageNestedMessage(ctx context.Context, i interface{}) (_ *testdata.RootMessage_NestedMessage, rerr error) {
+	if i == nil {
+		return nil, nil
+	}
+	args := i.(map[string]interface{})
+	_ = args
+	var result = new(testdata.RootMessage_NestedMessage)
+	// Repeated Enum
+	if args["sub_r_enum"] != nil {
+		var sub_r_enum_list = args["sub_r_enum"].([]interface{})
+		var sub_r_enum_ = make([]testdata.RootMessage_NestedEnum, len(sub_r_enum_list))
+		for i, sub_r_enum_item := range sub_r_enum_list {
+			sub_r_enum_r, ok := sub_r_enum_item.(int)
+			if !ok {
+				return nil, errors.New("failed to parse sub_r_enum[" + strconv.Itoa(i) + "]")
+			}
+			sub_r_enum_[i] = testdata.RootMessage_NestedEnum(sub_r_enum_r)
+		}
+		result.SubREnum = sub_r_enum_
+	}
+	// Repeated Enum
+	if args["sub_sub_r_enum"] != nil {
+		var sub_sub_r_enum_list = args["sub_sub_r_enum"].([]interface{})
+		var sub_sub_r_enum_ = make([]testdata.RootMessage_NestedMessage_NestedNestedEnum, len(sub_sub_r_enum_list))
+		for i, sub_sub_r_enum_item := range sub_sub_r_enum_list {
+			sub_sub_r_enum_r, ok := sub_sub_r_enum_item.(int)
+			if !ok {
+				return nil, errors.New("failed to parse sub_sub_r_enum[" + strconv.Itoa(i) + "]")
+			}
+			sub_sub_r_enum_[i] = testdata.RootMessage_NestedMessage_NestedNestedEnum(sub_sub_r_enum_r)
+		}
+		result.SubSubREnum = sub_sub_r_enum_
+	}
+
+	return result, nil
+}
+
+var ExmplMessageWithEmpty = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplMessageWithEmpty",
+	Fields: graphql.Fields{},
+})
+
+// [MessageWithEmpty] Input resolver
+func ResolveMessageWithEmpty(ctx context.Context, i interface{}) (_ *testdata.MessageWithEmpty, rerr error) {
+	if i == nil {
+		return nil, nil
+	}
+	args := i.(map[string]interface{})
+	_ = args
+	var result = new(testdata.MessageWithEmpty)
+	// Non-repeated message
+	result.Empt = new(testdata.Empty)
+
+	return result, nil
+}
+
+var ExmplRootMessage2 = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplRootMessage2",
+	Fields: graphql.Fields{},
+})
+var ExmplRootMessage2Input = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplRootMessage2Input",
+	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
+		return graphql.InputObjectConfigFieldMap{
+			"some_field": &graphql.InputObjectFieldConfig{
+				Type: scalars.GraphQLInt32Scalar,
+			},
+		}
+	}),
+})
+
+// [RootMessage2] Input resolver
+func ResolveRootMessage2(ctx context.Context, i interface{}) (_ *testdata.RootMessage2, rerr error) {
+	if i == nil {
+		return nil, nil
+	}
+	args := i.(map[string]interface{})
+	_ = args
+	var result = new(testdata.RootMessage2)
+	// Non-repeated scalar
+	if args["some_field"] != nil {
+		result.SomeField = args["some_field"].(int32)
 	}
 
 	return result, nil
 }
 
 // Maps
-// Maps of C
+var ExmplRootMessageMapEnumMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
+	Name: "ExmplRootMessageMapEnumMap",
+	Fields: graphql.Fields{
+		"key": &graphql.Field{
+			Name: "key",
+			Type: scalars.GraphQLInt32Scalar,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["key"].(int32), nil
+			},
+		},
+		"value": &graphql.Field{
+			Name: "value",
+			Type: ExmplRootMessageNestedEnum,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["value"].(testdata.RootMessage_NestedEnum), nil
+			},
+		},
+	},
+})))
+
+var ExmplRootMessageMapScalarMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
+	Name: "ExmplRootMessageMapScalarMap",
+	Fields: graphql.Fields{
+		"key": &graphql.Field{
+			Name: "key",
+			Type: scalars.GraphQLInt32Scalar,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["key"].(int32), nil
+			},
+		},
+		"value": &graphql.Field{
+			Name: "value",
+			Type: scalars.GraphQLInt32Scalar,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["value"].(int32), nil
+			},
+		},
+	},
+})))
+
+var ExmplRootMessageMapMsgMap = graphql.NewList(graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
+	Name: "ExmplRootMessageMapMsgMap",
+	Fields: graphql.Fields{
+		"key": &graphql.Field{
+			Name: "key",
+			Type: scalars.GraphQLInt32Scalar,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["key"].(int32), nil
+			},
+		},
+		"value": &graphql.Field{
+			Name: "value",
+			Type: ExmplRootMessageNestedMessage,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["value"].(*testdata.RootMessage_NestedMessage), nil
+			},
+		},
+	},
+})))
+
+// Maps of RootMessage
+
+var ExmplRootMessageMapEnumMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplRootMessageMapEnumMapInput",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"key": &graphql.InputObjectFieldConfig{
+			Type: scalars.GraphQLInt32Scalar,
+		},
+		"value": &graphql.InputObjectFieldConfig{
+			Type: ExmplRootMessageNestedEnum,
+		},
+	},
+})))
+
+var ExmplRootMessageMapScalarMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplRootMessageMapScalarMapInput",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"key": &graphql.InputObjectFieldConfig{
+			Type: scalars.GraphQLInt32Scalar,
+		},
+		"value": &graphql.InputObjectFieldConfig{
+			Type: scalars.GraphQLInt32Scalar,
+		},
+	},
+})))
+
+var ExmplRootMessageMapMsgMapInput = graphql.NewList(graphql.NewNonNull(graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplRootMessageMapMsgMapInput",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"key": &graphql.InputObjectFieldConfig{
+			Type: scalars.GraphQLInt32Scalar,
+		},
+		"value": &graphql.InputObjectFieldConfig{
+			Type: ExmplRootMessageNestedMessageInput,
+		},
+	},
+})))
+
+func ResolveRootMessageMapEnumMap(ctx context.Context, i interface{}) (_ map[int32]testdata.RootMessage_NestedEnum, rerr error) {
+	if i == nil {
+		return nil, nil
+	}
+	result := make(map[int32]testdata.RootMessage_NestedEnum)
+	vals := i.([]interface{})
+	for _, v := range vals {
+		args := v.(map[string]interface{})
+		result[args["key"].(int32)] = testdata.RootMessage_NestedEnum(args["value"].(int))
+	}
+	return result, nil
+}
+func ResolveRootMessageMapScalarMap(ctx context.Context, i interface{}) (_ map[int32]int32, rerr error) {
+	if i == nil {
+		return nil, nil
+	}
+	result := make(map[int32]int32)
+	vals := i.([]interface{})
+	for _, v := range vals {
+		args := v.(map[string]interface{})
+		result[args["key"].(int32)] = args["value"].(int32)
+	}
+	return result, nil
+}
+func ResolveRootMessageMapMsgMap(ctx context.Context, i interface{}) (_ map[int32]*testdata.RootMessage_NestedMessage, rerr error) {
+	if i == nil {
+		return nil, nil
+	}
+	result := make(map[int32]*testdata.RootMessage_NestedMessage)
+	vals := i.([]interface{})
+	for iv, v := range vals {
+		args := v.(map[string]interface{})
+
+		vv, err := ResolveRootMessageNestedMessage(ctx, args["value"])
+
+		if err != nil {
+			return nil, errors.New("failed to parse ExmplRootMessageMapMsgMap[" + strconv.Itoa(iv) + "]: " + err.Error())
+		}
+		result[args["key"].(int32)] = vv
+	}
+	return result, nil
+}
+
+// Maps of NestedMessage
+// Maps of Empty
+// Maps of MessageWithEmpty
+// Maps of RootMessage2
 func init() {
 	// Adding fields to output messages
-	ExmplC.AddFieldConfig("a", &graphql.Field{
-		Name: "a",
-		Type: scalars.GraphQLInt32Scalar,
+	ExmplRootMessage.AddFieldConfig("r_msg", &graphql.Field{
+		Name: "r_msg",
+		Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageNestedMessage)),
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*testdata.C)
+			src := p.Source.(*testdata.RootMessage)
 			if src == nil {
 				return nil, nil
 			}
-			return src.A, nil
+			return src.RMsg, nil
 		},
 	})
-	ExmplC.AddFieldConfig("b", &graphql.Field{
-		Name: "b",
-		Type: scalars.GraphQLInt32Scalar,
+	ExmplRootMessage.AddFieldConfig("r_scalar", &graphql.Field{
+		Name: "r_scalar",
+		Type: graphql.NewList(graphql.NewNonNull(scalars.GraphQLInt32Scalar)),
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*testdata.C)
+			src := p.Source.(*testdata.RootMessage)
 			if src == nil {
 				return nil, nil
 			}
-			return src.B, nil
+			return src.RScalar, nil
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("r_enum", &graphql.Field{
+		Name: "r_enum",
+		Type: graphql.NewList(graphql.NewNonNull(ExmplRootEnum)),
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			source := src.REnum
+			var result = make([]int, len(source))
+			for i, val := range source {
+				result[i] = int(val)
+			}
+			return result, nil
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("r_empty_msg", &graphql.Field{
+		Name: "r_empty_msg",
+
+		Type: graphql.NewList(scalars.NoDataScalar),
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.REmptyMsg, nil
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("n_r_enum", &graphql.Field{
+		Name: "n_r_enum",
+		Type: common_1.CommonEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return int(src.NREnum), nil
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("n_r_scalar", &graphql.Field{
+		Name: "n_r_scalar",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.NRScalar, nil
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("n_r_msg", &graphql.Field{
+		Name: "n_r_msg",
+		Type: common_1.CommonMessage,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.NRMsg, nil
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("scalar_from_context", &graphql.Field{
+		Name: "scalar_from_context",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.ScalarFromContext, nil
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("n_r_empty_msg", &graphql.Field{
+		Name: "n_r_empty_msg",
+		Type: scalars.NoDataScalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.NREmptyMsg, nil
+		},
+	})
+	// Map field
+	ExmplRootMessage.AddFieldConfig("map_enum", &graphql.Field{
+		Name: "map_enum",
+		Type: ExmplRootMessageMapEnumMap,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			var res []map[string]interface{}
+			for k, v := range src.MapEnum {
+				res = append(res, map[string]interface{}{
+					"key":   k,
+					"value": v,
+				})
+			}
+			return res, nil
+		},
+	})
+	// Map field
+	ExmplRootMessage.AddFieldConfig("map_scalar", &graphql.Field{
+		Name: "map_scalar",
+		Type: ExmplRootMessageMapScalarMap,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			var res []map[string]interface{}
+			for k, v := range src.MapScalar {
+				res = append(res, map[string]interface{}{
+					"key":   k,
+					"value": v,
+				})
+			}
+			return res, nil
+		},
+	})
+	// Map field
+	ExmplRootMessage.AddFieldConfig("map_msg", &graphql.Field{
+		Name: "map_msg",
+		Type: ExmplRootMessageMapMsgMap,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			var res []map[string]interface{}
+			for k, v := range src.MapMsg {
+				res = append(res, map[string]interface{}{
+					"key":   k,
+					"value": v,
+				})
+			}
+			return res, nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("e_f_o_e", &graphql.Field{
+		Name: "e_f_o_e",
+		Type: common_1.CommonEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return int(src.GetEFOE()), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("e_f_o_s", &graphql.Field{
+		Name: "e_f_o_s",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetEFOS(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("e_f_o_m", &graphql.Field{
+		Name: "e_f_o_m",
+		Type: common_1.CommonMessage,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetEFOM(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("e_f_o_em", &graphql.Field{
+		Name: "e_f_o_em",
+		Type: scalars.NoDataScalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetEFOEm(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("s_f_o_s", &graphql.Field{
+		Name: "s_f_o_s",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetSFOS(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("s_f_o_e", &graphql.Field{
+		Name: "s_f_o_e",
+		Type: ExmplRootEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return int(src.GetSFOE()), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("s_f_o_mes", &graphql.Field{
+		Name: "s_f_o_mes",
+		Type: ExmplRootMessage2,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetSFOMes(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("s_f_o_m", &graphql.Field{
+		Name: "s_f_o_m",
+		Type: scalars.NoDataScalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetSFOM(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("m_f_o_m", &graphql.Field{
+		Name: "m_f_o_m",
+		Type: ExmplRootMessage2,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetMFOM(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("m_f_o_s", &graphql.Field{
+		Name: "m_f_o_s",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetMFOS(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("m_f_o_e", &graphql.Field{
+		Name: "m_f_o_e",
+		Type: ExmplRootEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return int(src.GetMFOE()), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("m_f_o_em", &graphql.Field{
+		Name: "m_f_o_em",
+		Type: scalars.NoDataScalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetMFOEm(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("em_f_o_em", &graphql.Field{
+		Name: "em_f_o_em",
+		Type: scalars.NoDataScalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetEmFOEm(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("em_f_o_s", &graphql.Field{
+		Name: "em_f_o_s",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetEmFOS(), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("em_f_o_en", &graphql.Field{
+		Name: "em_f_o_en",
+		Type: ExmplRootEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return int(src.GetEmFOEn()), nil
+		},
+	})
+	// One OFF output
+	ExmplRootMessage.AddFieldConfig("em_f_o_m", &graphql.Field{
+		Name: "em_f_o_m",
+		Type: ExmplRootMessage2,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage)
+			if src == nil {
+				return nil, nil
+			}
+			return src.GetEmFOM(), nil
+		},
+	})
+	ExmplRootMessageNestedMessage.AddFieldConfig("sub_r_enum", &graphql.Field{
+		Name: "sub_r_enum",
+		Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageNestedEnum)),
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage_NestedMessage)
+			if src == nil {
+				return nil, nil
+			}
+			source := src.SubREnum
+			var result = make([]int, len(source))
+			for i, val := range source {
+				result[i] = int(val)
+			}
+			return result, nil
+		},
+	})
+	ExmplRootMessageNestedMessage.AddFieldConfig("sub_sub_r_enum", &graphql.Field{
+		Name: "sub_sub_r_enum",
+		Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageNestedMessageNestedNestedEnum)),
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage_NestedMessage)
+			if src == nil {
+				return nil, nil
+			}
+			source := src.SubSubREnum
+			var result = make([]int, len(source))
+			for i, val := range source {
+				result[i] = int(val)
+			}
+			return result, nil
+		},
+	})
+	ExmplMessageWithEmpty.AddFieldConfig("empt", &graphql.Field{
+		Name: "empt",
+		Type: scalars.NoDataScalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.MessageWithEmpty)
+			if src == nil {
+				return nil, nil
+			}
+			return src.Empt, nil
+		},
+	})
+	ExmplRootMessage2.AddFieldConfig("some_field", &graphql.Field{
+		Name: "some_field",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(*testdata.RootMessage2)
+			if src == nil {
+				return nil, nil
+			}
+			return src.SomeField, nil
 		},
 	})
 }
 
-func GetServiceAGraphQLQueriesFields(c testdata.ServiceAClient, ih *interceptors.InterceptorHandler) graphql.Fields {
-	return nil
-
-}
-
-func GetServiceAGraphQLMutationsFields(c testdata.ServiceAClient, ih *interceptors.InterceptorHandler) graphql.Fields {
+func GetServiceExampleGraphQLQueriesFields(c testdata.ServiceExampleClient, ih *interceptors.InterceptorHandler) graphql.Fields {
 
 	return graphql.Fields{
 
-		"methodB": &graphql.Field{
-			Name: "methodB",
-			Type: ExmplC,
+		"getQueryMethod": &graphql.Field{
+			Name: "getQueryMethod",
+			Type: ExmplRootMessage,
 			Args: graphql.FieldConfigArgument{
-				"a": &graphql.ArgumentConfig{
+				"r_msg": &graphql.ArgumentConfig{
+					Description: "repeated Message", Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageNestedMessageInput)),
+				},
+				"r_scalar": &graphql.ArgumentConfig{
+					Description: "repeated Scalar", Type: graphql.NewList(graphql.NewNonNull(scalars.GraphQLInt32Scalar)),
+				},
+				"r_enum": &graphql.ArgumentConfig{
+					Description: "repeated Enum", Type: graphql.NewList(graphql.NewNonNull(ExmplRootEnum)),
+				},
+				"r_empty_msg": &graphql.ArgumentConfig{
+					Description: "repeated empty message", Type: graphql.NewList(graphql.NewNonNull(scalars.NoDataScalar)),
+				},
+				"n_r_enum": &graphql.ArgumentConfig{
+					Description: "non-repeated Enum", Type: common_1.CommonEnum,
+				},
+				"n_r_scalar": &graphql.ArgumentConfig{
+					Description: "non-repeated Scalar", Type: scalars.GraphQLInt32Scalar,
+				},
+				"n_r_msg": &graphql.ArgumentConfig{
+					Description: "non-repeated Message", Type: common_1.CommonMessageInput,
+				},
+				"n_r_empty_msg": &graphql.ArgumentConfig{
+					Description: "non-repeated empty message field", Type: scalars.NoDataScalar,
+				},
+				"map_enum": &graphql.ArgumentConfig{
+					Description: "enum_map",
+					Type:        ExmplRootMessageMapEnumMapInput,
+				},
+				"map_scalar": &graphql.ArgumentConfig{
+					Description: "scalar map",
+					Type:        ExmplRootMessageMapScalarMapInput,
+				},
+				"map_msg": &graphql.ArgumentConfig{
+					Type: ExmplRootMessageMapMsgMapInput,
+				},
+				"e_f_o_e": &graphql.ArgumentConfig{
+					Type: common_1.CommonEnum,
+				},
+				"e_f_o_s": &graphql.ArgumentConfig{
 					Type: scalars.GraphQLInt32Scalar,
 				},
-				"b": &graphql.ArgumentConfig{
+				"e_f_o_m": &graphql.ArgumentConfig{
+					Type: common_1.CommonMessageInput,
+				},
+				"e_f_o_em": &graphql.ArgumentConfig{
+					Type: scalars.NoDataScalar,
+				},
+				"s_f_o_s": &graphql.ArgumentConfig{
 					Type: scalars.GraphQLInt32Scalar,
+				},
+				"s_f_o_e": &graphql.ArgumentConfig{
+					Type: ExmplRootEnum,
+				},
+				"s_f_o_mes": &graphql.ArgumentConfig{
+					Type: ExmplRootMessage2Input,
+				},
+				"s_f_o_m": &graphql.ArgumentConfig{
+					Type: scalars.NoDataScalar,
+				},
+				"m_f_o_m": &graphql.ArgumentConfig{
+					Type: ExmplRootMessage2Input,
+				},
+				"m_f_o_s": &graphql.ArgumentConfig{
+					Type: scalars.GraphQLInt32Scalar,
+				},
+				"m_f_o_e": &graphql.ArgumentConfig{
+					Type: ExmplRootEnum,
+				},
+				"m_f_o_em": &graphql.ArgumentConfig{
+					Type: scalars.NoDataScalar,
+				},
+				"em_f_o_em": &graphql.ArgumentConfig{
+					Type: scalars.NoDataScalar,
+				},
+				"em_f_o_s": &graphql.ArgumentConfig{
+					Type: scalars.GraphQLInt32Scalar,
+				},
+				"em_f_o_en": &graphql.ArgumentConfig{
+					Type: ExmplRootEnum,
+				},
+				"em_f_o_m": &graphql.ArgumentConfig{
+					Type: ExmplRootMessage2Input,
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
 				if ih == nil {
-					req, err := ResolveC(p.Context, p.Args)
+					req, err := ResolveRootMessage(p.Context, p.Args)
 					if err != nil {
 						return nil, err
 					}
-					return c.MethodB(p.Context, req)
+					return c.GetQueryMethod(p.Context, req)
 				}
 				ctx := &interceptors.Context{
-					Service: "ServiceA",
-					Method:  "methodB",
+					Service: "ServiceExample",
+					Method:  "getQueryMethod",
 					Params:  p,
 				}
 				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return ResolveC(p.Context, p.Args)
+					return ResolveRootMessage(p.Context, p.Args)
 				})
 				if err != nil {
 					return nil, err
 				}
 				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error) {
-					r, ok := req.(*testdata.C)
+					r, ok := req.(*testdata.RootMessage)
 					if !ok {
-						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.C", req))
+						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.RootMessage", req))
 					}
-					res, err := c.MethodB(ctx.Params.Context, r, opts...)
+					res, err := c.GetQueryMethod(ctx.Params.Context, r, opts...)
 					return res, err
 				})
 				if err != nil {
 					return nil, err
 				}
-				rc, ok := res.(*testdata.C)
+				rc, ok := res.(*testdata.RootMessage)
 				if !ok {
-					return nil, errors.New(fmt.Sprintf("Call Interceptor returns bad value type(%T). Should return *testdata.C", res))
+					return nil, errors.New(fmt.Sprintf("Call Interceptor returns bad value type(%T). Should return *testdata.RootMessage", res))
+				}
+				return rc, err
+			},
+		},
+	}
+
+}
+
+func GetServiceExampleGraphQLMutationsFields(c testdata.ServiceExampleClient, ih *interceptors.InterceptorHandler) graphql.Fields {
+
+	return graphql.Fields{
+
+		"mutationMethod": &graphql.Field{
+			Name: "mutationMethod",
+			Type: ExmplRootMessageNestedMessage,
+			Args: graphql.FieldConfigArgument{
+				"some_field": &graphql.ArgumentConfig{
+					Type: scalars.GraphQLInt32Scalar,
+				},
+			},
+			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
+				if ih == nil {
+					req, err := ResolveRootMessage2(p.Context, p.Args)
+					if err != nil {
+						return nil, err
+					}
+					return c.MutationMethod(p.Context, req)
+				}
+				ctx := &interceptors.Context{
+					Service: "ServiceExample",
+					Method:  "mutationMethod",
+					Params:  p,
+				}
+				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
+					return ResolveRootMessage2(p.Context, p.Args)
+				})
+				if err != nil {
+					return nil, err
+				}
+				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error) {
+					r, ok := req.(*testdata.RootMessage2)
+					if !ok {
+						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.RootMessage2", req))
+					}
+					res, err := c.MutationMethod(ctx.Params.Context, r, opts...)
+					return res, err
+				})
+				if err != nil {
+					return nil, err
+				}
+				rc, ok := res.(*testdata.RootMessage_NestedMessage)
+				if !ok {
+					return nil, errors.New(fmt.Sprintf("Call Interceptor returns bad value type(%T). Should return *testdata.RootMessage_NestedMessage", res))
+				}
+				return rc, err
+			},
+		},
+
+		"EmptyMsgs": &graphql.Field{
+			Name: "EmptyMsgs",
+			Type: scalars.NoDataScalar,
+			Args: graphql.FieldConfigArgument{},
+			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
+				if ih == nil {
+					return c.EmptyMsgs(p.Context, new(testdata.Empty))
+				}
+				ctx := &interceptors.Context{
+					Service: "ServiceExample",
+					Method:  "EmptyMsgs",
+					Params:  p,
+				}
+				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
+					return new(testdata.Empty), nil
+				})
+				if err != nil {
+					return nil, err
+				}
+				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error) {
+					r, ok := req.(*testdata.Empty)
+					if !ok {
+						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.Empty", req))
+					}
+					res, err := c.EmptyMsgs(ctx.Params.Context, r, opts...)
+					return res, err
+				})
+				if err != nil {
+					return nil, err
+				}
+				rc, ok := res.(*testdata.Empty)
+				if !ok {
+					return nil, errors.New(fmt.Sprintf("Call Interceptor returns bad value type(%T). Should return *testdata.Empty", res))
+				}
+				return rc, err
+			},
+		},
+
+		"MsgsWithEpmty": &graphql.Field{
+			Name: "MsgsWithEpmty",
+			Type: ExmplMessageWithEmpty,
+			Args: graphql.FieldConfigArgument{
+				"empt": &graphql.ArgumentConfig{
+					Type: scalars.NoDataScalar,
+				},
+			},
+			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
+				if ih == nil {
+					req, err := ResolveMessageWithEmpty(p.Context, p.Args)
+					if err != nil {
+						return nil, err
+					}
+					return c.MsgsWithEpmty(p.Context, req)
+				}
+				ctx := &interceptors.Context{
+					Service: "ServiceExample",
+					Method:  "MsgsWithEpmty",
+					Params:  p,
+				}
+				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
+					return ResolveMessageWithEmpty(p.Context, p.Args)
+				})
+				if err != nil {
+					return nil, err
+				}
+				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error) {
+					r, ok := req.(*testdata.MessageWithEmpty)
+					if !ok {
+						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.MessageWithEmpty", req))
+					}
+					res, err := c.MsgsWithEpmty(ctx.Params.Context, r, opts...)
+					return res, err
+				})
+				if err != nil {
+					return nil, err
+				}
+				rc, ok := res.(*testdata.MessageWithEmpty)
+				if !ok {
+					return nil, errors.New(fmt.Sprintf("Call Interceptor returns bad value type(%T). Should return *testdata.MessageWithEmpty", res))
 				}
 				return rc, err
 			},
