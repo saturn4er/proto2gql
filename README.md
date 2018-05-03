@@ -17,7 +17,7 @@ $ ./proto2gql
 ```
 
 ## Generation process
-![Generation process](https://www.dropbox.com/s/9zkutpamcnp0wbb/proto2gql-proc.png)
+![Generation process](https://raw.githubusercontent.com/saturn4er/proto2gql/1.1.0/proto2gql-proc.png)
 
 ## Config example
 ```yaml
@@ -102,4 +102,4 @@ func main(){
 
 ## How generated code works
 
-![workflow](https://www.dropbox.com/s/at6uuymurq14v2q/proto2gql-execution.png)
+![workflow](https://raw.githubusercontent.com/saturn4er/proto2gql/1.1.0/proto2gql-execution.png)
