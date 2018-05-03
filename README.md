@@ -103,3 +103,11 @@ func main(){
 ## How generated code works
 
 ![workflow](https://raw.githubusercontent.com/saturn4er/proto2gql/1.1.0/proto2gql-execution.png)
+
+## Todo
+
+ - [x] fields generation
+ - [ ] schema generation
+ - [ ] streams
+ - [ ] bytes fields
+ - [ ] test resolvers
