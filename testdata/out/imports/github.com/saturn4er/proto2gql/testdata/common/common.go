@@ -12,8 +12,6 @@ import (
 	graphql "github.com/graphql-go/graphql"
 	opentracing_go "github.com/opentracing/opentracing-go"
 	interceptors "github.com/saturn4er/proto2gql/api/interceptors"
-	scalars "github.com/saturn4er/proto2gql/api/scalars"
-	common "github.com/saturn4er/proto2gql/testdata/common"
 )
 
 var (
@@ -47,50 +45,7 @@ var CommonEnum = graphql.NewEnum(graphql.EnumConfig{
 })
 
 // Messages
-var CommonMessage = graphql.NewObject(graphql.ObjectConfig{
-	Name:   "CommonMessage",
-	Fields: graphql.Fields{},
-})
-var CommonMessageInput = graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "CommonMessageInput",
-	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
-		return graphql.InputObjectConfigFieldMap{
-			"scalar": &graphql.InputObjectFieldConfig{
-				Type: scalars.GraphQLInt32Scalar,
-			},
-		}
-	}),
-})
-
-// [CommonMessage] Input resolver
-func ResolveCommonMessage(ctx context.Context, i interface{}) (_ *common.CommonMessage, rerr error) {
-	if i == nil {
-		return nil, nil
-	}
-	args := i.(map[string]interface{})
-	_ = args
-	var result = new(common.CommonMessage)
-	// Non-repeated scalar
-	if args["scalar"] != nil {
-		result.Scalar = args["scalar"].(int32)
-	}
-
-	return result, nil
-}
-
 // Maps
-// Maps of CommonMessage
 func init() {
 	// Adding fields to output messages
-	CommonMessage.AddFieldConfig("scalar", &graphql.Field{
-		Name: "scalar",
-		Type: scalars.GraphQLInt32Scalar,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			src := p.Source.(*common.CommonMessage)
-			if src == nil {
-				return nil, nil
-			}
-			return src.Scalar, nil
-		},
-	})
 }

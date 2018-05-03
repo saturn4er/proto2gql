@@ -55,10 +55,23 @@ func (g *generator) importDirAndPkg(filePath string) (dir, pkg string, rerr erro
 	}
 	return outDir, pkg, nil
 }
+
+func (g *generator) generateSchemas(protos map[*ProtoConfig]*generatedFile) error {
+	for i, sc := range g.config.Schemas {
+		err := generateSchema(sc, protos)
+		if err != nil {
+			return errors.Wrapf(err, "failed to generated %d schema", i)
+		}
+	}
+	return nil
+}
+
 func (g *generator) generate() error {
 	p := parser.New(g.config.Imports.Aliases, g.config.Paths)
 	// Resolving what to generate
 	var filesToGenerate []*generatedFile
+	var generatedProtos = make(map[*ProtoConfig]*generatedFile)
+
 	for _, cfg := range g.config.Protos {
 		p.Paths = mergePathsConfig(g.config.Paths, cfg.Paths)
 		p.ImportAliases = mergeAlieses(g.config.Imports.Aliases, cfg.ImportsAliases)
@@ -76,7 +89,7 @@ func (g *generator) generate() error {
 		if err != nil {
 			return errors.Wrap(err, "failed to resolve go pkg")
 		}
-		filesToGenerate = append(filesToGenerate, &generatedFile{
+		f := &generatedFile{
 			OutGoPkg:         pkg,
 			OutGoPkgName:     mergeStringsConfig(g.config.OutputPkg, cfg.OutputPkg),
 			OutDir:           outDir,
@@ -88,7 +101,9 @@ func (g *generator) generate() error {
 			Services:         cfg.Services,
 			TracerEnabled:    g.config.Tracer,
 			Messages:         cfg.Messages,
-		})
+		}
+		filesToGenerate = append(filesToGenerate, f)
+		generatedProtos[cfg] = f
 
 		for _, imp := range file.Imports {
 			filename := strings.TrimSuffix(path.Base(imp.FilePath), ".proto") + ".go"
@@ -146,8 +161,10 @@ func (g *generator) generate() error {
 			return errors.Wrap(err, "failed to generate file")
 		}
 	}
+	g.generateSchemas(generatedProtos)
 	return nil
 }
+
 func (g *generator) resolveGoPkg(dir string) (string, error) {
 	absPath, err := filepath.Abs(dir)
 	if err != nil {

@@ -14,7 +14,9 @@ imports:
   output_path: "./out/imports"
 
 protos:
-  - proto_path: "./test.proto"
+  -
+    name: "Example"
+    proto_path: "./test.proto"
     output_path: "./out/test"
     output_package: "test"
     gql_messages_prefix: "Exmpl"
@@ -23,3 +25,27 @@ protos:
       RootMessage:
         fields:
           scalar_from_context: {context_key: "ctx_key"}
+
+schemas:
+  -
+    output_path: "./out/schema"
+    output_package: "test_schema"
+    queries:
+      type: "proto"
+      name: "Example"
+      filter_fields:
+        - "MsgsWithEpmty"
+
+    mutations:
+      type: "OBJECT"
+      name: "ExampleMutationTop"
+      fields:
+        - type: "OBJECT"
+          name: "NestedExampleMutation"
+          fields:
+            - type: "SERVICE"
+              proto_name: "Example"
+              name: "ServiceExample"
+              filter_fields:
+                - "MsgsWithEpmty"
+

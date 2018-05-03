@@ -231,10 +231,10 @@ const bodyTemplate = `
 					{{range $index, $field := .Fields -}}
 						{{if eq $index 0 -}}
 						if {{.Name}}_, ok := args["{{.Name}}"]; ok && {{.Name}}_ != nil {
-							{{- if $field.Type.IsScalar -}}
+							{{if $field.Type.IsScalar -}}
 								// Non-repeated scalar
 								result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{.Name}}_.({{call $.GoType .Type}})}
-							{{- else if $field.Type.IsMessage -}}
+							{{else if $field.Type.IsMessage -}}
 								// Non-repeated message
 								{{ if $field.Type.Message.HaveFields -}}
 									{{ if $.tracerEnabled }}
@@ -249,22 +249,22 @@ const bodyTemplate = `
 								{{ else -}}
 									result.{{call $.ccase  $oneoff.Name}} = new({{call $.GoType $msg.Type}}_{{call $.ccase  .Name}})
 								{{ end -}}
-							{{- else if $field.Type.IsEnum -}}
+							{{else if $field.Type.IsEnum -}}
 								// Non-repeated enum
 								result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{call $.GoType .Type}}({{.Name}}_.(int))}
 							{{end -}}
-						}{{- else -}} else if {{.Name}}_, ok := args["{{.Name}}"]; ok && {{.Name}}_ != nil {
+						}{{else -}} else if {{.Name}}_, ok := args["{{.Name}}"]; ok && {{.Name}}_ != nil {
 							{{if $field.Type.IsScalar -}}
 								// Non-repeated scalar
 								result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{.Name}}_.({{call $.GoType .Type}})}
 							{{else if $field.Type.IsMessage -}}
 								{{ if $field.Type.Message.HaveFields -}}
 									// Non-repeated message
-									{{ if $.tracerEnabled }}
+									{{ if $.tracerEnabled -}}
 										{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(tr,  tr.ContextWithSpan(ctx, span), {{.Name}}_)
-									{{ else }}
+									{{ else -}}
 										{{$field.Name}}_r, err := {{call $.GQLInputTypeResolver $field.Type}}(ctx, {{.Name}}_)
-									{{ end }}
+									{{ end -}}
                                 	
 									if err != nil {
 										return nil, {{$.errorspkg}}.New("failed to parse {{$field.Name}}: " + err.Error())
@@ -273,7 +273,7 @@ const bodyTemplate = `
 								{{ else -}}
 									result.{{call $.ccase  $oneoff.Name}} = new({{call $.GoType $msg.Type}}_{{call $.ccase  .Name}})
 								{{ end -}}
-							{{- else if $field.Type.IsEnum -}}
+							{{else if $field.Type.IsEnum -}}
 								// Non-repeated enum
 								result.{{call $.ccase  $oneoff.Name}} = &{{call $.GoType $msg.Type}}_{{call $.ccase  .Name}}{{"{"}}{{call $.GoType .Type}}({{.Name}}_.(int))}
 							{{end -}}

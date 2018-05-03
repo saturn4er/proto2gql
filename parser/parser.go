@@ -14,25 +14,26 @@ type Parser struct {
 	parsedFiles   []*File
 }
 
-func (f *Parser) parsedFile(filePath string) (*File, bool) {
-	for _, f := range f.parsedFiles {
+func (p *Parser) parsedFile(filePath string) (*File, bool) {
+	for _, f := range p.parsedFiles {
 		if f.FilePath == filePath {
 			return f, true
 		}
 	}
 	return nil, false
 }
-func (f *Parser) importFilePath(filename string) (filePath string, err error) {
-	if v, ok := f.ImportAliases[filename]; ok {
+
+func (p *Parser) importFilePath(filename string) (filePath string, err error) {
+	if v, ok := p.ImportAliases[filename]; ok {
 		filename = v
 	}
-	for _, path := range f.Paths {
+	for _, path := range p.Paths {
 		p := filepath.Join(path, filename)
 		if _, err := os.Stat(p); err == nil {
 			return p, nil
 		}
 	}
-	return "", errors.Errorf("can't find import %s in any of %s", filename, f.Paths)
+	return "", errors.Errorf("can't find import %s in any of %s", filename, p.Paths)
 }
 
 func (p *Parser) parseFileImports(file *File) error {

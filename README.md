@@ -16,6 +16,9 @@ To generate GraphQL fields by .proto
 $ ./proto2gql
 ```
 
+## Generation process
+![Generation process](https://www.dropbox.com/s/9zkutpamcnp0wbb/proto2gql-proc.png)
+
 ## Config example
 ```yaml
 
@@ -96,3 +99,7 @@ func main(){
 }
 
 ```
+
+## How generated code works
+
+![workflow](https://www.dropbox.com/s/at6uuymurq14v2q/proto2gql-execution.png)
