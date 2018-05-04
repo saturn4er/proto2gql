@@ -62,7 +62,36 @@ protos:
       MessageName:
         error_field: "errors"                       # recognize this field as payload error. You can access it in interceptors
         fields:
-          message_field: {context_key: "ctx_field_key"}  # Resolver, will try to fetch this field from context instead of fetching it from arguments 
+          message_field: {context_key: "ctx_field_key"}  # Resolver, will try to fetch this field from context instead of fetching it from arguments
+          
+schemas:  
+  - name: "SomeSchema"                  # Schema name
+    output_path: "./out/schema.go"      # Where generator will put fabric for this schema
+    output_package: "test_schema"       # Go package name for schema file
+    queries:
+      type: "SERVICE"                   
+      proto: "Example"
+      service: "ServiceExample"
+      filter_fields:
+        - "MsgsWithEpmty"
+      exclude_fields:
+        - "excludedField"
+
+    mutations:
+      type: "OBJECT"
+      fields:
+        - field: "nested_example_mutation"
+          type: "OBJECT"
+          object_name: "NestedExampleMutation"
+          fields:
+            - field: "ExampleService"
+              type: "SERVICE"
+              object_name: "ServiceExampleMutations"
+              proto: "Example"
+              service: "ServiceExample"
+              filter_fields:
+                - "MsgsWithEpmty"
+ 
 ```
 
 ## Interceptors
