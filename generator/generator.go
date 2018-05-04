@@ -59,7 +59,7 @@ func (g *generator) importDirAndPkg(filePath string) (dir, pkg string, rerr erro
 
 func (g *generator) generateSchemas(protos map[*ProtoConfig]*gqlProtoDerivativeFile) error {
 	for i, sc := range g.config.Schemas {
-		err := generateSchema(sc, protos)
+		err := generateSchema(g.config, sc, protos)
 		if err != nil {
 			return errors.Wrapf(err, "failed to generated %d schema", i)
 		}
@@ -162,8 +162,7 @@ func (g *generator) generate() error {
 			return errors.Wrap(err, "failed to generate file")
 		}
 	}
-	g.generateSchemas(generatedProtos)
-	return nil
+	return g.generateSchemas(generatedProtos)
 }
 
 func (g *generator) resolveGoPkg(dir string) (string, error) {

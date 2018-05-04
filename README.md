@@ -107,7 +107,7 @@ func main(){
 ## Todo
 
  - [x] fields generation
- - [ ] schema generation
+ - [x] schema generation
  - [ ] streams
  - [ ] bytes fields
  - [ ] test resolvers

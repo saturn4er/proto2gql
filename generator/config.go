@@ -52,15 +52,16 @@ type SchemaNodeConfig struct {
 	Service        string             `yaml:"service"`
 	ObjectName     string             `yaml:"object_name"`
 	Field          string             `yaml:"field"`
-	Fields         []SchemaNodeConfig `yaml:"childs"`
+	Fields         []SchemaNodeConfig `yaml:"fields"`
 	ExcludeMethods []string           `yaml:"exclude_methods"`
 	FilterMethods  []string           `yaml:"filter_methods"`
 }
 type SchemaConfig struct {
-	OutputPath    string           `yaml:"output_path"`
-	OutputPackage string           `yaml:"output_package"`
-	Queries       SchemaNodeConfig `yaml:"queries"`
-	Mutations     SchemaNodeConfig `yaml:"mutations"`
+	Name          string            `yaml:"name"`
+	OutputPath    string            `yaml:"output_path"`
+	OutputPackage string            `yaml:"output_package"`
+	Queries       *SchemaNodeConfig `yaml:"queries"`
+	Mutations     *SchemaNodeConfig `yaml:"mutations"`
 }
 type GenerateConfig struct {
 	Tracer     bool           `yaml:"generate_tracer"`

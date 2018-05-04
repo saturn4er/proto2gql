@@ -659,3 +659,82 @@ const methodTemplate = `
 					},
 				},
 `
+
+const schemaHeadTemplate = `
+package {{$.pkg}}
+
+
+import (
+    {{ range $import := .imports -}}
+        {{$import.Alias}} "{{$import.Path}}"
+    {{ end }}
+)
+
+var (
+	_ = {{$.gqlpkg}}.NewObject
+)
+type (
+	_ = {{$.tracerpkg}}.Tracer
+)
+`
+const schemaBodyTemplate = `
+
+type {{$.schemaName}}SchemaClients struct {
+	{{ range $service := $.services -}}
+		{{$service.Service.Name}}Client {{call $.ServiceGoClientType $service}}
+	{{ end -}}
+}
+
+func Get{{$.schemaName}}Schema(cls {{$.schemaName}}SchemaClients, ih *{{$.interceptorspkg}}.InterceptorHandler{{- if $.trace -}}, tr {{$.tracerpkg}}.Tracer{{- end -}}) ({{$.gqlpkg}}.Schema, error) {
+	{{ range $service := $.services -}}
+		{{ if $.queryObj.Fields -}}
+			var {{call $.CCase $service.Service.Name}}QueriesFields = {{call $.ServiceGoQueriesFieldsGetter $service}}(cls.{{$service.Service.Name}}Client, ih{{- if $.trace -}}, tr{{- end -}})
+			var _ = {{call $.CCase $service.Service.Name}}QueriesFields
+		{{ end -}}
+		{{ if $.mutationObj -}}
+			var {{call $.CCase $service.Service.Name}}MutationsFields = {{call $.ServiceGoMutationsFieldsGetter $service}}(cls.{{$service.Service.Name}}Client, ih{{- if $.trace -}}, tr{{- end -}})
+			var _ = {{call $.CCase $service.Service.Name}}MutationsFields
+		{{ end -}}
+	{{ end }}
+	{{ range $object := $.objects -}}
+		var {{call $.CCase $object.Name}} = {{$.gqlpkg}}.NewObject({{$.gqlpkg}}.ObjectConfig{
+			Name: "{{$object.Name}}",
+			{{ if ne $object.QuotedComment "" -}}
+				Comment: {{$object.QuotedComment}},
+			{{ end }}
+			Fields: {{$.gqlpkg}}.Fields{
+				{{ if len $object.Fields }}
+					{{ range $fld := $object.Fields -}}
+						{{ if $fld.Service -}}
+							{{ if $object.QueryObject -}}
+								"{{$fld.Name}}": {{call $.CCase $fld.Service.Service.Name}}QueriesFields["{{$fld.Name}}"],
+							{{ else -}}
+								"{{$fld.Name}}": {{call $.CCase $fld.Service.Service.Name}}MutationsFields["{{$fld.Name}}"],
+							{{ end -}}
+						{{ else -}}
+							"{{$fld.Name}}": &{{$.gqlpkg}}.Field{
+								Name: "{{$fld.Name}}",
+								Type: {{$fld.Object.Name}},
+								Resolve: func(p {{$.gqlpkg}}.ResolveParams) (interface{}, error) {
+									return struct{}{}, nil
+								},
+							},
+						{{ end -}}
+					{{ end -}}
+				{{ else }}
+					"noFields": &{{$.gqlpkg}}.Field{
+						Name: "noFields",
+						Type: {{$.gqlpkg}}.String,
+					},
+				{{ end }}
+			},
+		})
+	{{ end }}
+	return {{$.gqlpkg}}.NewSchema({{$.gqlpkg}}.SchemaConfig{
+		Query: {{$.queryObj.Name}},
+		{{ if $.mutationObj -}}
+			Mutation: {{$.mutationObj.Name}},
+		{{ end -}}
+	})
+}
+`

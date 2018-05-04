@@ -8,7 +8,7 @@ imports:
 
 output_package: "graphql"
 output_path: "./out"
-
+generate_tracer: true
 imports:
   output_package: "imports"
   output_path: "./out/imports"
@@ -28,7 +28,8 @@ protos:
 
 schemas:
   -
-    output_path: "./out/schema"
+    name: "SomeSchema"
+    output_path: "./out/schema.go"
     output_package: "test_schema"
     queries:
       type: "SERVICE"
@@ -40,10 +41,12 @@ schemas:
     mutations:
       type: "OBJECT"
       fields:
-        - type: "OBJECT"
+        - field: "nested_example_mutation"
+          type: "OBJECT"
           object_name: "NestedExampleMutation"
           fields:
-            - type: "SERVICE"
+            - field: "ExampleService"
+              type: "SERVICE"
               object_name: "ServiceExampleMutations"
               proto: "Example"
               service: "ServiceExample"

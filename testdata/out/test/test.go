@@ -13,6 +13,7 @@ import (
 	opentracing_go "github.com/opentracing/opentracing-go"
 	interceptors "github.com/saturn4er/proto2gql/api/interceptors"
 	scalars "github.com/saturn4er/proto2gql/api/scalars"
+	tracer "github.com/saturn4er/proto2gql/api/tracer"
 	testdata "github.com/saturn4er/proto2gql/testdata"
 	common "github.com/saturn4er/proto2gql/testdata/common"
 	common_1 "github.com/saturn4er/proto2gql/testdata/out/imports/github.com/saturn4er/proto2gql/testdata/common"
@@ -96,7 +97,20 @@ var ExmplRootMessage = graphql.NewObject(graphql.ObjectConfig{
 })
 
 // [RootMessage] Input resolver
-func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMessage, rerr error) {
+func ResolveRootMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.RootMessage, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveRootMessage")
+	defer span.Finish()
+	defer func() {
+		if perr := recover(); perr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", perr)
+			span.SetTag("error_stack", string(debug.Stack()))
+		}
+		if rerr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", rerr.Error())
+		}
+	}()
 	if i == nil {
 		return nil, nil
 	}
@@ -109,7 +123,7 @@ func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMes
 		var r_msg_ = make([]*testdata.RootMessage_NestedMessage, len(r_msg_list))
 		for i, r_msg_item := range r_msg_list {
 
-			r_msg_r, err := ResolveRootMessageNestedMessage(ctx, r_msg_item)
+			r_msg_r, err := ResolveRootMessageNestedMessage(tr, tr.ContextWithSpan(ctx, span), r_msg_item)
 
 			if err != nil {
 				return nil, errors.New("failed to parse r_msg[" + strconv.Itoa(i) + "]: " + err.Error())
@@ -162,7 +176,7 @@ func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMes
 		result.NRScalar = args["n_r_scalar"].(int32)
 	}
 	// Non-repeated message
-	n_r_msg_r, err := common_1.ResolveCommonMessage(ctx, args["n_r_msg"])
+	n_r_msg_r, err := common_1.ResolveCommonMessage(tr, tr.ContextWithSpan(ctx, span), args["n_r_msg"])
 	if err != nil {
 		return nil, errors.New("failed to parse n_r_msg: " + err.Error())
 	}
@@ -178,7 +192,7 @@ func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMes
 	// Non-repeated message
 	result.NREmptyMsg = new(testdata.Empty)
 	// Map
-	map_enum_, err := ResolveRootMessageMapEnumMap(ctx, args["map_enum"])
+	map_enum_, err := ResolveRootMessageMapEnumMap(tr, tr.ContextWithSpan(ctx, span), args["map_enum"])
 	if err != nil {
 		return nil, errors.New("failed to parse map_enum: " + err.Error())
 	}
@@ -186,7 +200,7 @@ func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMes
 		result.MapEnum = map_enum_
 	}
 	// Map
-	map_scalar_, err := ResolveRootMessageMapScalarMap(ctx, args["map_scalar"])
+	map_scalar_, err := ResolveRootMessageMapScalarMap(tr, tr.ContextWithSpan(ctx, span), args["map_scalar"])
 	if err != nil {
 		return nil, errors.New("failed to parse map_scalar: " + err.Error())
 	}
@@ -194,7 +208,7 @@ func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMes
 		result.MapScalar = map_scalar_
 	}
 	// Map
-	map_msg_, err := ResolveRootMessageMapMsgMap(ctx, args["map_msg"])
+	map_msg_, err := ResolveRootMessageMapMsgMap(tr, tr.ContextWithSpan(ctx, span), args["map_msg"])
 	if err != nil {
 		return nil, errors.New("failed to parse map_msg: " + err.Error())
 	}
@@ -210,7 +224,7 @@ func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMes
 		result.EnumFirstOneoff = &testdata.RootMessage_EFOS{e_f_o_s_.(int32)}
 	} else if e_f_o_m_, ok := args["e_f_o_m"]; ok && e_f_o_m_ != nil {
 		// Non-repeated message
-		e_f_o_m_r, err := common_1.ResolveCommonMessage(ctx, e_f_o_m_)
+		e_f_o_m_r, err := common_1.ResolveCommonMessage(tr, tr.ContextWithSpan(ctx, span), e_f_o_m_)
 		if err != nil {
 			return nil, errors.New("failed to parse e_f_o_m: " + err.Error())
 		}
@@ -226,7 +240,7 @@ func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMes
 		result.ScalarFirstOneoff = &testdata.RootMessage_SFOE{testdata.RootEnum(s_f_o_e_.(int))}
 	} else if s_f_o_mes_, ok := args["s_f_o_mes"]; ok && s_f_o_mes_ != nil {
 		// Non-repeated message
-		s_f_o_mes_r, err := ResolveRootMessage2(ctx, s_f_o_mes_)
+		s_f_o_mes_r, err := ResolveRootMessage2(tr, tr.ContextWithSpan(ctx, span), s_f_o_mes_)
 		if err != nil {
 			return nil, errors.New("failed to parse s_f_o_mes: " + err.Error())
 		}
@@ -237,7 +251,7 @@ func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMes
 	if m_f_o_m_, ok := args["m_f_o_m"]; ok && m_f_o_m_ != nil {
 		// Non-repeated message
 
-		m_f_o_m_r, err := ResolveRootMessage2(ctx, m_f_o_m_)
+		m_f_o_m_r, err := ResolveRootMessage2(tr, tr.ContextWithSpan(ctx, span), m_f_o_m_)
 
 		if err != nil {
 			return nil, errors.New("failed to parse m_f_o_m: " + err.Error())
@@ -263,7 +277,7 @@ func ResolveRootMessage(ctx context.Context, i interface{}) (_ *testdata.RootMes
 		result.EmptyFirstOneoff = &testdata.RootMessage_EmFOEn{testdata.RootEnum(em_f_o_en_.(int))}
 	} else if em_f_o_m_, ok := args["em_f_o_m"]; ok && em_f_o_m_ != nil {
 		// Non-repeated message
-		em_f_o_m_r, err := ResolveRootMessage2(ctx, em_f_o_m_)
+		em_f_o_m_r, err := ResolveRootMessage2(tr, tr.ContextWithSpan(ctx, span), em_f_o_m_)
 		if err != nil {
 			return nil, errors.New("failed to parse em_f_o_m: " + err.Error())
 		}
@@ -291,7 +305,20 @@ var ExmplRootMessageNestedMessageInput = graphql.NewInputObject(graphql.InputObj
 })
 
 // [RootMessage NestedMessage] Input resolver
-func ResolveRootMessageNestedMessage(ctx context.Context, i interface{}) (_ *testdata.RootMessage_NestedMessage, rerr error) {
+func ResolveRootMessageNestedMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.RootMessage_NestedMessage, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveRootMessageNestedMessage")
+	defer span.Finish()
+	defer func() {
+		if perr := recover(); perr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", perr)
+			span.SetTag("error_stack", string(debug.Stack()))
+		}
+		if rerr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", rerr.Error())
+		}
+	}()
 	if i == nil {
 		return nil, nil
 	}
@@ -334,7 +361,20 @@ var ExmplMessageWithEmpty = graphql.NewObject(graphql.ObjectConfig{
 })
 
 // [MessageWithEmpty] Input resolver
-func ResolveMessageWithEmpty(ctx context.Context, i interface{}) (_ *testdata.MessageWithEmpty, rerr error) {
+func ResolveMessageWithEmpty(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.MessageWithEmpty, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveMessageWithEmpty")
+	defer span.Finish()
+	defer func() {
+		if perr := recover(); perr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", perr)
+			span.SetTag("error_stack", string(debug.Stack()))
+		}
+		if rerr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", rerr.Error())
+		}
+	}()
 	if i == nil {
 		return nil, nil
 	}
@@ -363,7 +403,20 @@ var ExmplRootMessage2Input = graphql.NewInputObject(graphql.InputObjectConfig{
 })
 
 // [RootMessage2] Input resolver
-func ResolveRootMessage2(ctx context.Context, i interface{}) (_ *testdata.RootMessage2, rerr error) {
+func ResolveRootMessage2(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.RootMessage2, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveRootMessage2")
+	defer span.Finish()
+	defer func() {
+		if perr := recover(); perr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", perr)
+			span.SetTag("error_stack", string(debug.Stack()))
+		}
+		if rerr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", rerr.Error())
+		}
+	}()
 	if i == nil {
 		return nil, nil
 	}
@@ -501,7 +554,20 @@ var ExmplRootMessageMapMsgMapInput = graphql.NewList(graphql.NewNonNull(graphql.
 	},
 })))
 
-func ResolveRootMessageMapEnumMap(ctx context.Context, i interface{}) (_ map[int32]testdata.RootMessage_NestedEnum, rerr error) {
+func ResolveRootMessageMapEnumMap(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[int32]testdata.RootMessage_NestedEnum, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveRootMessageMapEnumMap")
+	defer span.Finish()
+	defer func() {
+		if perr := recover(); perr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", perr)
+			span.SetTag("error_stack", string(debug.Stack()))
+		}
+		if rerr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", rerr.Error())
+		}
+	}()
 	if i == nil {
 		return nil, nil
 	}
@@ -513,7 +579,20 @@ func ResolveRootMessageMapEnumMap(ctx context.Context, i interface{}) (_ map[int
 	}
 	return result, nil
 }
-func ResolveRootMessageMapScalarMap(ctx context.Context, i interface{}) (_ map[int32]int32, rerr error) {
+func ResolveRootMessageMapScalarMap(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[int32]int32, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveRootMessageMapScalarMap")
+	defer span.Finish()
+	defer func() {
+		if perr := recover(); perr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", perr)
+			span.SetTag("error_stack", string(debug.Stack()))
+		}
+		if rerr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", rerr.Error())
+		}
+	}()
 	if i == nil {
 		return nil, nil
 	}
@@ -525,7 +604,20 @@ func ResolveRootMessageMapScalarMap(ctx context.Context, i interface{}) (_ map[i
 	}
 	return result, nil
 }
-func ResolveRootMessageMapMsgMap(ctx context.Context, i interface{}) (_ map[int32]*testdata.RootMessage_NestedMessage, rerr error) {
+func ResolveRootMessageMapMsgMap(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[int32]*testdata.RootMessage_NestedMessage, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveRootMessageMapMsgMap")
+	defer span.Finish()
+	defer func() {
+		if perr := recover(); perr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", perr)
+			span.SetTag("error_stack", string(debug.Stack()))
+		}
+		if rerr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", rerr.Error())
+		}
+	}()
 	if i == nil {
 		return nil, nil
 	}
@@ -534,7 +626,7 @@ func ResolveRootMessageMapMsgMap(ctx context.Context, i interface{}) (_ map[int3
 	for iv, v := range vals {
 		args := v.(map[string]interface{})
 
-		vv, err := ResolveRootMessageNestedMessage(ctx, args["value"])
+		vv, err := ResolveRootMessageNestedMessage(tr, tr.ContextWithSpan(ctx, span), args["value"])
 
 		if err != nil {
 			return nil, errors.New("failed to parse ExmplRootMessageMapMsgMap[" + strconv.Itoa(iv) + "]: " + err.Error())
@@ -960,7 +1052,7 @@ func init() {
 	})
 }
 
-func GetServiceExampleGraphQLQueriesFields(c testdata.ServiceExampleClient, ih *interceptors.InterceptorHandler) graphql.Fields {
+func GetServiceExampleGraphQLQueriesFields(c testdata.ServiceExampleClient, ih *interceptors.InterceptorHandler, tr tracer.Tracer) graphql.Fields {
 
 	return graphql.Fields{
 
@@ -1053,8 +1145,16 @@ func GetServiceExampleGraphQLQueriesFields(c testdata.ServiceExampleClient, ih *
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
+				span := tr.CreateChildSpanFromContext(p.Context, "ServiceExample.getQueryMethod Resolver")
+				defer span.Finish()
+				defer func() {
+					if rerr != nil {
+						span.SetTag("error", "true")
+						span.SetTag("error_message", rerr.Error())
+					}
+				}()
 				if ih == nil {
-					req, err := ResolveRootMessage(p.Context, p.Args)
+					req, err := ResolveRootMessage(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 					if err != nil {
 						return nil, err
 					}
@@ -1066,7 +1166,7 @@ func GetServiceExampleGraphQLQueriesFields(c testdata.ServiceExampleClient, ih *
 					Params:  p,
 				}
 				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return ResolveRootMessage(p.Context, p.Args)
+					return ResolveRootMessage(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 				})
 				if err != nil {
 					return nil, err
@@ -1093,7 +1193,7 @@ func GetServiceExampleGraphQLQueriesFields(c testdata.ServiceExampleClient, ih *
 
 }
 
-func GetServiceExampleGraphQLMutationsFields(c testdata.ServiceExampleClient, ih *interceptors.InterceptorHandler) graphql.Fields {
+func GetServiceExampleGraphQLMutationsFields(c testdata.ServiceExampleClient, ih *interceptors.InterceptorHandler, tr tracer.Tracer) graphql.Fields {
 
 	return graphql.Fields{
 
@@ -1106,8 +1206,16 @@ func GetServiceExampleGraphQLMutationsFields(c testdata.ServiceExampleClient, ih
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
+				span := tr.CreateChildSpanFromContext(p.Context, "ServiceExample.mutationMethod Resolver")
+				defer span.Finish()
+				defer func() {
+					if rerr != nil {
+						span.SetTag("error", "true")
+						span.SetTag("error_message", rerr.Error())
+					}
+				}()
 				if ih == nil {
-					req, err := ResolveRootMessage2(p.Context, p.Args)
+					req, err := ResolveRootMessage2(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 					if err != nil {
 						return nil, err
 					}
@@ -1119,7 +1227,7 @@ func GetServiceExampleGraphQLMutationsFields(c testdata.ServiceExampleClient, ih
 					Params:  p,
 				}
 				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return ResolveRootMessage2(p.Context, p.Args)
+					return ResolveRootMessage2(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 				})
 				if err != nil {
 					return nil, err
@@ -1148,6 +1256,14 @@ func GetServiceExampleGraphQLMutationsFields(c testdata.ServiceExampleClient, ih
 			Type: scalars.NoDataScalar,
 			Args: graphql.FieldConfigArgument{},
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
+				span := tr.CreateChildSpanFromContext(p.Context, "ServiceExample.EmptyMsgs Resolver")
+				defer span.Finish()
+				defer func() {
+					if rerr != nil {
+						span.SetTag("error", "true")
+						span.SetTag("error_message", rerr.Error())
+					}
+				}()
 				if ih == nil {
 					return c.EmptyMsgs(p.Context, new(testdata.Empty))
 				}
@@ -1190,8 +1306,16 @@ func GetServiceExampleGraphQLMutationsFields(c testdata.ServiceExampleClient, ih
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
+				span := tr.CreateChildSpanFromContext(p.Context, "ServiceExample.MsgsWithEpmty Resolver")
+				defer span.Finish()
+				defer func() {
+					if rerr != nil {
+						span.SetTag("error", "true")
+						span.SetTag("error_message", rerr.Error())
+					}
+				}()
 				if ih == nil {
-					req, err := ResolveMessageWithEmpty(p.Context, p.Args)
+					req, err := ResolveMessageWithEmpty(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 					if err != nil {
 						return nil, err
 					}
@@ -1203,7 +1327,7 @@ func GetServiceExampleGraphQLMutationsFields(c testdata.ServiceExampleClient, ih
 					Params:  p,
 				}
 				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return ResolveMessageWithEmpty(p.Context, p.Args)
+					return ResolveMessageWithEmpty(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 				})
 				if err != nil {
 					return nil, err

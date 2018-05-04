@@ -13,6 +13,7 @@ import (
 	opentracing_go "github.com/opentracing/opentracing-go"
 	interceptors "github.com/saturn4er/proto2gql/api/interceptors"
 	scalars "github.com/saturn4er/proto2gql/api/scalars"
+	tracer "github.com/saturn4er/proto2gql/api/tracer"
 	common "github.com/saturn4er/proto2gql/testdata/common"
 )
 
@@ -63,7 +64,20 @@ var CommonMessageInput = graphql.NewInputObject(graphql.InputObjectConfig{
 })
 
 // [CommonMessage] Input resolver
-func ResolveCommonMessage(ctx context.Context, i interface{}) (_ *common.CommonMessage, rerr error) {
+func ResolveCommonMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *common.CommonMessage, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveCommonMessage")
+	defer span.Finish()
+	defer func() {
+		if perr := recover(); perr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", perr)
+			span.SetTag("error_stack", string(debug.Stack()))
+		}
+		if rerr != nil {
+			span.SetTag("error", "true")
+			span.SetTag("error_message", rerr.Error())
+		}
+	}()
 	if i == nil {
 		return nil, nil
 	}
