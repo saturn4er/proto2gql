@@ -78,7 +78,10 @@ func (f *File) findType(typ string) (*Type, bool) {
 		pkg, typ := strings.Join(parts[:i+1], "."), strings.Join(parts[i+1:], ".")
 		for _, imp := range f.Imports {
 			if imp.PkgName == pkg {
-				return imp.findType(typ)
+				t, ok := imp.findType(typ)
+				if ok {
+					return t, ok
+				}
 			}
 		}
 	}
