@@ -695,15 +695,15 @@ func Get{{$.schemaName}}Schema(cls {{$.schemaName}}SchemaClients, ih *{{$.interc
 			var {{call $.CCase $service.Service.Name}}MutationsFields = {{call $.ServiceGoMutationsFieldsGetter $service}}(cls.{{$service.Service.Name}}Client, ih{{- if $.trace -}}, tr{{- end -}})
 			var _ = {{call $.CCase $service.Service.Name}}MutationsFields
 		{{ end -}}
-	{{ end }}
+	{{ end -}}
 	{{ range $object := $.objects -}}
 		var {{call $.CCase $object.Name}} = {{$.gqlpkg}}.NewObject({{$.gqlpkg}}.ObjectConfig{
 			Name: "{{$object.Name}}",
 			{{ if ne $object.QuotedComment "" -}}
 				Comment: {{$object.QuotedComment}},
-			{{ end }}
+			{{ end -}}
 			Fields: {{$.gqlpkg}}.Fields{
-				{{ if len $object.Fields }}
+				{{ if len $object.Fields -}}
 					{{ range $fld := $object.Fields -}}
 						{{ if $fld.Service -}}
 							{{ if $object.QueryObject -}}
@@ -721,15 +721,15 @@ func Get{{$.schemaName}}Schema(cls {{$.schemaName}}SchemaClients, ih *{{$.interc
 							},
 						{{ end -}}
 					{{ end -}}
-				{{ else }}
+				{{ else -}}
 					"noFields": &{{$.gqlpkg}}.Field{
 						Name: "noFields",
 						Type: {{$.gqlpkg}}.String,
 					},
-				{{ end }}
+				{{ end -}}
 			},
 		})
-	{{ end }}
+	{{ end -}}
 	return {{$.gqlpkg}}.NewSchema({{$.gqlpkg}}.SchemaConfig{
 		Query: {{$.queryObj.Name}},
 		{{ if $.mutationObj -}}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/parser"
+	"golang.org/x/tools/imports"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,9 +12,6 @@ import (
 	"text/template"
 )
 
-type objectObjectField struct {
-	Object *gqlObject
-}
 type schemaService struct {
 	ServiceFile *gqlProtoDerivativeFile
 	Service     *parser.Service
@@ -39,8 +37,7 @@ type schemaGenerator struct {
 	queryObject    *gqlObject
 	mutationObject *gqlObject
 	services       []*schemaService
-	usedServices   map[*parser.Service]struct {
-	}
+	usedServices   map[*parser.Service]struct{}
 }
 
 func (g *schemaGenerator) resolveObjectFields(nodeCfg SchemaNodeConfig, object *gqlObject) (err error) {
@@ -221,10 +218,12 @@ func (g *schemaGenerator) generate() error {
 		panic(err)
 	}
 	r := bytes.Join([][]byte{headres.Bytes(), res.Bytes()}, nil)
-	//r, err = imports.Process(g.cfg.OutputPath, r, &imports.Options{})
-	//if err != nil {
-	//	return errors.Wrap(err, "failed to format generated code")
-	//}
+	r, err = imports.Process(g.cfg.OutputPath, r, &imports.Options{
+		Comments: true,
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to format generated code")
+	}
 	err = os.MkdirAll(filepath.Dir(g.cfg.OutputPath), 0777)
 	if err != nil {
 		panic(err)
