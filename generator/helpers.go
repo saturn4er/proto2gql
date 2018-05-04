@@ -23,7 +23,7 @@ func mergeStringsConfig(in ...string) string {
 	}
 	return in[l]
 }
-func mergeAlieses(in ...map[string]string) map[string]string {
+func mergeAliases(in ...map[string]string) map[string]string {
 	var res = make(map[string]string)
 	for _, i := range in {
 		for k, v := range i {

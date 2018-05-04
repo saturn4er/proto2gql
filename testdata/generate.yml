@@ -31,21 +31,22 @@ schemas:
     output_path: "./out/schema"
     output_package: "test_schema"
     queries:
-      type: "proto"
-      name: "Example"
+      type: "SERVICE"
+      proto: "Example"
+      service: "ServiceExample"
       filter_fields:
         - "MsgsWithEpmty"
 
     mutations:
       type: "OBJECT"
-      name: "ExampleMutationTop"
       fields:
         - type: "OBJECT"
-          name: "NestedExampleMutation"
+          object_name: "NestedExampleMutation"
           fields:
             - type: "SERVICE"
-              proto_name: "Example"
-              name: "ServiceExample"
+              object_name: "ServiceExampleMutations"
+              proto: "Example"
+              service: "ServiceExample"
               filter_fields:
                 - "MsgsWithEpmty"
 

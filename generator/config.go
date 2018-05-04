@@ -47,14 +47,14 @@ type ImportsConfig struct {
 	Settings   map[string]ImportConfig `yaml:"settings"`
 }
 type SchemaNodeConfig struct {
-	Type              string             `yaml:"type"` // "OBJECT|SERVICE"
-	ProtoName         string             `yaml:"proto_name"`
-	Name              string             `yaml:"name"`
-	Fields            []SchemaNodeConfig `yaml:"childs"`
-	ExcludedQueries   []string           `yaml:"excluded_queries"`
-	ExcludedMutations []string           `yaml:"excluded_mutations"`
-	FilterQueries     []string           `yaml:"filter_queries"`
-	FilterMutations   []string           `yaml:"filter_mutations"`
+	Type           string             `yaml:"type"` // "OBJECT|SERVICE"
+	Proto          string             `yaml:"proto"`
+	Service        string             `yaml:"service"`
+	ObjectName     string             `yaml:"object_name"`
+	Field          string             `yaml:"field"`
+	Fields         []SchemaNodeConfig `yaml:"childs"`
+	ExcludeMethods []string           `yaml:"exclude_methods"`
+	FilterMethods  []string           `yaml:"filter_methods"`
 }
 type SchemaConfig struct {
 	OutputPath    string           `yaml:"output_path"`

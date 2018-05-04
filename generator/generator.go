@@ -10,22 +10,23 @@ import (
 	"github.com/saturn4er/proto2gql/parser"
 )
 
-type generatedFile struct {
+type gqlProtoDerivativeFile struct {
 	GoProtoPkg string
 
 	OutGoPkgName string
 	OutGoPkg     string
-	OutDir       string
-	OutFilePath  string
 
-	ParsedFile *parser.File
+	OutDir      string
+	OutFilePath string
+
+	ProtoFile *parser.File
 
 	TracerEnabled    bool
 	GQLEnumsPrefix   string
 	GQLMessagePrefix string
 	Services         map[string]ServiceConfig
 	Messages         map[string]MessageConfig
-	Generator        *protoGenerator
+	Generator        *protoGoAnalogueFileGenerator
 }
 type generator struct {
 	config *GenerateConfig
@@ -39,7 +40,7 @@ func (g *generator) importDirAndPkg(filePath string) (dir, pkg string, rerr erro
 	} else if strings.HasPrefix(pth, filepath.Join(build.Default.GOPATH, "src")) {
 		prefixPath = filepath.Join(build.Default.GOPATH, "src")
 	} else {
-		return "", "", errors.New("import File is outside GOPATH directory:")
+		return "", "", errors.New("import File is outside GOPATH directory")
 	}
 	relPath, err := filepath.Rel(prefixPath, pth)
 	if err != nil {
@@ -56,7 +57,7 @@ func (g *generator) importDirAndPkg(filePath string) (dir, pkg string, rerr erro
 	return outDir, pkg, nil
 }
 
-func (g *generator) generateSchemas(protos map[*ProtoConfig]*generatedFile) error {
+func (g *generator) generateSchemas(protos map[*ProtoConfig]*gqlProtoDerivativeFile) error {
 	for i, sc := range g.config.Schemas {
 		err := generateSchema(sc, protos)
 		if err != nil {
@@ -69,12 +70,12 @@ func (g *generator) generateSchemas(protos map[*ProtoConfig]*generatedFile) erro
 func (g *generator) generate() error {
 	p := parser.New(g.config.Imports.Aliases, g.config.Paths)
 	// Resolving what to generate
-	var filesToGenerate []*generatedFile
-	var generatedProtos = make(map[*ProtoConfig]*generatedFile)
+	var filesToGenerate []*gqlProtoDerivativeFile
+	var generatedProtos = make(map[*ProtoConfig]*gqlProtoDerivativeFile)
 
 	for _, cfg := range g.config.Protos {
 		p.Paths = mergePathsConfig(g.config.Paths, cfg.Paths)
-		p.ImportAliases = mergeAlieses(g.config.Imports.Aliases, cfg.ImportsAliases)
+		p.ImportAliases = mergeAliases(g.config.Imports.Aliases, cfg.ImportsAliases)
 		file, err := p.Parse(cfg.ProtoPath)
 		if err != nil {
 			return errors.Wrap(err, "failed to parse File")
@@ -89,13 +90,13 @@ func (g *generator) generate() error {
 		if err != nil {
 			return errors.Wrap(err, "failed to resolve go pkg")
 		}
-		f := &generatedFile{
+		f := &gqlProtoDerivativeFile{
 			OutGoPkg:         pkg,
 			OutGoPkgName:     mergeStringsConfig(g.config.OutputPkg, cfg.OutputPkg),
 			OutDir:           outDir,
 			GoProtoPkg:       goProtoPkg,
 			OutFilePath:      path.Join(outDir, filename),
-			ParsedFile:       file,
+			ProtoFile:        file,
 			GQLEnumsPrefix:   cfg.GQLEnumsPrefix,
 			GQLMessagePrefix: cfg.GQLMessagePrefix,
 			Services:         cfg.Services,
@@ -119,13 +120,13 @@ func (g *generator) generate() error {
 			}
 			s := g.config.Imports.Settings[imp.FilePath]
 			if isSamePackage(imp, file) {
-				filesToGenerate = append(filesToGenerate, &generatedFile{
+				filesToGenerate = append(filesToGenerate, &gqlProtoDerivativeFile{
 					OutGoPkg:         pkg,
 					OutGoPkgName:     mergeStringsConfig(g.config.OutputPkg, cfg.OutputPkg),
 					GoProtoPkg:       goProtoPkg,
 					OutDir:           outDir,
 					OutFilePath:      path.Join(outDir, filename),
-					ParsedFile:       imp,
+					ProtoFile:        imp,
 					GQLEnumsPrefix:   s.GQLEnumsPrefix,
 					GQLMessagePrefix: s.GQLMessagePrefix,
 					Services:         nil,
@@ -137,13 +138,13 @@ func (g *generator) generate() error {
 			if err != nil {
 				return errors.Wrap(err, "failed to resolve import importing params")
 			}
-			filesToGenerate = append(filesToGenerate, &generatedFile{
+			filesToGenerate = append(filesToGenerate, &gqlProtoDerivativeFile{
 				OutGoPkg:         pkg,
 				OutGoPkgName:     filepath.Base(pkg),
 				GoProtoPkg:       goProtoPkg,
 				OutDir:           dir,
 				OutFilePath:      path.Join(dir, filename),
-				ParsedFile:       imp,
+				ProtoFile:        imp,
 				GQLEnumsPrefix:   s.GQLEnumsPrefix,
 				GQLMessagePrefix: s.GQLMessagePrefix,
 				Services:         nil,

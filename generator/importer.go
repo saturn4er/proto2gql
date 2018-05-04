@@ -17,7 +17,7 @@ type importer struct {
 
 func (i *importer) resolveImport(path string) (alias, importPath string) {
 	paths := strings.Split(path, "/")
-	if len(paths[len(paths)-1]) == 0 {
+	if paths[len(paths)-1] == "" {
 		// if Path is something like `a/b/c/`(ends with slash), Alias will be "c" Path will be "a/b/c"
 		alias, importPath = paths[len(paths)-2], strings.Join(paths[:len(paths)-1], "/")
 	} else {
@@ -47,17 +47,12 @@ func (i *importer) aliasExists(alias string) bool {
 	return false
 }
 func (i *importer) findAliasWithoutCollision(alias string) string {
-	for j := 0; ; j++ {
-		if j == 0 {
-			if i.aliasExists(alias) {
-				continue
-			}
-			return alias
-		} else {
-			a := alias + "_" + strconv.Itoa(j)
-			if i.aliasExists(alias + "_" + strconv.Itoa(j)) {
-				continue
-			}
+	if !i.aliasExists(alias) {
+		return alias
+	}
+	for j := 1; ; j++ {
+		a := alias + "_" + strconv.Itoa(j)
+		if !i.aliasExists(alias + "_" + strconv.Itoa(j)) {
 			return a
 		}
 	}
