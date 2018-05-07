@@ -20,6 +20,26 @@ const (
 	tracerPkg           = "github.com/saturn4er/proto2gql/api/tracer"
 )
 
+var customScalarsAnalogues = map[string]string{
+	"double":   "GraphQLFloat64Scalar",
+	"float":    "GraphQLFloat32Scalar",
+	"int64":    "GraphQLInt64Scalar",
+	"uint64":   "GraphQLUInt64Scalar",
+	"int32":    "GraphQLInt32Scalar",
+	"uint32":   "GraphQLUInt32Scalar",
+	"fixed64":  "GraphQLUInt64Scalar",
+	"fixed32":  "GraphQLUInt32Scalar",
+	"bytes":    "GraphQLBytesScalar",
+	"sfixed32": "GraphQLInt32Scalar",
+	"sfixed64": "GraphQLInt64Scalar",
+	"sint32":   "GraphQLInt32Scalar",
+	"sint64":   "GraphQLInt64Scalar",
+}
+var graphqlScalarsAnalogues = map[string]string{
+	"bool":   "Boolean",
+	"string": "String",
+}
+
 type gqlProtoDerivativeFileGenerator struct {
 	file           *gqlProtoDerivativeFile
 	imports        importer
@@ -60,37 +80,11 @@ func (g *gqlProtoDerivativeFileGenerator) scalarGoType(typ string) (string, erro
 
 func (g *gqlProtoDerivativeFileGenerator) scalarGQLType(imports *importer) func(typ string) (string, error) {
 	return func(typ string) (string, error) {
-		switch typ {
-		case "double":
-			return imports.New(scalarsPkgPath) + ".GraphQLFloat64Scalar", nil
-		case "float":
-			return imports.New(scalarsPkgPath) + ".GraphQLFloat32Scalar", nil
-		case "int64":
-			return imports.New(scalarsPkgPath) + ".GraphQLInt64Scalar", nil
-		case "uint64":
-			return imports.New(scalarsPkgPath) + ".GraphQLUInt64Scalar", nil
-		case "int32":
-			return imports.New(scalarsPkgPath) + ".GraphQLInt32Scalar", nil
-		case "uint32":
-			return imports.New(scalarsPkgPath) + ".GraphQLUInt32Scalar", nil
-		case "fixed64":
-			return imports.New(scalarsPkgPath) + ".GraphQLUInt64Scalar", nil
-		case "fixed32":
-			return imports.New(scalarsPkgPath) + ".GraphQLUInt32Scalar", nil
-		case "bool":
-			return imports.New(graphqlPkgPath) + ".Boolean", nil
-		case "string":
-			return imports.New(graphqlPkgPath) + ".String", nil
-		case "bytes":
-			return imports.New(scalarsPkgPath) + ".GraphQLBytesScalar", nil
-		case "sfixed32":
-			return imports.New(scalarsPkgPath) + ".GraphQLInt32Scalar", nil
-		case "sfixed64":
-			return imports.New(scalarsPkgPath) + ".GraphQLInt64Scalar", nil
-		case "sint32":
-			return imports.New(scalarsPkgPath) + ".GraphQLInt32Scalar", nil
-		case "sint64":
-			return imports.New(scalarsPkgPath) + ".GraphQLInt64Scalar", nil
+		if v, ok := customScalarsAnalogues[typ]; ok {
+			return imports.New(scalarsPkgPath) + "." + v, nil
+		}
+		if v, ok := graphqlScalarsAnalogues[typ]; ok {
+			return imports.New(graphqlPkgPath) + "." + v, nil
 		}
 		return "", errors.Errorf("%s is not scalar", typ)
 	}
