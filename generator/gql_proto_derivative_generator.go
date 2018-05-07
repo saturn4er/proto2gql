@@ -439,11 +439,11 @@ func (g *gqlProtoDerivativeFileGenerator) generate() error {
 	headres := bytes.NewBuffer(nil)
 	hdtpd, err := template.New("header").Parse(headTemplate)
 	if err != nil {
-		panic(err)
+		return errors.Wrap(err, "failed to parse header template")
 	}
 	err = hdtpd.Execute(headres, g.templateContext(imprts))
 	if err != nil {
-		panic(err)
+		return errors.Wrap(err, "failed to execute header template")
 	}
 	r := bytes.Join([][]byte{headres.Bytes(), res.Bytes()}, nil)
 	r, err = imports.Process(g.file.OutFilePath, r, &imports.Options{
@@ -454,7 +454,7 @@ func (g *gqlProtoDerivativeFileGenerator) generate() error {
 	}
 	err = os.MkdirAll(g.file.OutDir, 0777)
 	if err != nil {
-		panic(err)
+		return errors.Wrapf(err, "failed to make output dir %s", g.file.OutDir)
 	}
 	err = ioutil.WriteFile(g.file.OutFilePath, r, 0600)
 	return err
