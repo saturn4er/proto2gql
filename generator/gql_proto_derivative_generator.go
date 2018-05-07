@@ -179,12 +179,15 @@ func (g *gqlProtoDerivativeFileGenerator) gqlOutputTypeResolverResolver(imports 
 		panic(t.String() + " is not handled in gqlOutputTypeResolverResolver")
 	}
 }
-func (g *gqlProtoDerivativeFileGenerator) typeIsUsedInMessage(msg *parser.Message, typ *parser.Type) bool {
+func (g *gqlProtoDerivativeFileGenerator) typeIsUsedInMessage(checkedMsgs parser.Messages, msg *parser.Message, typ *parser.Type) bool {
+	if checkedMsgs.Contains(msg) {
+		return false
+	}
 	for _, fld := range msg.Fields {
 		if fld.Type == typ {
 			return true
 		}
-		if fld.Type.IsMessage() && g.typeIsUsedInMessage(fld.Type.Message, typ) {
+		if fld.Type.IsMessage() && g.typeIsUsedInMessage(append(checkedMsgs.Copy(), msg), fld.Type.Message, typ) {
 			return true
 		}
 	}
@@ -192,7 +195,7 @@ func (g *gqlProtoDerivativeFileGenerator) typeIsUsedInMessage(msg *parser.Messag
 		if mfld.Map.ValueType == typ {
 			return true
 		}
-		if mfld.Map.ValueType.IsMessage() && g.typeIsUsedInMessage(mfld.Map.ValueType.Message, typ) {
+		if mfld.Map.ValueType.IsMessage() && g.typeIsUsedInMessage(append(checkedMsgs.Copy(), msg), mfld.Map.ValueType.Message, typ) {
 			return true
 		}
 	}
@@ -201,7 +204,7 @@ func (g *gqlProtoDerivativeFileGenerator) typeIsUsedInMessage(msg *parser.Messag
 			if fld.Type == typ {
 				return true
 			}
-			if fld.Type.IsMessage() && g.typeIsUsedInMessage(fld.Type.Message, typ) {
+			if fld.Type.IsMessage() && g.typeIsUsedInMessage(append(checkedMsgs.Copy(), msg), fld.Type.Message, typ) {
 				return true
 			}
 		}
@@ -212,7 +215,7 @@ func (g *gqlProtoDerivativeFileGenerator) needToGenerateTypeInputObject(typ *par
 	for _, f := range g.generatedFiles {
 		for _, s := range f.ProtoFile.Services {
 			for _, mtd := range s.Methods {
-				if g.typeIsUsedInMessage(mtd.InputMessage, typ) {
+				if g.typeIsUsedInMessage(nil, mtd.InputMessage, typ) {
 					return true
 				}
 			}
@@ -228,7 +231,7 @@ func (g *gqlProtoDerivativeFileGenerator) needToGenerateTypeInputObjectResolver(
 				if mtd.InputMessage.Type == typ {
 					return true
 				}
-				if g.typeIsUsedInMessage(mtd.InputMessage, typ) {
+				if g.typeIsUsedInMessage(nil, mtd.InputMessage, typ) {
 					return true
 				}
 			}
@@ -244,7 +247,7 @@ func (g *gqlProtoDerivativeFileGenerator) needToGenerateTypeOutputObject(typ *pa
 				if mtd.OutputMessage.Type == typ {
 					return true
 				}
-				if g.typeIsUsedInMessage(mtd.OutputMessage, typ) {
+				if g.typeIsUsedInMessage(nil, mtd.OutputMessage, typ) {
 					return true
 				}
 			}

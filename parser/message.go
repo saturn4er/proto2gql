@@ -2,6 +2,22 @@ package parser
 
 import "github.com/emicklei/proto"
 
+type Messages []*Message
+
+func (m Messages) Copy() Messages {
+	result := make(Messages, len(m))
+	copy(result, m)
+	return result
+}
+func (m Messages) Contains(msg *Message) bool {
+	for _, value := range m {
+		if value == msg {
+			return true
+		}
+	}
+	return false
+}
+
 type Message struct {
 	Name          string
 	QuotedComment string
