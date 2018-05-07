@@ -9,7 +9,7 @@ type Message struct {
 	MapFields     []*MapField
 	OneOffs       []*OneOf
 	Type          *Type
-	Descriptor    *proto.Message `json:"-"`
+	Descriptor    *proto.Message
 	TypeName      TypeName
 	file          *File
 	parentMsg     *Message
@@ -51,14 +51,14 @@ type Field struct {
 	Name          string
 	QuotedComment string
 	Repeated      bool
-	descriptor    *proto.Field `json:"-"`
+	descriptor    *proto.Field
 	Type          *Type
 }
 
 type MapField struct {
 	Name          string
 	QuotedComment string
-	descriptor    *proto.MapField `json:"-"`
+	descriptor    *proto.MapField
 	Type          *Type
 	Map           *Map
 }

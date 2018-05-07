@@ -26,7 +26,7 @@ type gqlProtoDerivativeFile struct {
 	GQLMessagePrefix string
 	Services         map[string]ServiceConfig
 	Messages         map[string]MessageConfig
-	Generator        *protoGoAnalogueFileGenerator
+	Generator        *gqlProtoDerivativeFileGenerator
 }
 type generator struct {
 	config *GenerateConfig

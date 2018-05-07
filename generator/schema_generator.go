@@ -40,6 +40,31 @@ type schemaGenerator struct {
 	usedServices   map[*parser.Service]struct{}
 }
 
+func (g *schemaGenerator) filterMethods(methods []*parser.Method, filter, exclude []string) []*parser.Method {
+	var res []*parser.Method
+	var filteredMethods = make(map[string]struct{})
+	for _, f := range filter {
+		filteredMethods[f] = struct{}{}
+	}
+	var excludedMethods = make(map[string]interface{})
+	for _, f := range exclude {
+		excludedMethods[f] = struct{}{}
+	}
+	for _, m := range methods {
+		if len(excludedMethods) > 0 {
+			if _, ok := excludedMethods[m.Name]; ok {
+				continue
+			}
+		}
+		if len(filteredMethods) > 0 {
+			if _, ok := filteredMethods[m.Name]; !ok {
+				continue
+			}
+		}
+		res = append(res, m)
+	}
+	return res
+}
 func (g *schemaGenerator) resolveObjectFields(nodeCfg SchemaNodeConfig, object *gqlObject) (err error) {
 	switch nodeCfg.Type {
 	case SchemaNodeTypeObject:
@@ -77,25 +102,7 @@ func (g *schemaGenerator) resolveObjectFields(nodeCfg SchemaNodeConfig, object *
 				return errors.Errorf("can't find service '%s' in proto file '%s'", nodeCfg.Service, nodeCfg.Proto)
 			}
 			var methods []*parser.Method
-			var filteredMethods = make(map[string]struct{})
-			for _, f := range nodeCfg.FilterMethods {
-				filteredMethods[f] = struct{}{}
-			}
-			var excludedMethods = make(map[string]interface{})
-			for _, f := range nodeCfg.ExcludeMethods {
-				excludedMethods[f] = struct{}{}
-			}
 			for _, m := range service.Methods {
-				if len(excludedMethods) > 0 {
-					if _, ok := excludedMethods[m.Name]; ok {
-						continue
-					}
-				}
-				if len(filteredMethods) > 0 {
-					if _, ok := filteredMethods[m.Name]; !ok {
-						continue
-					}
-				}
 				if file.Generator.methodIsQuery(m) {
 					if object.QueryObject {
 						methods = append(methods, m)
@@ -106,6 +113,7 @@ func (g *schemaGenerator) resolveObjectFields(nodeCfg SchemaNodeConfig, object *
 					}
 				}
 			}
+			methods = g.filterMethods(methods, nodeCfg.FilterMethods, nodeCfg.ExcludeMethods)
 
 			schemaService := &schemaService{Service: service, ServiceFile: file}
 			if _, ok := g.usedServices[service]; !ok {
@@ -125,7 +133,6 @@ func (g *schemaGenerator) resolveObjectFields(nodeCfg SchemaNodeConfig, object *
 	default:
 		return errors.Errorf("unknown type %s", nodeCfg.Type)
 	}
-	return nil
 }
 func (g *schemaGenerator) resolveObjectsToGenerate() error {
 	if g.cfg.Queries != nil {
@@ -228,10 +235,7 @@ func (g *schemaGenerator) generate() error {
 	if err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile(g.cfg.OutputPath, r, 0600)
-	return err
-
-	return nil
+	return ioutil.WriteFile(g.cfg.OutputPath, r, 0600)
 }
 func generateSchema(cfg *GenerateConfig, sc SchemaConfig, protos map[*ProtoConfig]*gqlProtoDerivativeFile) error {
 	g := &schemaGenerator{

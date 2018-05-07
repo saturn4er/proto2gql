@@ -20,7 +20,7 @@ const (
 	tracerPkg           = "github.com/saturn4er/proto2gql/api/tracer"
 )
 
-type protoGoAnalogueFileGenerator struct {
+type gqlProtoDerivativeFileGenerator struct {
 	file           *gqlProtoDerivativeFile
 	imports        importer
 	generatedFiles []*gqlProtoDerivativeFile
@@ -31,10 +31,10 @@ type ErrorField struct {
 	Type     *parser.Type
 }
 
-func (g *protoGoAnalogueFileGenerator) gqlEnumVarName(i *parser.Enum) string {
+func (g *gqlProtoDerivativeFileGenerator) gqlEnumVarName(i *parser.Enum) string {
 	return g.file.GQLEnumsPrefix + i.Name
 }
-func (g *protoGoAnalogueFileGenerator) scalarGoType(typ string) (string, error) {
+func (g *gqlProtoDerivativeFileGenerator) scalarGoType(typ string) (string, error) {
 	switch typ {
 	case "double":
 		return "float64", nil
@@ -58,7 +58,7 @@ func (g *protoGoAnalogueFileGenerator) scalarGoType(typ string) (string, error) 
 	return "", errors.New("not found")
 }
 
-func (g *protoGoAnalogueFileGenerator) scalarGQLType(imports *importer) func(typ string) (string, error) {
+func (g *gqlProtoDerivativeFileGenerator) scalarGQLType(imports *importer) func(typ string) (string, error) {
 	return func(typ string) (string, error) {
 		switch typ {
 		case "double":
@@ -95,7 +95,7 @@ func (g *protoGoAnalogueFileGenerator) scalarGQLType(imports *importer) func(typ
 		return "", errors.Errorf("%s is not scalar", typ)
 	}
 }
-func (g *protoGoAnalogueFileGenerator) gqlInputTypeName(imports *importer) (resolver func(t *parser.Type) string) {
+func (g *gqlProtoDerivativeFileGenerator) gqlInputTypeName(imports *importer) (resolver func(t *parser.Type) string) {
 	return func(t *parser.Type) string {
 		if t.Message != nil && !t.Message.HaveFields() {
 			return imports.New(scalarsPkgPath) + ".NoDataScalar"
@@ -127,7 +127,7 @@ func (g *protoGoAnalogueFileGenerator) gqlInputTypeName(imports *importer) (reso
 		panic(t.String() + " is not handled in gqlInputTypeName")
 	}
 }
-func (g *protoGoAnalogueFileGenerator) gqlOutputTypeName(imports *importer) (res func(t *parser.Type) string) {
+func (g *gqlProtoDerivativeFileGenerator) gqlOutputTypeName(imports *importer) (res func(t *parser.Type) string) {
 	return func(t *parser.Type) string {
 		if t.Message != nil && !g.messageHaveFieldsExceptError(t.Message) {
 			return imports.New(scalarsPkgPath) + ".NoDataScalar"
@@ -159,7 +159,7 @@ func (g *protoGoAnalogueFileGenerator) gqlOutputTypeName(imports *importer) (res
 		panic(t.String() + " is not handled in gqlOutputTypeName")
 	}
 }
-func (g *protoGoAnalogueFileGenerator) gqlOutputTypeResolverResolver(imports *importer) (res func(t *parser.Type) string) {
+func (g *gqlProtoDerivativeFileGenerator) gqlOutputTypeResolverResolver(imports *importer) (res func(t *parser.Type) string) {
 	return func(t *parser.Type) string {
 		if t.File != g.file.ProtoFile {
 			gf, err := g.findGeneratedFile(t.File)
@@ -179,7 +179,7 @@ func (g *protoGoAnalogueFileGenerator) gqlOutputTypeResolverResolver(imports *im
 		panic(t.String() + " is not handled in gqlOutputTypeResolverResolver")
 	}
 }
-func (g *protoGoAnalogueFileGenerator) typeIsUsedInMessage(msg *parser.Message, typ *parser.Type) bool {
+func (g *gqlProtoDerivativeFileGenerator) typeIsUsedInMessage(msg *parser.Message, typ *parser.Type) bool {
 	for _, fld := range msg.Fields {
 		if fld.Type == typ {
 			return true
@@ -208,7 +208,7 @@ func (g *protoGoAnalogueFileGenerator) typeIsUsedInMessage(msg *parser.Message, 
 	}
 	return false
 }
-func (g *protoGoAnalogueFileGenerator) needToGenerateTypeInputObject(typ *parser.Type) bool {
+func (g *gqlProtoDerivativeFileGenerator) needToGenerateTypeInputObject(typ *parser.Type) bool {
 	for _, f := range g.generatedFiles {
 		for _, s := range f.ProtoFile.Services {
 			for _, mtd := range s.Methods {
@@ -221,7 +221,7 @@ func (g *protoGoAnalogueFileGenerator) needToGenerateTypeInputObject(typ *parser
 	return false
 }
 
-func (g *protoGoAnalogueFileGenerator) needToGenerateTypeInputObjectResolver(typ *parser.Type) bool {
+func (g *gqlProtoDerivativeFileGenerator) needToGenerateTypeInputObjectResolver(typ *parser.Type) bool {
 	for _, f := range g.generatedFiles {
 		for _, s := range f.ProtoFile.Services {
 			for _, mtd := range s.Methods {
@@ -237,7 +237,7 @@ func (g *protoGoAnalogueFileGenerator) needToGenerateTypeInputObjectResolver(typ
 	return false
 }
 
-func (g *protoGoAnalogueFileGenerator) needToGenerateTypeOutputObject(typ *parser.Type) (res bool) {
+func (g *gqlProtoDerivativeFileGenerator) needToGenerateTypeOutputObject(typ *parser.Type) (res bool) {
 	for _, f := range g.generatedFiles {
 		for _, s := range f.ProtoFile.Services {
 			for _, mtd := range s.Methods {
@@ -252,7 +252,7 @@ func (g *protoGoAnalogueFileGenerator) needToGenerateTypeOutputObject(typ *parse
 	}
 	return false
 }
-func (g *protoGoAnalogueFileGenerator) methodIsQuery(m *parser.Method) bool {
+func (g *gqlProtoDerivativeFileGenerator) methodIsQuery(m *parser.Method) bool {
 	if srvCfg, ok := g.file.Services[m.Service.Name]; ok {
 		if mtdCfg, ok := srvCfg.Methods[m.Name]; ok {
 			return mtdCfg.RequestType == MethodTypeQuery
@@ -261,13 +261,13 @@ func (g *protoGoAnalogueFileGenerator) methodIsQuery(m *parser.Method) bool {
 	return strings.HasPrefix(strings.ToLower(m.Name), "get")
 }
 
-func (g *protoGoAnalogueFileGenerator) serviceName(m *parser.Service) string {
+func (g *gqlProtoDerivativeFileGenerator) serviceName(m *parser.Service) string {
 	if srvCfg, ok := g.file.Services[m.Name]; ok && srvCfg.Alias != "" {
 		return srvCfg.Alias
 	}
 	return m.Name
 }
-func (g *protoGoAnalogueFileGenerator) methodName(m *parser.Method) string {
+func (g *gqlProtoDerivativeFileGenerator) methodName(m *parser.Method) string {
 	if srvCfg, ok := g.file.Services[m.Service.Name]; ok {
 		if mtdCfg, ok := srvCfg.Methods[m.Name]; ok && mtdCfg.Alias != "" {
 			return mtdCfg.Alias
@@ -275,7 +275,7 @@ func (g *protoGoAnalogueFileGenerator) methodName(m *parser.Method) string {
 	}
 	return m.Name
 }
-func (g *protoGoAnalogueFileGenerator) serviceHaveQueries(m *parser.Service) bool {
+func (g *gqlProtoDerivativeFileGenerator) serviceHaveQueries(m *parser.Service) bool {
 	for _, m := range m.Methods {
 		if g.methodIsQuery(m) {
 			return true
@@ -284,7 +284,7 @@ func (g *protoGoAnalogueFileGenerator) serviceHaveQueries(m *parser.Service) boo
 	return false
 }
 
-func (g *protoGoAnalogueFileGenerator) serviceHaveMutations(m *parser.Service) bool {
+func (g *gqlProtoDerivativeFileGenerator) serviceHaveMutations(m *parser.Service) bool {
 	for _, m := range m.Methods {
 		if !g.methodIsQuery(m) {
 			return true
@@ -292,14 +292,14 @@ func (g *protoGoAnalogueFileGenerator) serviceHaveMutations(m *parser.Service) b
 	}
 	return false
 }
-func (g *protoGoAnalogueFileGenerator) messageHaveFieldsExceptError(msg *parser.Message) bool {
+func (g *gqlProtoDerivativeFileGenerator) messageHaveFieldsExceptError(msg *parser.Message) bool {
 	ef := g.errorFieldOfMessage(msg)
 	if ef == nil {
 		return msg.HaveFields()
 	}
 	return msg.HaveFieldsExcept(ef.Name)
 }
-func (g *protoGoAnalogueFileGenerator) errorFieldOfMessage(msg *parser.Message) *ErrorField {
+func (g *gqlProtoDerivativeFileGenerator) errorFieldOfMessage(msg *parser.Message) *ErrorField {
 	m, ok := g.file.Messages[msg.Name]
 	if !ok || m.ErrorField == "" {
 		return nil
@@ -336,18 +336,18 @@ func (g *protoGoAnalogueFileGenerator) errorFieldOfMessage(msg *parser.Message) 
 	}
 	return nil
 }
-func (g *protoGoAnalogueFileGenerator) isErrorField(msg *parser.Message, name string) bool {
+func (g *gqlProtoDerivativeFileGenerator) isErrorField(msg *parser.Message, name string) bool {
 	if m, ok := g.file.Messages[msg.Name]; ok {
 		return name == m.ErrorField
 	}
 	return false
 }
 
-func (g *protoGoAnalogueFileGenerator) fieldContextKey(msg *parser.Message, name string) string {
+func (g *gqlProtoDerivativeFileGenerator) fieldContextKey(msg *parser.Message, name string) string {
 	return g.file.Messages[msg.Name].Fields[name].ContextKey
 }
 
-func (g *protoGoAnalogueFileGenerator) templateContext(imports *importer) map[string]interface{} {
+func (g *gqlProtoDerivativeFileGenerator) templateContext(imports *importer) map[string]interface{} {
 	return map[string]interface{}{
 		"File":            g.file.ProtoFile,
 		"pkg":             g.file.OutGoPkgName,
@@ -383,7 +383,7 @@ func (g *protoGoAnalogueFileGenerator) templateContext(imports *importer) map[st
 		"NeedToGenerateTypeGQLOutput":        g.needToGenerateTypeOutputObject,
 	}
 }
-func (g *protoGoAnalogueFileGenerator) findGeneratedFile(f *parser.File) (*gqlProtoDerivativeFile, error) {
+func (g *gqlProtoDerivativeFileGenerator) findGeneratedFile(f *parser.File) (*gqlProtoDerivativeFile, error) {
 	for _, fl := range g.generatedFiles {
 		if fl.ProtoFile == f {
 			return fl, nil
@@ -391,7 +391,7 @@ func (g *protoGoAnalogueFileGenerator) findGeneratedFile(f *parser.File) (*gqlPr
 	}
 	return nil, errors.New("Not found")
 }
-func (g *protoGoAnalogueFileGenerator) goTypeResolver(imports *importer) (resolver func(t *parser.Type) string) {
+func (g *gqlProtoDerivativeFileGenerator) goTypeResolver(imports *importer) (resolver func(t *parser.Type) string) {
 	return func(t *parser.Type) string {
 		switch {
 		case t.Message != nil:
@@ -428,7 +428,7 @@ func (g *protoGoAnalogueFileGenerator) goTypeResolver(imports *importer) (resolv
 	}
 }
 
-func (g *protoGoAnalogueFileGenerator) generate() error {
+func (g *gqlProtoDerivativeFileGenerator) generate() error {
 	tpl, err := template.New("template").Parse(bodyTemplate)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse template")
@@ -463,8 +463,8 @@ func (g *protoGoAnalogueFileGenerator) generate() error {
 	return err
 }
 
-func newProtoGenerator(file *gqlProtoDerivativeFile, files []*gqlProtoDerivativeFile) *protoGoAnalogueFileGenerator {
-	return &protoGoAnalogueFileGenerator{
+func newProtoGenerator(file *gqlProtoDerivativeFile, files []*gqlProtoDerivativeFile) *gqlProtoDerivativeFileGenerator {
+	return &gqlProtoDerivativeFileGenerator{
 		file:           file,
 		generatedFiles: files,
 	}
