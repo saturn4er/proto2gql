@@ -161,6 +161,9 @@ type RootMessage struct {
 	EmptyFirstOneoff isRootMessage_EmptyFirstOneoff `protobuf_oneof:"empty_first_oneoff"`
 }
 
+func init() {
+	RootMessage.XXX_OneofFuncs()
+}
 func (m *RootMessage) Reset()                    { *m = RootMessage{} }
 func (m *RootMessage) String() string            { return proto.CompactTextString(m) }
 func (*RootMessage) ProtoMessage()               {}
