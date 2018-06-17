@@ -86,9 +86,14 @@ func (g *generator) generate() error {
 		if err != nil {
 			return errors.Wrap(err, "failed to resolve go pkg")
 		}
-		goProtoPkg, err := g.resolveGoPkg(filepath.Dir(file.FilePath))
-		if err != nil {
-			return errors.Wrap(err, "failed to resolve go pkg")
+		var goProtoPkg string
+		if cfg.GoPackage != "" {
+			goProtoPkg = cfg.GoPackage
+		} else {
+			goProtoPkg, err = g.resolveGoPkg(filepath.Dir(file.FilePath))
+			if err != nil {
+				return errors.Wrap(err, "failed to resolve go pkg")
+			}
 		}
 		f := &gqlProtoDerivativeFile{
 			OutGoPkg:              pkg,

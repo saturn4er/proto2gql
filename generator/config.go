@@ -28,6 +28,7 @@ type ProtoConfig struct {
 	Paths            []string                   `yaml:"paths"`
 	ProtoPath        string                     `yaml:"proto_path"`
 	OutputPkg        string                     `yaml:"output_package"`
+	GoPackage        string                     `yaml:"go_package"`
 	OutputPath       string                     `yaml:"output_path"`
 	GQLEnumsPrefix   string                     `yaml:"gql_enums_prefix"`
 	GQLMessagePrefix string                     `yaml:"gql_messages_prefix"`
