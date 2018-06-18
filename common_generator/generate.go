@@ -5,6 +5,11 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"text/template"
+	"reflect"
+	"strings"
+	"golang.org/x/tools/imports"
+	"fmt"
+	"os"
 )
 
 const (
@@ -13,6 +18,7 @@ const (
 	GraphqlPkgPath      = "github.com/graphql-go/graphql"
 	OpentracingPkgPath  = "github.com/opentracing/opentracing-go"
 	TracerPkgPath       = "github.com/saturn4er/proto2gql/api/tracer"
+	ErrorsPkgPath       = "github.com/pkg/errors"
 )
 
 type generator struct {
@@ -35,22 +41,43 @@ func (g generator) bodyTemplateContext() interface{} {
 	}
 
 }
+func (g generator) goTypeStr(typ reflect.Type) string {
+	if typeIsScalar(typ) {
+		return typ.String()
+	}
+	switch typ.Kind() {
+	case reflect.Slice:
+		return "[]" + g.goTypeStr(typ.Elem())
+	default:
+		return g.imports.Prefix(typ.PkgPath()) + typ.Name()
+	}
+	panic("type " + typ.Kind().String() + " is not supported")
+}
+
 func (g generator) bodyTemplateFuncs() map[string]interface{} {
 	return map[string]interface{}{
 		"ctxPkg":          g.importFunc("context"),
 		"debugPkg":        g.importFunc("runtime/debug"),
+		"errorsPkg":       g.importFunc(ErrorsPkgPath),
 		"gqlPkg":          g.importFunc(GraphqlPkgPath),
 		"scalarsPkg":      g.importFunc(ScalarsPkgPath),
 		"interceptorsPkg": g.importFunc(InterceptorsPkgPath),
 		"opentracingPkg":  g.importFunc(OpentracingPkgPath),
 		"tracerPkg":       g.importFunc(TracerPkgPath),
+		"concat": func(st ...string) string {
+			return strings.Join(st, "")
+		},
+		"isArray": func(typ reflect.Type) bool {
+			return typ.Kind() == reflect.Slice
+		},
+		"goType": g.goTypeStr,
 	}
 }
 
 func (g generator) headTemplateContext() map[string]interface{} {
 	return map[string]interface{}{
 		"imports": g.imports.Imports(),
-		"package": g.File.Package,
+		"package": g.File.PackageName,
 	}
 
 }
@@ -91,11 +118,20 @@ func (g generator) generate() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to generate head")
 	}
-	res := bytes.Join([][]byte{
+	r := bytes.Join([][]byte{
 		head,
 		body,
 	}, nil)
-	_, err = g.Out.Write(res)
+
+	res, err := imports.Process("file", r, &imports.Options{
+		Comments: true,
+	})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	} else {
+		r = res
+	}
+	_, err = g.Out.Write(r)
 	if err != nil {
 		return errors.Wrap(err, "failed to write  output")
 	}
@@ -107,7 +143,9 @@ func Generate(file *File, w io.Writer) error {
 		File: file,
 		Out:  w,
 
-		imports: new(Importer),
+		imports: &Importer{
+			CurrentPackage: file.PackagePath,
+		},
 	}
 	return g.generate()
 }

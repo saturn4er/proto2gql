@@ -12,7 +12,8 @@ type Import struct {
 	Path  string
 }
 type Importer struct {
-	imports []Import
+	CurrentPackage string
+	imports        []Import
 }
 
 func (i *Importer) resolveImport(path string) (alias, importPath string) {
@@ -58,6 +59,9 @@ func (i *Importer) findAliasWithoutCollision(alias string) string {
 	}
 }
 func (i *Importer) New(path string) string {
+	if i.CurrentPackage == path {
+		return ""
+	}
 	alias, path := i.resolveImport(path)
 	imp := i.findPath(path)
 	if imp != nil {
@@ -69,6 +73,12 @@ func (i *Importer) New(path string) string {
 		Path:  path,
 	})
 	return alias
+}
+func (i *Importer) Prefix(path string) string {
+	if i.CurrentPackage == path {
+		return ""
+	}
+	return i.New(path) + "."
 }
 
 func (i *Importer) Imports() []Import {
