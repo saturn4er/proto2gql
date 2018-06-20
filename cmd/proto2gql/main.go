@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/saturn4er/proto2gql/generator"
 	"gopkg.in/urfave/cli.v1"
 	"gopkg.in/yaml.v2"
+	"github.com/saturn4er/proto2gql/generator"
 )
 
 func main() {
@@ -27,16 +27,15 @@ func main() {
 				panic(err)
 			}
 			cfg = []byte(os.ExpandEnv(string(cfg)))
-			var gc generator.GenerateConfig
-			err = yaml.Unmarshal(cfg, &gc)
+			gc := new(generator.GenerateConfig)
+			err = yaml.Unmarshal(cfg, gc)
 			if err != nil {
 				panic(err)
 			}
-			err = generator.Generate(&gc)
+			err = generator.Generate(gc)
 			if err != nil {
 				panic(err)
 			}
-
 		},
 	}
 	app.Run(os.Args)

@@ -1,4 +1,4 @@
-package common_generator
+package common
 
 import (
 	"testing"

@@ -1,16 +1,4 @@
-package generator
-
-import (
-	"github.com/saturn4er/proto2gql/generator/proto"
-)
-
-const (
-	MethodTypeMutation = "MUTATION"
-	MethodTypeQuery    = "QUERY"
-
-	SchemaNodeTypeObject  = "OBJECT"
-	SchemaNodeTypeService = "SERVICE"
-)
+package proto
 
 type FieldsConfig struct {
 	ContextKey string `yaml:"context_key"`
@@ -33,23 +21,81 @@ type ProtoConfig struct {
 	ProtoPath        string                   `yaml:"proto_path"`
 	OutputPkg        string                   `yaml:"output_package"`
 	OutputPath       string                   `yaml:"output_path"`
+	GoPackage        string                   `yaml:"go_package"`
 	GQLEnumsPrefix   string                   `yaml:"gql_enums_prefix"`
 	GQLMessagePrefix string                   `yaml:"gql_messages_prefix"`
 	ImportsAliases   map[string]string        `yaml:"imports_aliases"`
 	Services         map[string]ServiceConfig `yaml:"services"`
 	Messages         map[string]MessageConfig `yaml:"messages"`
 }
-type ImportConfig struct {
-	GoPackage        string `yaml:"go_package"`
-	GQLEnumsPrefix   string `yaml:"gql_enums_prefix"`
-	GQLMessagePrefix string `yaml:"gql_messages_prefix"`
+
+func (pc *ProtoConfig) GetName() string {
+	if pc == nil {
+		return ""
+	}
+	return pc.Name
 }
-type ImportsConfig struct {
-	OutputPkg  string                  `yaml:"output_package"`
-	OutputPath string                  `yaml:"output_path"`
-	Aliases    map[string]string       `yaml:"aliases"`
-	Settings   map[string]ImportConfig `yaml:"settings"`
+func (pc *ProtoConfig) GetPaths() []string {
+	if pc == nil {
+		return []string{}
+	}
+	return pc.Paths
 }
+func (pc *ProtoConfig) GetProtoPath() string {
+	if pc == nil {
+		return ""
+	}
+	return pc.ProtoPath
+}
+func (pc *ProtoConfig) GetOutputPkg() string {
+	if pc == nil {
+		return ""
+	}
+	return pc.OutputPkg
+}
+func (pc *ProtoConfig) GetGoPackage() string {
+	if pc == nil {
+		return ""
+	}
+	return pc.GoPackage
+}
+func (pc *ProtoConfig) GetOutputPath() string {
+	if pc == nil {
+		return ""
+	}
+	return pc.OutputPath
+}
+func (pc *ProtoConfig) GetGQLEnumsPrefix() string {
+	if pc == nil {
+		return ""
+	}
+	return pc.GQLEnumsPrefix
+}
+func (pc *ProtoConfig) GetGQLMessagePrefix() string {
+	if pc == nil {
+		return ""
+	}
+	return pc.GQLMessagePrefix
+}
+func (pc *ProtoConfig) GetImportsAliases() map[string]string {
+	if pc == nil {
+		return map[string]string{}
+	}
+	return pc.ImportsAliases
+}
+func (pc *ProtoConfig) GetServices() map[string]ServiceConfig {
+	if pc == nil {
+		return map[string]ServiceConfig{}
+	}
+	return pc.Services
+}
+func (pc *ProtoConfig) GetMessages() map[string]MessageConfig {
+	if pc == nil {
+		return map[string]MessageConfig{}
+	}
+	return pc.Messages
+}
+
 type SchemaNodeConfig struct {
 	Type           string             `yaml:"type"` // "OBJECT|SERVICE"
 	Proto          string             `yaml:"proto"`
@@ -67,10 +113,7 @@ type SchemaConfig struct {
 	Queries       *SchemaNodeConfig `yaml:"queries"`
 	Mutations     *SchemaNodeConfig `yaml:"mutations"`
 }
-
 type GenerateConfig struct {
-	Tracer     bool                 `yaml:"generate_tracer"`
-	VendorPath string               `yaml:"vendor_path"`
-	Paths      []string             `yaml:"paths"`
-	Protos     []*proto.ProtoConfig `yaml:"protos"`
+	Tracer     bool
+	VendorPath string
 }

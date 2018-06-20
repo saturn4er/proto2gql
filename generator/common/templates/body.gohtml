@@ -1,0 +1,301 @@
+// Enums
+{{range $enum := .File.Enums -}}
+	var {{$enum.VariableName}} = {{gqlPkg}}.NewEnum({{gqlPkg}}.EnumConfig{
+		Name:        "{{$enum.GraphQLName}}",
+		{{ if $enum.Comment -}}
+			Description: {{$enum.Comment}},
+		{{ end -}}
+		Values: {{gqlPkg}}.EnumValueConfigMap{
+            {{range $value := $enum.Values -}}
+				"{{$value.Name}}": &{{gqlPkg}}.EnumValueConfig{
+					Value: {{$value.Value}},
+					{{ if ne $value.Comment "\"\"" -}}
+						Description: {{$value.Comment}},
+					{{ end -}}
+				},
+			{{end -}}
+		},
+	})
+{{end -}}
+
+
+// Input object
+{{ range $object := .File.InputObjects -}}
+	var {{$object.VariableName}} = {{gqlPkg}}.NewInputObject({{gqlPkg}}.InputObjectConfig{
+        Name: "{{$object.GraphQLName}}",
+        Fields: {{gqlPkg}}.InputObjectConfigFieldMapThunk(func() {{gqlPkg}}.InputObjectConfigFieldMap {
+            return {{gqlPkg}}.InputObjectConfigFieldMap{
+                {{range $field := $object.Fields -}}
+                    "{{$field.Name}}": &{{gqlPkg}}.InputObjectFieldConfig{Type: {{call $field.Type $}}},
+                {{end -}}
+            }
+        }),
+    })
+{{ end -}}
+
+// Input objects resolvers
+{{ range $resolver := .File.InputObjectResolvers -}}
+func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer, {{end}}ctx {{ctxPkg}}.Context, i interface{}) (_ *{{$resolver.OutputGoType}}, rerr error){
+	{{ if $.TracerEnabled -}}
+		span := tr.CreateChildSpanFromContext(ctx, "{{$resolver.FunctionName}}")
+		defer span.Finish()
+		defer func(){
+			if perr := recover(); perr != nil {
+				span.SetTag("error", "true")
+				span.SetTag("error_message", perr)
+				span.SetTag("error_stack", string({{debugPkg}}.Stack()))
+			}
+			if rerr != nil {
+				span.SetTag("error", "true")
+				span.SetTag("error_message", rerr.Error())
+			}
+		}()
+	{{end -}}
+	if i == nil {
+		return nil, nil
+	}
+	args := i.(map[string]interface{})
+	_ = args
+	var result = new({{$resolver.OutputGoType}})
+	{{ range $field := $resolver.Fields -}}
+		if args["{{$field.GraphqlInputField}}"] != nil {
+			{{ if isArray $field.GoType -}}
+        	in := args["{{$field.GraphqlInputField}}"].([]interface{})
+			result.{{$field.Name}} = make({{goType $field.GoType}}, len(in))
+			for i, val := range in {
+				{{ if $field.ResolverWithError }}
+					v, err := {{call $field.ValueResolver "val" $}}
+					if err != nil {
+						return errors.Wrap("")
+					}
+					result.{{$field.Name}}[i] = v
+				{{ else -}}
+					result.{{$field.Name}}[i] = {{call $field.ValueResolver "val" $}}
+				{{ end -}}
+
+			}
+			{{ else -}}
+				result.{{$field.Name}} = {{call $field.ValueResolver (concat "args[\"" $field.GraphqlInputField "\"]") $}}
+			{{ end -}}
+		}
+	{{ end -}}
+
+	return result, nil
+}
+{{ end -}}
+// Output objects
+{{ range $object := $.File.OutputObjects -}}
+	var {{$object.VariableName}} = {{gqlPkg}}.NewObject({{gqlPkg}}.ObjectConfig{
+		Name: "{{$object.GraphQLName}}",
+		Fields: {{gqlPkg}}.Fields{},
+	})
+	func init(){
+		{{ range $field := $object.Fields -}}
+			{{$object.VariableName}}.AddFieldConfig("{{$field.Name}}", &{{gqlPkg}}.Field{
+				Name: "{{.Name}}",
+				Type: {{call $field.Type $}},
+				Resolve: func(p {{gqlPkg}}.ResolveParams) (interface{}, error) {
+        	    	switch src := p.Source.(type){
+						case *{{goType $field.GoObjectType}}:
+							if src == nil {
+								return nil, nil
+							}
+							{{if $field.NeedCast -}}
+								return {{$field.CastTo}}(src.{{$field.GoObjectField}}), nil
+							{{else -}}
+								return src.{{$field.GoObjectField}}, nil
+							{{ end -}}
+						case {{goType $field.GoObjectType}}:
+							{{if $field.NeedCast -}}
+								return {{$field.CastTo}}(src.{{$field.GoObjectField}}), nil
+							{{else -}}
+								return src.{{$field.GoObjectField}}, nil
+							{{end -}}
+					}
+					return nil, {{errorsPkg}}.New("source of unknown type")
+				},
+			})
+		{{ end -}}
+	}
+{{ end -}}
+// Maps input objects
+{{ range $object := .File.MapInputObjects -}}
+	var {{$object.VariableName}} = {{gqlPkg}}.NewInputObject({{gqlPkg}}.InputObjectConfig{
+        Name: "{{$object.GraphQLName}}",
+        Fields: {{gqlPkg}}.InputObjectConfigFieldMapThunk(func() {{gqlPkg}}.InputObjectConfigFieldMap {
+            return {{gqlPkg}}.InputObjectConfigFieldMap{
+				"key": &{{gqlPkg}}.InputObjectFieldConfig{Type: {{call $object.KeyObjectType $}}},
+    	        "value": &{{gqlPkg}}.InputObjectFieldConfig{Type: {{call $object.ValueObjectType $}}},
+            }
+        }),
+    })
+{{ end -}}
+// Maps input objects resolvers
+{{ range $resolver := .File.MapInputObjectResolvers -}}
+	func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer, {{end}}ctx {{ctxPkg}}.Context, i interface{}) (_ map[{{goType $resolver.KeyGoType}}]{{goType $resolver.ValueGoType}}, rerr error){
+		{{ if $.TracerEnabled -}}
+			span := tr.CreateChildSpanFromContext(ctx, "{{$resolver.FunctionName}}")
+			defer span.Finish()
+			defer func(){
+				if perr := recover(); perr != nil {
+					span.SetTag("error", "true")
+					span.SetTag("error_message", perr)
+					span.SetTag("error_stack", string({{debugPkg}}.Stack()))
+				}
+				if rerr != nil {
+					span.SetTag("error", "true")
+					span.SetTag("error_message", rerr.Error())
+				}
+			}()
+		{{end -}}
+		if i == nil {
+			return nil, nil
+		}
+		in := i.([]interface{})
+		result := make(map[{{goType $resolver.KeyGoType}}]{{goType $resolver.ValueGoType}})
+		for i, ival := range in {
+			_ = i
+			val := ival.(map[string]interface{})
+			k, v := val["key"], val["value"]
+			_, _ = k,v
+			{{if $resolver.KeyResolverWithError -}}
+				kk, err := {{call $resolver.KeyResolver "k" $}}
+				if err != nil {
+					return nil, {{errorsPkg}}.Wrapf(err, "failed to resolve #%d map element key", i)
+				}
+			{{else -}}
+				kk := {{call $resolver.KeyResolver "k" $}}
+			{{end -}}
+			{{if $resolver.ValueResolverWithError -}}
+				vv, err := {{call $resolver.ValueResolver "v" $}}
+				if err != nil {
+					return nil, {{errorsPkg}}.Wrapf(err, "failed to resolve #%d map element value", i)
+				}
+			{{else -}}
+				vv := {{call $resolver.ValueResolver "v" $}}
+			{{end -}}
+			result[kk]=vv
+		}
+		return result, nil
+	}
+{{ end -}}
+
+// Maps output objects
+{{ range $object := .File.MapOutputObjects -}}
+	var {{$object.VariableName}} = {{gqlPkg}}.NewObject({{gqlPkg}}.ObjectConfig{
+		Name: "{{$object.GraphQLName}}",
+       	Fields: {{gqlPkg}}.Fields{
+		},
+	})
+	func init(){
+		{{$object.VariableName}}.AddFieldConfig("key", &{{gqlPkg}}.Field{
+			Name: "key",
+			Type: {{call $object.KeyObjectType $}},
+			Resolve: func(p {{gqlPkg}}.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["key"].({{goType $object.KeyGoType}}), nil
+			},
+		})
+		{{$object.VariableName}}.AddFieldConfig("value", &{{gqlPkg}}.Field{
+			Name: "value",
+			Type: {{call $object.KeyObjectType $}},
+			Resolve: func(p {{gqlPkg}}.ResolveParams) (interface{}, error) {
+				src := p.Source.(map[string]interface{})
+				if src == nil {
+					return nil, nil
+				}
+				return src["value"].({{goType $object.ValueGoType}}), nil
+			},
+		})
+	}
+{{end -}}
+
+// Services
+{{ range $service := .File.Services -}}
+	func Get{{$service.Name}}ServiceMethods(c {{goType $service.CallInterface}}, ih *{{interceptorsPkg}}.InterceptorHandler {{ if $.TracerEnabled }} ,tr {{tracerPkg}}.Tracer {{end}}) {{gqlPkg}}.Fields {
+		{{ if $service.Methods -}}
+			return {{gqlPkg}}.Fields{
+				{{range $method := $service.Methods -}}
+					"{{$method.Name}}": &{{gqlPkg}}.Field{
+						Name: "{{$method.Name}}",
+						Type: {{call $method.ResultType $}},
+						{{ if $method.Arguments -}}
+							Args: {{gqlPkg}}.FieldConfigArgument{
+		                		{{ range $arg := $method.Arguments -}}
+									"{{$arg.Name}}": &{{gqlPkg}}.ArgumentConfig{Type: {{call $arg.Type $}}},
+								{{ end -}}
+							},
+						{{ end -}}
+						Resolve: func(p {{gqlPkg}}.ResolveParams) (_ interface{}, rerr error) {
+							{{ if $.TracerEnabled -}}
+								span := tr.CreateChildSpanFromContext(p.Context, "{{$service.Name}}.{{$method.Name}} Resolver")
+								defer span.Finish()
+								defer func(){
+									if rerr != nil {
+										span.SetTag("error", "true")
+										span.SetTag("error_message", rerr.Error())
+									}
+								}()
+							{{end -}}
+							if ih == nil {
+								{{ if $method.RequestResolverFunctionName -}}
+									{{ if $.TracerEnabled -}}
+										req, err := {{$method.RequestResolverFunctionName}}(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+									{{ else -}}
+										req, err := {{$method.RequestResolverFunctionName}}(p.Context, p.Args)
+									{{ end -}}
+									if err != nil {
+										return nil, err
+									}
+									return c.{{$method.CallMethod}}(p.Context, req)
+								{{ else -}}
+ 									return c.{{$method.CallMethod}}(p.Context, new({{goType $method.RequestType}}))
+								{{ end -}}
+							}
+							ctx := &{{interceptorsPkg}}.Context{
+								Service: "{{$service.Name}}",
+								Method: "{{$method.Name}}",
+								Params: p,
+							}
+							req, err := ih.ResolveArgs(ctx, func(ctx *{{interceptorsPkg}}.Context, next {{interceptorsPkg}}.ResolveArgsInvoker) (result interface{}, err error) {
+								{{ if $method.RequestResolverFunctionName -}}
+									{{ if $.TracerEnabled -}}
+										req, err := {{$method.RequestResolverFunctionName}}(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+									{{ else -}}
+										req, err := {{$method.RequestResolverFunctionName}}(p.Context, p.Args)
+									{{ end -}}
+								{{ else -}}
+									return new({{goType $method.RequestType}}), nil
+								{{ end -}}
+							})
+							if err != nil {
+								return nil, err
+							}
+							res, err := ih.Call(ctx, req, func(ctx *{{interceptorsPkg}}.Context, req interface{}, next {{interceptorsPkg}}.CallMethodInvoker) (result interface{}, err error) {
+								r, ok := req.(*{{goType $method.RequestType}})
+								if !ok {
+									return nil, {{errorsPkg}}.New({{fmtPkg}}.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *{{goType $method.RequestType}}", req))
+								}
+								res, err := c.{{$method.CallMethod}}(ctx.Params.Context, r)
+								return res, err
+							})
+							if err != nil {
+								return nil, err
+							}
+							rc, ok :=res.(*{{goType $method.ResponseType}})
+							if !ok {
+								return nil, {{errorsPkg}}.New({{fmtPkg}}.Sprintf("Call Interceptor returns bad value type(%T). Should return *{{goType $method.ResponseType}}", res))
+							}
+							return rc, err
+						},
+					},
+				{{ end -}}
+			}
+		{{else -}}
+			return nil
+		{{end -}}
+	}
+{{ end -}}

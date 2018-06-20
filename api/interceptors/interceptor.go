@@ -2,7 +2,6 @@ package interceptors
 
 import (
 	"github.com/graphql-go/graphql"
-	"google.golang.org/grpc"
 )
 
 type Context struct {
@@ -13,10 +12,10 @@ type Context struct {
 	PayloadError interface{}
 }
 type ResolveArgsInvoker func() (result interface{}, err error)
-type CallMethodInvoker func(req interface{}, opts ...grpc.CallOption) (result interface{}, err error)
+type CallMethodInvoker func(req interface{}) (result interface{}, err error)
 
 type ResolveArgsInterceptor func(ctx *Context, next ResolveArgsInvoker) (result interface{}, err error)
-type CallInterceptor func(ctx *Context, req interface{}, next CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error)
+type CallInterceptor func(ctx *Context, req interface{}, next CallMethodInvoker) (result interface{}, err error)
 
 type InterceptorHandler struct {
 	ResolveArgsInterceptors []ResolveArgsInterceptor
@@ -37,17 +36,17 @@ func (d *InterceptorHandler) ResolveArgs(c *Context, resolve ResolveArgsIntercep
 	}
 	return invoker()
 }
-func (d *InterceptorHandler) Call(c *Context, req interface{}, call CallInterceptor, opts ...grpc.CallOption) (res interface{}, err error) {
+func (d *InterceptorHandler) Call(c *Context, req interface{}, call CallInterceptor) (res interface{}, err error) {
 	chain := make([]CallInterceptor, len(d.CallInterceptors)+1)
 	copy(chain, d.CallInterceptors)
 	chain[len(d.CallInterceptors)] = call
 	i := -1
 	var invoker CallMethodInvoker
-	invoker = func(req interface{}, opts ...grpc.CallOption) (result interface{}, err error) {
+	invoker = func(req interface{}) (result interface{}, err error) {
 		i++
-		return chain[i](c, req, invoker, opts...)
+		return chain[i](c, req, invoker)
 	}
-	return invoker(req, opts...)
+	return invoker(req)
 }
 
 func (d *InterceptorHandler) OnResolveArgs(i ResolveArgsInterceptor) {

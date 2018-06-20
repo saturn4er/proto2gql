@@ -1,4 +1,4 @@
-package generator
+package common
 
 import (
 	"strconv"
@@ -11,11 +11,12 @@ type Import struct {
 	Alias string
 	Path  string
 }
-type importer struct {
-	imports []Import
+type Importer struct {
+	CurrentPackage string
+	imports        []Import
 }
 
-func (i *importer) resolveImport(path string) (alias, importPath string) {
+func (i *Importer) resolveImport(path string) (alias, importPath string) {
 	paths := strings.Split(path, "/")
 	if paths[len(paths)-1] == "" {
 		// if Path is something like `a/b/c/`(ends with slash), Alias will be "c" Path will be "a/b/c"
@@ -30,7 +31,7 @@ func (i *importer) resolveImport(path string) (alias, importPath string) {
 	}
 	return
 }
-func (i *importer) findPath(path string) *Import {
+func (i *Importer) findPath(path string) *Import {
 	for _, imp := range i.imports {
 		if imp.Path == path {
 			return &imp
@@ -38,7 +39,7 @@ func (i *importer) findPath(path string) *Import {
 	}
 	return nil
 }
-func (i *importer) aliasExists(alias string) bool {
+func (i *Importer) aliasExists(alias string) bool {
 	for _, imp := range i.imports {
 		if imp.Alias == alias {
 			return true
@@ -46,7 +47,7 @@ func (i *importer) aliasExists(alias string) bool {
 	}
 	return false
 }
-func (i *importer) findAliasWithoutCollision(alias string) string {
+func (i *Importer) findAliasWithoutCollision(alias string) string {
 	if !i.aliasExists(alias) {
 		return alias
 	}
@@ -57,7 +58,10 @@ func (i *importer) findAliasWithoutCollision(alias string) string {
 		}
 	}
 }
-func (i *importer) New(path string) string {
+func (i *Importer) New(path string) string {
+	if i.CurrentPackage == path {
+		return ""
+	}
 	alias, path := i.resolveImport(path)
 	imp := i.findPath(path)
 	if imp != nil {
@@ -70,8 +74,14 @@ func (i *importer) New(path string) string {
 	})
 	return alias
 }
+func (i *Importer) Prefix(path string) string {
+	if i.CurrentPackage == path {
+		return ""
+	}
+	return i.New(path) + "."
+}
 
-func (i *importer) Imports() []Import {
+func (i *Importer) Imports() []Import {
 	res := make([]Import, len(i.imports))
 	copy(res, i.imports)
 	return res

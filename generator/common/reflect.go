@@ -1,11 +1,11 @@
-package common_generator
+package common
 
 import (
 	"reflect"
 )
 
-func typeIsScalar(p reflect.Type) bool {
-	switch p.Kind() {
+func typeIsScalar(p GoType) bool {
+	switch p.Kind {
 	case reflect.Bool,
 		reflect.Int,
 		reflect.Int8,

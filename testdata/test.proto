@@ -41,7 +41,7 @@ message RootMessage {
     map<int32, NestedEnum> map_enum = 1; // Map with enum value
     // scalar map
     map<int32, int32> map_scalar = 28; // Map with scalar value
-    map<int32, NestedMessage> map_msg = 2; // Map with Message value
+    map<string, NestedMessage> map_msg = 2; // Map with Message value
 
     // repeated Message
     repeated NestedMessage r_msg = 3;
