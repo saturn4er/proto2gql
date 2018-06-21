@@ -57,6 +57,16 @@ func (g generator) goTypeStr(typ GoType) string {
 	panic("type " + typ.Kind.String() + " is not supported")
 }
 
+func (g generator) goTypeForNew(typ GoType) string {
+	switch typ.Kind {
+	case reflect.Ptr:
+		return g.goTypeStr(*typ.ElemType)
+	case reflect.Struct:
+		return g.imports.Prefix(typ.Pkg) + typ.Name
+	}
+	panic("type " + typ.Kind.String() + " is not supported")
+}
+
 func (g generator) bodyTemplateFuncs() map[string]interface{} {
 	return map[string]interface{}{
 		"ctxPkg":          g.importFunc("context"),
@@ -74,7 +84,8 @@ func (g generator) bodyTemplateFuncs() map[string]interface{} {
 		"isArray": func(typ GoType) bool {
 			return typ.Kind == reflect.Slice
 		},
-		"goType": g.goTypeStr,
+		"goType":       g.goTypeStr,
+		"goTypeForNew": g.goTypeForNew,
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/saturn4er/proto2gql/generator/proto/parser"
 )
 
+
 func (g *Generator) inputMessageGraphQLName(message *parser.Message) string {
 	return g.fileConfig(message.File).GetGQLMessagePrefix() + strings.Join(message.TypeName, "__") + "Input"
 }

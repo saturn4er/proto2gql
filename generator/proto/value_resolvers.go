@@ -27,8 +27,8 @@ func (g *Generator) TypeValueResolver(parentFile *parser.File, typ *parser.Type)
 			return nil, false, errors.Wrapf(err, "failed to resolve type %s output package", typ)
 		}
 		return func(arg string, ctx common.BodyContext) string {
-			return ctx.Importer.Prefix(pkg) + g.inputMessageFieldTypeResolver()typ.>.TypeName) + "(" + arg + ".(int))"
-		}, false, nil
+			return ctx.Importer.Prefix(pkg) + g.inputMessageResolverName(typ.Message) + "(tr," + arg + ")"
+		}, true, nil
 	}
 	return func(arg string, ctx common.BodyContext) string {
 		return arg + "// not implemented"

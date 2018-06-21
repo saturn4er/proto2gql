@@ -109,11 +109,16 @@ func (g *Generator) prepareFile(file parsedFile) (*common.File, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file map resolvers")
 	}
+	messagesResolvers, err := g.fileMessageInputObjectsResolvers(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to prepare file messages resolvers")
+	}
 	res := &common.File{
 		PackageName:             pkgName,
 		Package:                 pkg,
 		Enums:                   enums,
 		InputObjects:            inputs,
+		InputObjectResolvers:    messagesResolvers,
 		MapInputObjects:         mapInputs,
 		MapInputObjectResolvers: mapResolvers,
 		MapOutputObjects:        mapOutputs,

@@ -35,7 +35,7 @@
 
 // Input objects resolvers
 {{ range $resolver := .File.InputObjectResolvers -}}
-func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer, {{end}}ctx {{ctxPkg}}.Context, i interface{}) (_ *{{$resolver.OutputGoType}}, rerr error){
+func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer, {{end}}ctx {{ctxPkg}}.Context, i interface{}) (_ {{goType $resolver.OutputGoType}}, rerr error){
 	{{ if $.TracerEnabled -}}
 		span := tr.CreateChildSpanFromContext(ctx, "{{$resolver.FunctionName}}")
 		defer span.Finish()
@@ -56,7 +56,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 	}
 	args := i.(map[string]interface{})
 	_ = args
-	var result = new({{$resolver.OutputGoType}})
+	var result = new({{goTypeForNew $resolver.OutputGoType}})
 	{{ range $field := $resolver.Fields -}}
 		if args["{{$field.GraphqlInputField}}"] != nil {
 			{{ if isArray $field.GoType -}}

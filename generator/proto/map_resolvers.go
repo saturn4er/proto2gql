@@ -21,12 +21,12 @@ func (g *Generator) fileMapInputObjectsResolvers(file parsedFile) ([]common.MapI
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve value go type")
 			}
-			keyTypeResolver, keyResolveWithErr,err := g.TypeValueResolver(file.File, mapFld.Map.KeyType)
-			if err	 != nil {
+			keyTypeResolver, keyResolveWithErr, err := g.TypeValueResolver(file.File, mapFld.Map.KeyType)
+			if err != nil {
 				return nil, errors.Wrap(err, "failed to get key type value resolver")
 			}
-			valueTypeResolver, valueResolveWithErr,err := g.TypeValueResolver(file.File, mapFld.Map.ValueType)
-			if err	 != nil {
+			valueTypeResolver, valueResolveWithErr, err := g.TypeValueResolver(file.File, mapFld.Map.ValueType)
+			if err != nil {
 				return nil, errors.Wrap(err, "failed to get value type value resolver")
 			}
 			res = append(res, common.MapInputObjectResolver{
