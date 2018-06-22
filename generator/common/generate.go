@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"golang.org/x/tools/imports"
 )
@@ -51,13 +52,13 @@ func (g generator) goTypeStr(typ GoType) string {
 		return "[]" + g.goTypeStr(*typ.ElemType)
 	case reflect.Ptr:
 		return "*" + g.goTypeStr(*typ.ElemType)
-	case reflect.Struct:
+	case reflect.Struct, reflect.Interface:
 		return g.imports.Prefix(typ.Pkg) + typ.Name
 	}
-	fmt.Println(typ)
-	if typ.Name != ""{
+	if typ.Name != "" {
 		return g.imports.Prefix(typ.Pkg) + typ.Name
 	}
+	spew.Dump(typ)
 	panic("type " + typ.Kind.String() + " is not supported")
 }
 

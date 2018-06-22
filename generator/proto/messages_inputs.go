@@ -34,32 +34,9 @@ func (g *Generator) inputMessageTypeResolver(currentFile *parser.File, message *
 		return ctx.Importer.Prefix(pkg) + g.inputMessageVariable(message)
 	}, nil
 }
-func (g *Generator) inputTypeResolver(currentFile *parser.File, typ *parser.Type) (common.TypeResolver, error) {
-	if typ.IsScalar() {
-		resolver, ok := scalarsResolvers[typ.Scalar]
-		if !ok {
-			return nil, errors.Errorf("unimplemented scalar type: %s", typ.Scalar)
-		}
-		return resolver, nil
-	}
-	if typ.IsMessage() {
-		res, err := g.inputMessageTypeResolver(currentFile, typ.Message)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get message type resolver")
-		}
-		return res, nil
-	}
-	if typ.IsEnum() {
-		res, err := g.enumTypeResolver(currentFile, typ.Enum)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get enum type resolver")
-		}
-		return res, nil
-	}
-	return nil, errors.New("not implemented " + typ.String())
-}
+
 func (g *Generator) inputMessageFieldTypeResolver(currentFile *parser.File, field *parser.Field) (common.TypeResolver, error) {
-	resolver, err := g.inputTypeResolver(currentFile, field.Type)
+	resolver, err := g.TypeOutputTypeResolver(currentFile, field.Type)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get input type resolver")
 	}

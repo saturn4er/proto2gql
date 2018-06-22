@@ -24,20 +24,20 @@ type InputObjectResolver struct {
 }
 type InputObjectResolverOneOf struct {
 	OutputFieldName string
-	Fields          []InputObjectResolverField
+	Fields          []InputObjectResolverOneOfField
 }
 type InputObjectResolverOneOfField struct {
-	GraphqlInputField string
-	ValueResolver     ValueResolver
-	ResolverWithError bool
-	AssigningWrapper  AssigningWrapper
+	GraphQLInputFieldName string
+	ValueResolver         ValueResolver
+	ResolverWithError     bool
+	AssigningWrapper      AssigningWrapper
 }
 type InputObjectResolverField struct {
-	OutputFieldName   string
-	GraphqlInputField string
-	GoType            GoType
-	ValueResolver     ValueResolver
-	ResolverWithError bool
+	OutputFieldName       string
+	GraphQLInputFieldName string
+	GoType                GoType
+	ValueResolver         ValueResolver
+	ResolverWithError     bool
 }
 
 type InputObject struct {
@@ -97,7 +97,7 @@ type Service struct {
 }
 type Method struct {
 	Name                        string
-	ResultType                  TypeResolver
+	GraphQLOutputType           TypeResolver
 	Arguments                   []MethodArguments
 	RequestResolverFunctionName string
 	CallMethod                  string

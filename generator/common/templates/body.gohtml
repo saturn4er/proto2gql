@@ -55,54 +55,62 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 	_ = args
 	var result = new({{goTypeForNew $resolver.OutputGoType}})
 	{{ range $field := $resolver.Fields -}}
-		if args["{{$field.GraphqlInputField}}"] != nil {
+		if args["{{$field.GraphQLInputFieldName}}"] != nil {
 			{{ if isArray $field.GoType -}}
-        	in := args["{{$field.GraphqlInputField}}"].([]interface{})
-			result.{{$field.Name}} = make({{goType $field.GoType}}, len(in))
-			for i, val := range in {
+				in := args["{{$field.GraphQLInputFieldName}}"].([]interface{})
+				result.{{$field.OutputFieldName}} = make({{goType $field.GoType}}, len(in))
+				for i, val := range in {
+					{{ if $field.ResolverWithError }}
+						v, err := {{call $field.ValueResolver "val" $}}
+						if err != nil {
+							return nil, {{errorsPkg}}.Wrap(err, "failed to resolve input object field")
+						}
+						result.{{$field.OutputFieldName}}[i] = v
+					{{ else -}}
+						result.{{$field.OutputFieldName}}[i] = {{call $field.ValueResolver "val" $}}
+					{{ end -}}
+				}
+			{{ else -}}
 				{{ if $field.ResolverWithError }}
-					v, err := {{call $field.ValueResolver "val" $}}
+					v, err := {{call $field.ValueResolver (concat "args[\"" $field.GraphQLInputFieldName "\"]") $}}
 					if err != nil {
 						return nil, {{errorsPkg}}.Wrap(err, "failed to resolve input object field")
 					}
-					result.{{$field.OutputFieldName}}[i] = v
+					result.{{$field.OutputFieldName}} = v
 				{{ else -}}
-					result.{{$field.OutputFieldName}}[i] = {{call $field.ValueResolver "val" $}}
+					result.{{$field.OutputFieldName}} = {{call $field.ValueResolver (concat "args[\"" $field.GraphQLInputFieldName "\"]") $}}
 				{{ end -}}
-			}
-			{{ else -}}
-				result.{{$field.OutputFieldName}} = {{call $field.ValueResolver (concat "args[\"" $field.GraphqlInputField "\"]") $}}
 			{{ end -}}
 		}
 	{{ end -}}
 	{{range $oneof := $resolver.OneOfFields -}}
 		{{range $index, $field := $oneof.Fields -}}
 			{{if eq $index 0 -}}
-			if {{$field.GraphqlInputField}}_, ok := args["{{$field.GraphqlInputField}}"]; ok && {{$field.GraphqlInputField}}_ != nil {
+			if {{$field.GraphQLInputFieldName}}_, ok := args["{{$field.GraphQLInputFieldName}}"]; ok && {{$field.GraphQLInputFieldName}}_ != nil {
                 {{ if $field.ResolverWithError -}}
-                    v, err := {{call $field.ValueResolver (concat $field.GraphqlInputField "_") $}}
+                    v, err := {{call $field.ValueResolver (concat $field.GraphQLInputFieldName "_") $}}
                     if err != nil {
-                        return nil, {{errorsPkg}}.Wrap(err, "failed to resolve oneOf object field {{$field.GraphqlInputField}}")
+                        return nil, {{errorsPkg}}.Wrap(err, "failed to resolve oneOf object field {{$field.GraphQLInputFieldName}}")
                     }
                 {{ else -}}
-                    v := {{call $field.ValueResolver (concat $field.GraphqlInputField "_") $}}
+                    v := {{call $field.ValueResolver (concat $field.GraphQLInputFieldName "_") $}}
                 {{end -}}
                 {{ if $field.AssigningWrapper -}}
-                    result.{{$oneof.OutputFieldName}} = {{$field.AssigningWrapper "v"}}
+                    result.{{$oneof.OutputFieldName}} = {{call $field.AssigningWrapper "v" $}}
                 {{ else -}}
                     result.{{$oneof.OutputFieldName}} = v
                 {{ end -}}
-			}{{else -}} else if {{$field.GraphqlInputField}}_, ok := args["{{$field.GraphqlInputField}}"]; ok && {{$field.GraphqlInputField}}_ != nil {
+			}{{else -}} else if {{$field.GraphQLInputFieldName}}_, ok := args["{{$field.GraphQLInputFieldName}}"]; ok && {{$field.GraphQLInputFieldName}}_ != nil {
                 {{ if $field.ResolverWithError -}}
-                    v, err := {{call $field.ValueResolver (concat $field.GraphqlInputField "_") $}}
+                    v, err := {{call $field.ValueResolver (concat $field.GraphQLInputFieldName "_") $}}
                     if err != nil {
-                        return nil, {{errorsPkg}}.Wrap(err, "failed to resolve oneOf object field {{$field.GraphqlInputField}}")
+                        return nil, {{errorsPkg}}.Wrap(err, "failed to resolve oneOf object field {{$field.GraphQLInputFieldName}}")
                     }
                 {{ else -}}
-                    v := {{call $field.ValueResolver (concat $field.GraphqlInputField "_") $}}
+                    v := {{call $field.ValueResolver (concat $field.GraphQLInputFieldName "_") $}}
                 {{end -}}
                 {{ if $field.AssigningWrapper -}}
-                    result.{{$oneof.OutputFieldName}} = {{$field.AssigningWrapper "v"}}
+                    result.{{$oneof.OutputFieldName}} = {{call $field.AssigningWrapper "v" $}}
                 {{ else -}}
                     result.{{$oneof.OutputFieldName}} = v
                 {{ end -}}
@@ -249,7 +257,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 				{{range $method := $service.Methods -}}
 					"{{$method.Name}}": &{{gqlPkg}}.Field{
 						Name: "{{$method.Name}}",
-						Type: {{call $method.ResultType $}},
+						Type: {{call $method.GraphQLOutputType $}},
 						{{ if $method.Arguments -}}
 							Args: {{gqlPkg}}.FieldConfigArgument{
 		                		{{ range $arg := $method.Arguments -}}
@@ -279,7 +287,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 									}
 									return c.{{$method.CallMethod}}(p.Context, req)
 								{{ else -}}
- 									return c.{{$method.CallMethod}}(p.Context, new({{goType $method.RequestType}}))
+ 									return c.{{$method.CallMethod}}(p.Context, new({{goTypeForNew $method.RequestType}}))
 								{{ end -}}
 							}
 							ctx := &{{interceptorsPkg}}.Context{
@@ -295,26 +303,22 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 										req, err := {{$method.RequestResolverFunctionName}}(p.Context, p.Args)
 									{{ end -}}
 								{{ else -}}
-									return new({{goType $method.RequestType}}), nil
+									return new({{goTypeForNew $method.RequestType}}), nil
 								{{ end -}}
 							})
-							if err != nil {
-								return nil, err
-							}
+							if err != nil { return nil, err }
 							res, err := ih.Call(ctx, req, func(ctx *{{interceptorsPkg}}.Context, req interface{}, next {{interceptorsPkg}}.CallMethodInvoker) (result interface{}, err error) {
-								r, ok := req.(*{{goType $method.RequestType}})
+								r, ok := req.({{goType $method.RequestType}})
 								if !ok {
-									return nil, {{errorsPkg}}.New({{fmtPkg}}.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *{{goType $method.RequestType}}", req))
+									return nil, {{errorsPkg}}.New({{fmtPkg}}.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: {{goType $method.RequestType}}", req))
 								}
 								res, err := c.{{$method.CallMethod}}(ctx.Params.Context, r)
 								return res, err
 							})
-							if err != nil {
-								return nil, err
-							}
-							rc, ok :=res.(*{{goType $method.ResponseType}})
+							if err != nil { return nil, err }
+							rc, ok :=res.({{goType $method.ResponseType}})
 							if !ok {
-								return nil, {{errorsPkg}}.New({{fmtPkg}}.Sprintf("Call Interceptor returns bad value type(%T). Should return *{{goType $method.ResponseType}}", res))
+								return nil, {{errorsPkg}}.New({{fmtPkg}}.Sprintf("Call Interceptor returns bad value type(%T). Should return {{goType $method.ResponseType}}", res))
 							}
 							return rc, err
 						},
