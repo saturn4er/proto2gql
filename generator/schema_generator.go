@@ -2,14 +2,15 @@ package generator
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
-	"github.com/saturn4er/proto2gql/parser"
-	"golang.org/x/tools/imports"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/pkg/errors"
+	"github.com/saturn4er/proto2gql/parser"
+	"golang.org/x/tools/imports"
 )
 
 type schemaService struct {
@@ -225,15 +226,21 @@ func (g *schemaGenerator) generate() error {
 		panic(err)
 	}
 	r := bytes.Join([][]byte{headres.Bytes(), res.Bytes()}, nil)
-	r, err = imports.Process(g.cfg.OutputPath, r, &imports.Options{
-		Comments: true,
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to format generated code")
-	}
 	err = os.MkdirAll(filepath.Dir(g.cfg.OutputPath), 0777)
 	if err != nil {
 		panic(err)
+	}
+	err = ioutil.WriteFile(g.cfg.OutputPath, r, 0600)
+	if err != nil {
+		return errors.Wrap(err, "failed to save unformatted file")
+	}
+	r, err = imports.Process(g.cfg.OutputPath, r, &imports.Options{
+		Comments: true,
+	})
+
+	if err != nil {
+
+		return errors.Wrap(err, "failed to format generated code")
 	}
 	return ioutil.WriteFile(g.cfg.OutputPath, r, 0600)
 }
