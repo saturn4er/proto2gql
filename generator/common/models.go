@@ -98,13 +98,13 @@ type Service struct {
 type Method struct {
 	Name                        string
 	GraphQLOutputType           TypeResolver
-	Arguments                   []MethodArguments
+	Arguments                   []MethodArgument
 	RequestResolverFunctionName string
 	CallMethod                  string
 	RequestType                 GoType
 	ResponseType                GoType
 }
-type MethodArguments struct {
+type MethodArgument struct {
 	Name string
 	Type TypeResolver
 }

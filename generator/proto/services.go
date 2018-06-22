@@ -9,6 +9,30 @@ import (
 	"github.com/saturn4er/proto2gql/generator/proto/parser"
 )
 
+func (g Generator) serviceMethodArguments(file *parser.File, method *parser.Method) ([]common.MethodArgument, error) {
+	var args []common.MethodArgument
+	for _, field := range method.InputMessage.Fields {
+		typResolver, err := g.TypeInputTypeResolver(file, field.Type)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to prepare input type resolver")
+		}
+		args = append(args, common.MethodArgument{
+			Name: field.Name,
+			Type: typResolver,
+		})
+	}
+	for _, field := range method.InputMessage.Fields {
+		typResolver, err := g.TypeInputTypeResolver(file, field.Type)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to prepare input type resolver")
+		}
+		args = append(args, common.MethodArgument{
+			Name: field.Name,
+			Type: typResolver,
+		})
+	}
+	return args, nil
+}
 func (g Generator) serviceMethod(file *parser.File, method *parser.Method) (*common.Method, error) {
 	outType, err := g.TypeOutputTypeResolver(file, method.OutputMessage.Type)
 	if err != nil {
@@ -22,6 +46,10 @@ func (g Generator) serviceMethod(file *parser.File, method *parser.Method) (*com
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get request go type for method: ", method.Name)
 	}
+	args, err := g.serviceMethodArguments(file, method)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to prepare service method arguments")
+	}
 	return &common.Method{
 		Name:                        method.Name,
 		GraphQLOutputType:           outType,
@@ -29,6 +57,7 @@ func (g Generator) serviceMethod(file *parser.File, method *parser.Method) (*com
 		ResponseType:                responseType,
 		CallMethod:                  camelCase(method.Name),
 		RequestResolverFunctionName: g.inputMessageResolverName(method.InputMessage),
+		Arguments:                   args,
 	}, nil
 }
 func (g Generator) serviceQueryMethods(file *parser.File, service *parser.Service) ([]common.Method, error) {
