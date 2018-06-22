@@ -6,6 +6,7 @@ import (
 
 type TypeResolver func(ctx BodyContext) string
 type ValueResolver func(arg string, ctx BodyContext) string
+type AssigningWrapper func(arg string, ctx BodyContext) string
 
 type GoType struct {
 	Scalar   bool
@@ -19,10 +20,20 @@ type InputObjectResolver struct {
 	FunctionName string
 	OutputGoType GoType
 	Fields       []InputObjectResolverField
+	OneOfFields  []InputObjectResolverOneOf
 }
-
+type InputObjectResolverOneOf struct {
+	OutputFieldName string
+	Fields          []InputObjectResolverField
+}
+type InputObjectResolverOneOfField struct {
+	GraphqlInputField string
+	ValueResolver     ValueResolver
+	ResolverWithError bool
+	AssigningWrapper  AssigningWrapper
+}
 type InputObjectResolverField struct {
-	Name              string
+	OutputFieldName   string
 	GraphqlInputField string
 	GoType            GoType
 	ValueResolver     ValueResolver

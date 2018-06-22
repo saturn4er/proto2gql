@@ -41,13 +41,10 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 		defer span.Finish()
 		defer func(){
 			if perr := recover(); perr != nil {
-				span.SetTag("error", "true")
-				span.SetTag("error_message", perr)
-				span.SetTag("error_stack", string({{debugPkg}}.Stack()))
+				span.SetTag("error", "true").SetTag("error_message", perr).SetTag("error_stack", string({{debugPkg}}.Stack()))
 			}
 			if rerr != nil {
-				span.SetTag("error", "true")
-				span.SetTag("error_message", rerr.Error())
+				span.SetTag("error", "true").SetTag("error_message", rerr.Error())
 			}
 		}()
 	{{end -}}
@@ -66,19 +63,53 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 				{{ if $field.ResolverWithError }}
 					v, err := {{call $field.ValueResolver "val" $}}
 					if err != nil {
-						return errors.Wrap("")
+						return nil, {{errorsPkg}}.Wrap(err, "failed to resolve input object field")
 					}
-					result.{{$field.Name}}[i] = v
+					result.{{$field.OutputFieldName}}[i] = v
 				{{ else -}}
-					result.{{$field.Name}}[i] = {{call $field.ValueResolver "val" $}}
+					result.{{$field.OutputFieldName}}[i] = {{call $field.ValueResolver "val" $}}
 				{{ end -}}
-
 			}
 			{{ else -}}
-				result.{{$field.Name}} = {{call $field.ValueResolver (concat "args[\"" $field.GraphqlInputField "\"]") $}}
+				result.{{$field.OutputFieldName}} = {{call $field.ValueResolver (concat "args[\"" $field.GraphqlInputField "\"]") $}}
 			{{ end -}}
 		}
 	{{ end -}}
+	{{range $oneof := $resolver.OneOfFields -}}
+		{{range $index, $field := $oneof.Fields -}}
+			{{if eq $index 0 -}}
+			if {{$field.GraphqlInputField}}_, ok := args["{{$field.GraphqlInputField}}"]; ok && {{$field.GraphqlInputField}}_ != nil {
+                {{ if $field.ResolverWithError -}}
+                    v, err := {{call $field.ValueResolver (concat $field.GraphqlInputField "_") $}}
+                    if err != nil {
+                        return nil, {{errorsPkg}}.Wrap(err, "failed to resolve oneOf object field {{$field.GraphqlInputField}}")
+                    }
+                {{ else -}}
+                    v := {{call $field.ValueResolver (concat $field.GraphqlInputField "_") $}}
+                {{end -}}
+                {{ if $field.AssigningWrapper -}}
+                    result.{{$oneof.OutputFieldName}} = {{$field.AssigningWrapper "v"}}
+                {{ else -}}
+                    result.{{$oneof.OutputFieldName}} = v
+                {{ end -}}
+			}{{else -}} else if {{$field.GraphqlInputField}}_, ok := args["{{$field.GraphqlInputField}}"]; ok && {{$field.GraphqlInputField}}_ != nil {
+                {{ if $field.ResolverWithError -}}
+                    v, err := {{call $field.ValueResolver (concat $field.GraphqlInputField "_") $}}
+                    if err != nil {
+                        return nil, {{errorsPkg}}.Wrap(err, "failed to resolve oneOf object field {{$field.GraphqlInputField}}")
+                    }
+                {{ else -}}
+                    v := {{call $field.ValueResolver (concat $field.GraphqlInputField "_") $}}
+                {{end -}}
+                {{ if $field.AssigningWrapper -}}
+                    result.{{$oneof.OutputFieldName}} = {{$field.AssigningWrapper "v"}}
+                {{ else -}}
+                    result.{{$oneof.OutputFieldName}} = v
+                {{ end -}}
+			}{{end -}}
+
+		{{end}}
+	{{end}}
 
 	return result, nil
 }
@@ -91,8 +122,8 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 	})
 	func init(){
 		{{ range $field := $object.Fields -}}
-			{{$object.VariableName}}.AddFieldConfig("{{$field.Name}}", &{{gqlPkg}}.Field{
-				Name: "{{.Name}}",
+			{{$object.VariableName}}.AddFieldConfig("{{$field.OutputFieldName}}", &{{gqlPkg}}.Field{
+				Name: "{{$field.Name}}",
 				Type: {{call $field.Type $}},
 				Resolve: func(p {{gqlPkg}}.ResolveParams) (interface{}, error) {
         	    	switch src := p.Source.(type){
@@ -138,13 +169,10 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 			defer span.Finish()
 			defer func(){
 				if perr := recover(); perr != nil {
-					span.SetTag("error", "true")
-					span.SetTag("error_message", perr)
-					span.SetTag("error_stack", string({{debugPkg}}.Stack()))
+					span.SetTag("error", "true").SetTag("error_message", perr).SetTag("error_stack", string({{debugPkg}}.Stack()))
 				}
 				if rerr != nil {
-					span.SetTag("error", "true")
-					span.SetTag("error_message", rerr.Error())
+					span.SetTag("error", "true").SetTag("error_message", rerr.Error())
 				}
 			}()
 		{{end -}}
@@ -235,8 +263,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 								defer span.Finish()
 								defer func(){
 									if rerr != nil {
-										span.SetTag("error", "true")
-										span.SetTag("error_message", rerr.Error())
+										span.SetTag("error", "true").SetTag("error_message", rerr.Error())
 									}
 								}()
 							{{end -}}

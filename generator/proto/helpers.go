@@ -44,7 +44,7 @@ func goTypeByParserType(typ *parser.Type) (_ common.GoType, err error) {
 	if typ.IsEnum() {
 		return common.GoType{
 			Pkg:  typ.File.GoPackage,
-			Name: typ.Enum.Name,
+			Name: snakeCamelCaseSlice(typ.Enum.TypeName),
 			Kind: reflect.Int32,
 		}, nil
 	}
