@@ -15,7 +15,7 @@ func (g *Generator) TypeOutputTypeResolver(currentFile *parser.File, typ *parser
 		return resolver, nil
 	}
 	if typ.IsMessage() {
-		res, err := g.inputMessageTypeResolver(currentFile, typ.Message)
+		res, err := g.outputMessageTypeResolver(currentFile, typ.Message)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get message type resolver")
 		}

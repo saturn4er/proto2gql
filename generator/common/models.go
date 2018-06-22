@@ -48,7 +48,6 @@ type InputObject struct {
 type ObjectField struct {
 	Name          string
 	Type          TypeResolver
-	GoObjectType  GoType
 	GoObjectField string
 	NeedCast      bool
 	CastTo        GoType
@@ -56,6 +55,7 @@ type ObjectField struct {
 type OutputObject struct {
 	VariableName string
 	GraphQLName  string
+	GoType       GoType
 	Fields       []ObjectField
 }
 type Enum struct {

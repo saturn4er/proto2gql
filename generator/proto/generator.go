@@ -65,11 +65,15 @@ func (g *Generator) prepareFile(file parsedFile) (*common.File, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file map output objects")
 	}
-	mapResolvers, err := g.fileMapInputObjectsResolvers(file)
+	mapResolvers, err := g.fileInputMapResolvers(file)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file map resolvers")
 	}
-	messagesResolvers, err := g.fileMessageInputObjectsResolvers(file)
+	outputMessages, err := g.fileOutputMessages(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to prepare file output messages")
+	}
+	messagesResolvers, err := g.fileInputMessagesResolvers(file)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file messages resolvers")
 	}
@@ -83,6 +87,7 @@ func (g *Generator) prepareFile(file parsedFile) (*common.File, error) {
 		Enums:                   enums,
 		InputObjects:            inputs,
 		InputObjectResolvers:    messagesResolvers,
+		OutputObjects:           outputMessages,
 		MapInputObjects:         mapInputs,
 		MapInputObjectResolvers: mapResolvers,
 		MapOutputObjects:        mapOutputs,

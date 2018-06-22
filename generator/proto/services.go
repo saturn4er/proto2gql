@@ -23,11 +23,12 @@ func (g Generator) serviceMethod(file *parser.File, method *parser.Method) (*com
 		return nil, errors.Wrapf(err, "failed to get request go type for method: ", method.Name)
 	}
 	return &common.Method{
-		Name:              method.Name,
-		GraphQLOutputType: outType,
-		RequestType:       requestType,
-		ResponseType:      responseType,
-		CallMethod:        camelCase(method.Name),
+		Name:                        method.Name,
+		GraphQLOutputType:           outType,
+		RequestType:                 requestType,
+		ResponseType:                responseType,
+		CallMethod:                  camelCase(method.Name),
+		RequestResolverFunctionName: g.inputMessageResolverName(method.InputMessage),
 	}, nil
 }
 func (g Generator) serviceQueryMethods(file *parser.File, service *parser.Service) ([]common.Method, error) {

@@ -15,12 +15,6 @@ func (g *Generator) inputMessageGraphQLName(message *parser.Message) string {
 func (g *Generator) inputMessageVariable(message *parser.Message) string {
 	return g.fileConfig(message.File).GetGQLMessagePrefix() + strings.Join(message.TypeName, "") + "Input"
 }
-func (g *Generator) outputMessageGraphQLName(message *parser.Message) string {
-	return g.fileConfig(message.File).GetGQLMessagePrefix() + strings.Join(message.TypeName, "__")
-}
-func (g *Generator) outputMessageVariable(message *parser.Message) string {
-	return g.fileConfig(message.File).GetGQLMessagePrefix() + strings.Join(message.TypeName, "")
-}
 
 func (g *Generator) inputMessageTypeResolver(currentFile *parser.File, message *parser.Message) (common.TypeResolver, error) {
 	if !message.HaveFields() {

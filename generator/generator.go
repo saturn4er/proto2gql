@@ -1,30 +1,12 @@
 package generator
 
 import (
-	"path/filepath"
-	"github.com/pkg/errors"
-	"github.com/saturn4er/proto2gql/parser"
-	"github.com/saturn4er/proto2gql/generator/proto"
 	"os"
+	"path/filepath"
+
+	"github.com/pkg/errors"
+	"github.com/saturn4er/proto2gql/generator/proto"
 )
-
-type gqlProtoDerivativeFile struct {
-	GoProtoPkg string
-
-	OutGoPkgName string
-	OutGoPkg     string
-
-	OutDir      string
-	OutFilePath string
-
-	ProtoFile *parser.File
-
-	TracerEnabled    bool
-	GQLEnumsPrefix   string
-	GQLMessagePrefix string
-	Services         map[string]ServiceConfig
-	Messages         map[string]MessageConfig
-}
 
 type generator struct {
 	config *GenerateConfig

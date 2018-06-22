@@ -9,7 +9,7 @@ import (
 func (g *Generator) mapResolverFunctionName(mp *parser.Map) string {
 	return "Resolve" + g.inputMapVariable(mp)
 }
-func (g *Generator) fileMapInputObjectsResolvers(file parsedFile) ([]common.MapInputObjectResolver, error) {
+func (g *Generator) fileInputMapResolvers(file parsedFile) ([]common.MapInputObjectResolver, error) {
 	var res []common.MapInputObjectResolver
 	for _, msg := range file.File.Messages {
 		for _, mapFld := range msg.MapFields {

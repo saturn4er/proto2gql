@@ -130,12 +130,12 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 	})
 	func init(){
 		{{ range $field := $object.Fields -}}
-			{{$object.VariableName}}.AddFieldConfig("{{$field.OutputFieldName}}", &{{gqlPkg}}.Field{
+			{{$object.VariableName}}.AddFieldConfig("{{$field.Name}}", &{{gqlPkg}}.Field{
 				Name: "{{$field.Name}}",
 				Type: {{call $field.Type $}},
 				Resolve: func(p {{gqlPkg}}.ResolveParams) (interface{}, error) {
         	    	switch src := p.Source.(type){
-						case *{{goType $field.GoObjectType}}:
+						case *{{goType $object.GoType}}:
 							if src == nil {
 								return nil, nil
 							}
@@ -144,7 +144,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 							{{else -}}
 								return src.{{$field.GoObjectField}}, nil
 							{{ end -}}
-						case {{goType $field.GoObjectType}}:
+						case {{goType $object.GoType}}:
 							{{if $field.NeedCast -}}
 								return {{$field.CastTo}}(src.{{$field.GoObjectField}}), nil
 							{{else -}}
@@ -298,9 +298,9 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 							req, err := ih.ResolveArgs(ctx, func(ctx *{{interceptorsPkg}}.Context, next {{interceptorsPkg}}.ResolveArgsInvoker) (result interface{}, err error) {
 								{{ if $method.RequestResolverFunctionName -}}
 									{{ if $.TracerEnabled -}}
-										req, err := {{$method.RequestResolverFunctionName}}(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+                                    	return {{$method.RequestResolverFunctionName}}(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 									{{ else -}}
-										req, err := {{$method.RequestResolverFunctionName}}(p.Context, p.Args)
+										return {{$method.RequestResolverFunctionName}}(p.Context, p.Args)
 									{{ end -}}
 								{{ else -}}
 									return new({{goTypeForNew $method.RequestType}}), nil

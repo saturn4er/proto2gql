@@ -23,7 +23,7 @@ func (g *Generator) oneOfValueAssigningWrapper(msg *parser.Message, field *parse
 	}
 }
 
-func (g *Generator) fileMessageInputObjectsResolvers(file parsedFile) ([]common.InputObjectResolver, error) {
+func (g *Generator) fileInputMessagesResolvers(file parsedFile) ([]common.InputObjectResolver, error) {
 	var res []common.InputObjectResolver
 	for _, msg := range file.File.Messages {
 		goType, err := goTypeByParserType(msg.Type)

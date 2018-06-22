@@ -67,13 +67,13 @@ var ExmplRootMessageInput = graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "ExmplRootMessageInput",
 	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
 		return graphql.InputObjectConfigFieldMap{
-			"r_msg":               &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageNestedMessageInput))},
+			"r_msg":               &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageNestedMessage))},
 			"r_scalar":            &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(scalars.GraphQLInt32Scalar))},
 			"r_enum":              &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(RootEnum))},
 			"r_empty_msg":         &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(scalars.NoDataScalar))},
 			"n_r_enum":            &graphql.InputObjectFieldConfig{Type: common.CommonEnum},
 			"n_r_scalar":          &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
-			"n_r_msg":             &graphql.InputObjectFieldConfig{Type: common.CommonMessageInput},
+			"n_r_msg":             &graphql.InputObjectFieldConfig{Type: common.CommonMessage},
 			"scalar_from_context": &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
 			"n_r_empty_msg":       &graphql.InputObjectFieldConfig{Type: scalars.NoDataScalar},
 			"map_enum":            &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__map_enum))},
@@ -81,20 +81,20 @@ var ExmplRootMessageInput = graphql.NewInputObject(graphql.InputObjectConfig{
 			"map_msg":             &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__map_msg))},
 			"e_f_o_e":             &graphql.InputObjectFieldConfig{Type: common.CommonEnum},
 			"e_f_o_s":             &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
-			"e_f_o_m":             &graphql.InputObjectFieldConfig{Type: common.CommonMessageInput},
+			"e_f_o_m":             &graphql.InputObjectFieldConfig{Type: common.CommonMessage},
 			"e_f_o_em":            &graphql.InputObjectFieldConfig{Type: scalars.NoDataScalar},
 			"s_f_o_s":             &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
 			"s_f_o_e":             &graphql.InputObjectFieldConfig{Type: RootEnum},
-			"s_f_o_mes":           &graphql.InputObjectFieldConfig{Type: ExmplRootMessage2Input},
+			"s_f_o_mes":           &graphql.InputObjectFieldConfig{Type: ExmplRootMessage2},
 			"s_f_o_m":             &graphql.InputObjectFieldConfig{Type: scalars.NoDataScalar},
-			"m_f_o_m":             &graphql.InputObjectFieldConfig{Type: ExmplRootMessage2Input},
+			"m_f_o_m":             &graphql.InputObjectFieldConfig{Type: ExmplRootMessage2},
 			"m_f_o_s":             &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
 			"m_f_o_e":             &graphql.InputObjectFieldConfig{Type: RootEnum},
 			"m_f_o_em":            &graphql.InputObjectFieldConfig{Type: scalars.NoDataScalar},
 			"em_f_o_em":           &graphql.InputObjectFieldConfig{Type: scalars.NoDataScalar},
 			"em_f_o_s":            &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
 			"em_f_o_en":           &graphql.InputObjectFieldConfig{Type: RootEnum},
-			"em_f_o_m":            &graphql.InputObjectFieldConfig{Type: ExmplRootMessage2Input},
+			"em_f_o_m":            &graphql.InputObjectFieldConfig{Type: ExmplRootMessage2},
 		}
 	}),
 })
@@ -391,6 +391,254 @@ func ResolveRootMessage2(tr tracer.Tracer, ctx context.Context, i interface{}) (
 }
 
 // Output objects
+var ExmplRootMessage = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplRootMessage",
+	Fields: graphql.Fields{},
+})
+
+func init() {
+	ExmplRootMessage.AddFieldConfig("r_msg", &graphql.Field{
+		Name: "r_msg",
+		Type: ExmplRootMessageNestedMessage,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.RMsg, nil
+			case testdata.RootMessage:
+				return src.RMsg, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("r_scalar", &graphql.Field{
+		Name: "r_scalar",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.RScalar, nil
+			case testdata.RootMessage:
+				return src.RScalar, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("r_enum", &graphql.Field{
+		Name: "r_enum",
+		Type: RootEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.REnum, nil
+			case testdata.RootMessage:
+				return src.REnum, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("r_empty_msg", &graphql.Field{
+		Name: "r_empty_msg",
+		Type: scalars.NoDataScalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.REmptyMsg, nil
+			case testdata.RootMessage:
+				return src.REmptyMsg, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("n_r_enum", &graphql.Field{
+		Name: "n_r_enum",
+		Type: common.CommonEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.NREnum, nil
+			case testdata.RootMessage:
+				return src.NREnum, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("n_r_scalar", &graphql.Field{
+		Name: "n_r_scalar",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.NRScalar, nil
+			case testdata.RootMessage:
+				return src.NRScalar, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("n_r_msg", &graphql.Field{
+		Name: "n_r_msg",
+		Type: common.CommonMessage,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.NRMsg, nil
+			case testdata.RootMessage:
+				return src.NRMsg, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("scalar_from_context", &graphql.Field{
+		Name: "scalar_from_context",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.ScalarFromContext, nil
+			case testdata.RootMessage:
+				return src.ScalarFromContext, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+	ExmplRootMessage.AddFieldConfig("n_r_empty_msg", &graphql.Field{
+		Name: "n_r_empty_msg",
+		Type: scalars.NoDataScalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.NREmptyMsg, nil
+			case testdata.RootMessage:
+				return src.NREmptyMsg, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+}
+
+var ExmplRootMessageNestedMessage = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplRootMessage__NestedMessage",
+	Fields: graphql.Fields{},
+})
+
+func init() {
+	ExmplRootMessageNestedMessage.AddFieldConfig("sub_r_enum", &graphql.Field{
+		Name: "sub_r_enum",
+		Type: NestedEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage_NestedMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.SubREnum, nil
+			case testdata.RootMessage_NestedMessage:
+				return src.SubREnum, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+	ExmplRootMessageNestedMessage.AddFieldConfig("sub_sub_r_enum", &graphql.Field{
+		Name: "sub_sub_r_enum",
+		Type: NestedNestedEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage_NestedMessage:
+				if src == nil {
+					return nil, nil
+				}
+				return src.SubSubREnum, nil
+			case testdata.RootMessage_NestedMessage:
+				return src.SubSubREnum, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+}
+
+var ExmplEmpty = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplEmpty",
+	Fields: graphql.Fields{},
+})
+
+func init() {
+}
+
+var ExmplMessageWithEmpty = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplMessageWithEmpty",
+	Fields: graphql.Fields{},
+})
+
+func init() {
+	ExmplMessageWithEmpty.AddFieldConfig("empt", &graphql.Field{
+		Name: "empt",
+		Type: scalars.NoDataScalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.MessageWithEmpty:
+				if src == nil {
+					return nil, nil
+				}
+				return src.Empt, nil
+			case testdata.MessageWithEmpty:
+				return src.Empt, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+}
+
+var ExmplRootMessage2 = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplRootMessage2",
+	Fields: graphql.Fields{},
+})
+
+func init() {
+	ExmplRootMessage2.AddFieldConfig("some_field", &graphql.Field{
+		Name: "some_field",
+		Type: scalars.GraphQLInt32Scalar,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			switch src := p.Source.(type) {
+			case *testdata.RootMessage2:
+				if src == nil {
+					return nil, nil
+				}
+				return src.SomeField, nil
+			case testdata.RootMessage2:
+				return src.SomeField, nil
+			}
+			return nil, errors.New("source of unknown type")
+		},
+	})
+}
+
 // Maps input objects
 var ExmplRootMessageInput__map_enum = graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "ExmplRootMessageInput__map_enum",
@@ -415,7 +663,7 @@ var ExmplRootMessageInput__map_msg = graphql.NewInputObject(graphql.InputObjectC
 	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
 		return graphql.InputObjectConfigFieldMap{
 			"key":   &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"value": &graphql.InputObjectFieldConfig{Type: ExmplRootMessageNestedMessageInput},
+			"value": &graphql.InputObjectFieldConfig{Type: ExmplRootMessageNestedMessage},
 		}
 	}),
 })
@@ -586,7 +834,7 @@ func init() {
 	})
 	ExmplRootMessage__map_msg.AddFieldConfig("value", &graphql.Field{
 		Name: "value",
-		Type: ExmplRootMessageNestedMessageInput,
+		Type: ExmplRootMessageNestedMessage,
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			src := p.Source.(map[string]interface{})
 			if src == nil {
@@ -602,7 +850,7 @@ func GetServiceExampleServiceMethods(c testdata.ServiceExampleClient, ih *interc
 	return graphql.Fields{
 		"getQueryMethod": &graphql.Field{
 			Name: "getQueryMethod",
-			Type: ExmplRootMessageInput,
+			Type: ExmplRootMessage,
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
 				span := tr.CreateChildSpanFromContext(p.Context, "ServiceExample.getQueryMethod Resolver")
 				defer span.Finish()
@@ -612,7 +860,11 @@ func GetServiceExampleServiceMethods(c testdata.ServiceExampleClient, ih *interc
 					}
 				}()
 				if ih == nil {
-					return c.GetQueryMethod(p.Context, new(testdata.RootMessage))
+					req, err := ResolveRootMessage(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+					if err != nil {
+						return nil, err
+					}
+					return c.GetQueryMethod(p.Context, req)
 				}
 				ctx := &interceptors.Context{
 					Service: "ServiceExample",
@@ -620,7 +872,7 @@ func GetServiceExampleServiceMethods(c testdata.ServiceExampleClient, ih *interc
 					Params:  p,
 				}
 				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return new(testdata.RootMessage), nil
+					return ResolveRootMessage(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 				})
 				if err != nil {
 					return nil, err
@@ -649,7 +901,7 @@ func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, i
 	return graphql.Fields{
 		"mutationMethod": &graphql.Field{
 			Name: "mutationMethod",
-			Type: ExmplRootMessageNestedMessageInput,
+			Type: ExmplRootMessageNestedMessage,
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
 				span := tr.CreateChildSpanFromContext(p.Context, "MutationsServiceExample.mutationMethod Resolver")
 				defer span.Finish()
@@ -659,7 +911,11 @@ func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, i
 					}
 				}()
 				if ih == nil {
-					return c.MutationMethod(p.Context, new(testdata.RootMessage2))
+					req, err := ResolveRootMessage2(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+					if err != nil {
+						return nil, err
+					}
+					return c.MutationMethod(p.Context, req)
 				}
 				ctx := &interceptors.Context{
 					Service: "MutationsServiceExample",
@@ -667,7 +923,7 @@ func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, i
 					Params:  p,
 				}
 				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return new(testdata.RootMessage2), nil
+					return ResolveRootMessage2(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 				})
 				if err != nil {
 					return nil, err
@@ -702,7 +958,11 @@ func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, i
 					}
 				}()
 				if ih == nil {
-					return c.EmptyMsgs(p.Context, new(testdata.Empty))
+					req, err := ResolveEmpty(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+					if err != nil {
+						return nil, err
+					}
+					return c.EmptyMsgs(p.Context, req)
 				}
 				ctx := &interceptors.Context{
 					Service: "MutationsServiceExample",
@@ -710,7 +970,7 @@ func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, i
 					Params:  p,
 				}
 				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return new(testdata.Empty), nil
+					return ResolveEmpty(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 				})
 				if err != nil {
 					return nil, err
@@ -735,7 +995,7 @@ func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, i
 		},
 		"MsgsWithEpmty": &graphql.Field{
 			Name: "MsgsWithEpmty",
-			Type: ExmplMessageWithEmptyInput,
+			Type: ExmplMessageWithEmpty,
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
 				span := tr.CreateChildSpanFromContext(p.Context, "MutationsServiceExample.MsgsWithEpmty Resolver")
 				defer span.Finish()
@@ -745,7 +1005,11 @@ func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, i
 					}
 				}()
 				if ih == nil {
-					return c.MsgsWithEpmty(p.Context, new(testdata.MessageWithEmpty))
+					req, err := ResolveMessageWithEmpty(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+					if err != nil {
+						return nil, err
+					}
+					return c.MsgsWithEpmty(p.Context, req)
 				}
 				ctx := &interceptors.Context{
 					Service: "MutationsServiceExample",
@@ -753,7 +1017,7 @@ func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, i
 					Params:  p,
 				}
 				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return new(testdata.MessageWithEmpty), nil
+					return ResolveMessageWithEmpty(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 				})
 				if err != nil {
 					return nil, err
