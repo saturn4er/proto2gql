@@ -43,7 +43,7 @@ func (g generator) bodyTemplateContext() interface{} {
 
 }
 func (g generator) goTypeStr(typ GoType) string {
-	if typeIsScalar(typ) {
+	if typeIsScalar(typ) && typ.Name == "" {
 		return typ.Kind.String()
 	}
 	switch typ.Kind {
@@ -52,6 +52,10 @@ func (g generator) goTypeStr(typ GoType) string {
 	case reflect.Ptr:
 		return "*" + g.goTypeStr(*typ.ElemType)
 	case reflect.Struct:
+		return g.imports.Prefix(typ.Pkg) + typ.Name
+	}
+	fmt.Println(typ)
+	if typ.Name != ""{
 		return g.imports.Prefix(typ.Pkg) + typ.Name
 	}
 	panic("type " + typ.Kind.String() + " is not supported")

@@ -196,18 +196,18 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 				if src == nil {
 					return nil, nil
 				}
-				return src["key"].({{goType $object.KeyGoType}}), nil
+				return src["key"], nil
 			},
 		})
 		{{$object.VariableName}}.AddFieldConfig("value", &{{gqlPkg}}.Field{
 			Name: "value",
-			Type: {{call $object.KeyObjectType $}},
+			Type: {{call $object.ValueObjectType $}},
 			Resolve: func(p {{gqlPkg}}.ResolveParams) (interface{}, error) {
 				src := p.Source.(map[string]interface{})
 				if src == nil {
 					return nil, nil
 				}
-				return src["value"].({{goType $object.ValueGoType}}), nil
+				return src["value"], nil
 			},
 		})
 	}

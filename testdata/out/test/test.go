@@ -264,7 +264,7 @@ var ExmplRootMessageInput__map_msg = graphql.NewInputObject(graphql.InputObjectC
 })
 
 // Maps input objects resolvers
-func ResolveExmplRootMessageInput__map_enum(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[int32]int32, rerr error) {
+func ResolveExmplRootMessageInput__map_enum(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[int32]testdata.NestedEnum, rerr error) {
 	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessageInput__map_enum")
 	defer span.Finish()
 	defer func() {
@@ -282,7 +282,7 @@ func ResolveExmplRootMessageInput__map_enum(tr tracer.Tracer, ctx context.Contex
 		return nil, nil
 	}
 	in := i.([]interface{})
-	result := make(map[int32]int32)
+	result := make(map[int32]testdata.NestedEnum)
 	for i, ival := range in {
 		_ = i
 		val := ival.(map[string]interface{})
@@ -349,7 +349,7 @@ func ResolveExmplRootMessageInput__map_msg(tr tracer.Tracer, ctx context.Context
 		k, v := val["key"], val["value"]
 		_, _ = k, v
 		kk := k.(string)
-		vv, err := ResolveRootMessageNestedMessage(tr, v)
+		vv, err := ResolveRootMessageNestedMessage(tr, tr.ContextWithSpan(ctx, span), v)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to resolve #%d map element value", i)
 		}
@@ -373,18 +373,18 @@ func init() {
 			if src == nil {
 				return nil, nil
 			}
-			return src["key"].(int32), nil
+			return src["key"], nil
 		},
 	})
 	ExmplRootMessage__map_enum.AddFieldConfig("value", &graphql.Field{
 		Name: "value",
-		Type: scalars.GraphQLInt32Scalar,
+		Type: NestedEnum,
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			src := p.Source.(map[string]interface{})
 			if src == nil {
 				return nil, nil
 			}
-			return src["value"].(int32), nil
+			return src["value"], nil
 		},
 	})
 }
@@ -403,7 +403,7 @@ func init() {
 			if src == nil {
 				return nil, nil
 			}
-			return src["key"].(int32), nil
+			return src["key"], nil
 		},
 	})
 	ExmplRootMessage__map_scalar.AddFieldConfig("value", &graphql.Field{
@@ -414,7 +414,7 @@ func init() {
 			if src == nil {
 				return nil, nil
 			}
-			return src["value"].(int32), nil
+			return src["value"], nil
 		},
 	})
 }
@@ -433,18 +433,18 @@ func init() {
 			if src == nil {
 				return nil, nil
 			}
-			return src["key"].(string), nil
+			return src["key"], nil
 		},
 	})
 	ExmplRootMessage__map_msg.AddFieldConfig("value", &graphql.Field{
 		Name: "value",
-		Type: graphql.String,
+		Type: ExmplRootMessageNestedMessageInput,
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			src := p.Source.(map[string]interface{})
 			if src == nil {
 				return nil, nil
 			}
-			return src["value"].(*testdata.RootMessage_NestedMessage), nil
+			return src["value"], nil
 		},
 	})
 }

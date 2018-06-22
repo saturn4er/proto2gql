@@ -78,8 +78,6 @@ type MapOutputObject struct {
 	GraphQLName     string
 	KeyObjectType   TypeResolver
 	ValueObjectType TypeResolver
-	KeyGoType       GoType
-	ValueGoType     GoType
 }
 type Service struct {
 	Name          string

@@ -26,21 +26,11 @@ func (g *Generator) fileMapOutputObjects(file parsedFile) ([]common.MapOutputObj
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve value input type resolver")
 			}
-			keyGoType, err := goTypeByParserType(mapFld.Map.KeyType)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to resolve key go type")
-			}
-			valueGoType, err := goTypeByParserType(mapFld.Map.ValueType)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to resolve value go type")
-			}
 			res = append(res, common.MapOutputObject{
 				VariableName:    g.outputMapVariable(mapFld.Map),
 				GraphQLName:     g.outputMapGraphQLName(mapFld.Map),
 				KeyObjectType:   keyTypResolver,
 				ValueObjectType: valueTypResolver,
-				KeyGoType:       keyGoType,
-				ValueGoType:     valueGoType,
 			})
 		}
 	}
