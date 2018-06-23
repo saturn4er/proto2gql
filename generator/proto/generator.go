@@ -33,51 +33,49 @@ var scalarsResolvers = map[string]common.TypeResolver{
 
 type parsedFile struct {
 	File   *parser.File
-	Config *ProtoConfig
+	Config *ProtoFileConfig
 }
 type Generator struct {
-	vendorPath  string
-	parser      parser.Parser
-	parsedFiles []parsedFile
+	VendorPath      string
+	GenerateTracers bool
+	parser          parser.Parser
+	parsedFiles     []parsedFile
 }
 
-func (g *Generator) setVendorPath(path string) {
-	g.vendorPath = path
-}
 func (g *Generator) prepareFile(file parsedFile) (*common.File, error) {
 	pkgName, pkg, err := g.fileOutputPackage(file.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve file output package")
 	}
-	enums, err := g.prepareFileEnums(file)
+	enums, err := g.prepareFileEnums(file.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve file enums")
 	}
-	inputs, err := g.fileInputObjects(file)
+	inputs, err := g.fileInputObjects(file.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file input objects")
 	}
-	mapInputs, err := g.fileMapInputObjects(file)
+	mapInputs, err := g.fileMapInputObjects(file.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file map input objects")
 	}
-	mapOutputs, err := g.fileMapOutputObjects(file)
+	mapOutputs, err := g.fileMapOutputObjects(file.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file map output objects")
 	}
-	mapResolvers, err := g.fileInputMapResolvers(file)
+	mapResolvers, err := g.fileInputMapResolvers(file.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file map resolvers")
 	}
-	outputMessages, err := g.fileOutputMessages(file)
+	outputMessages, err := g.fileOutputMessages(file.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file output messages")
 	}
-	messagesResolvers, err := g.fileInputMessagesResolvers(file)
+	messagesResolvers, err := g.fileInputMessagesResolvers(file.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file messages resolvers")
 	}
-	services, err := g.fileServices(file)
+	services, err := g.fileServices(file.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file services")
 	}
@@ -96,7 +94,7 @@ func (g *Generator) prepareFile(file parsedFile) (*common.File, error) {
 	return res, nil
 }
 
-func (g *Generator) fileConfig(file *parser.File) *ProtoConfig {
+func (g *Generator) fileConfig(file *parser.File) *ProtoFileConfig {
 	for _, f := range g.parsedFiles {
 		if f.File == file {
 			return f.Config
@@ -136,7 +134,7 @@ func (g *Generator) fileOutputPackage(file *parser.File) (name, pkg string, err 
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve file output path")
 	}
-	pkg, err = resolveGoPackage(filepath.Dir(outPath), g.vendorPath)
+	pkg, err = resolveGoPackage(filepath.Dir(outPath), g.VendorPath)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve file go package")
 	}
@@ -173,14 +171,14 @@ func (g *Generator) Generate() error {
 	return nil
 }
 
-func (g *Generator) AddSourceByConfig(config ProtoConfig) error {
+func (g *Generator) AddSourceByConfig(config *ProtoFileConfig) error {
 	file, err := g.parser.Parse(config.ProtoPath, config.ImportsAliases, config.Paths)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse proto file")
 	}
 	g.parsedFiles = append(g.parsedFiles, parsedFile{
 		File:   file,
-		Config: &config,
+		Config: config,
 	})
 	return nil
 }

@@ -15,7 +15,7 @@ import (
 	common_1 "github.com/saturn4er/proto2gql/testdata/common"
 	common "github.com/saturn4er/proto2gql/testdata/out/Users/yaroslavmytsyo/go/src/github.com/saturn4er/proto2gql/testdata/common"
 ) // Enums
-var RootEnum = graphql.NewEnum(graphql.EnumConfig{
+var ExmplRootEnum = graphql.NewEnum(graphql.EnumConfig{
 	Name:        "ExmplRootEnum",
 	Description: "",
 	Values: graphql.EnumValueConfigMap{
@@ -31,7 +31,7 @@ var RootEnum = graphql.NewEnum(graphql.EnumConfig{
 		},
 	},
 })
-var NestedEnum = graphql.NewEnum(graphql.EnumConfig{
+var ExmplNestedEnum = graphql.NewEnum(graphql.EnumConfig{
 	Name:        "ExmplNestedEnum",
 	Description: "",
 	Values: graphql.EnumValueConfigMap{
@@ -43,7 +43,7 @@ var NestedEnum = graphql.NewEnum(graphql.EnumConfig{
 		},
 	},
 })
-var NestedNestedEnum = graphql.NewEnum(graphql.EnumConfig{
+var ExmplNestedNestedEnum = graphql.NewEnum(graphql.EnumConfig{
 	Name:        "ExmplNestedNestedEnum",
 	Description: "",
 	Values: graphql.EnumValueConfigMap{
@@ -69,31 +69,31 @@ var ExmplRootMessageInput = graphql.NewInputObject(graphql.InputObjectConfig{
 		return graphql.InputObjectConfigFieldMap{
 			"r_msg":               &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageNestedMessage))},
 			"r_scalar":            &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(scalars.GraphQLInt32Scalar))},
-			"r_enum":              &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(RootEnum))},
+			"r_enum":              &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootEnum))},
 			"r_empty_msg":         &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(scalars.NoDataScalar))},
 			"n_r_enum":            &graphql.InputObjectFieldConfig{Type: common.CommonEnum},
 			"n_r_scalar":          &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
 			"n_r_msg":             &graphql.InputObjectFieldConfig{Type: common.CommonMessage},
 			"scalar_from_context": &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
 			"n_r_empty_msg":       &graphql.InputObjectFieldConfig{Type: scalars.NoDataScalar},
-			"map_enum":            &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__map_enum))},
-			"map_scalar":          &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__map_scalar))},
-			"map_msg":             &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__map_msg))},
+			"map_enum":            &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapEnum))},
+			"map_scalar":          &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapScalar))},
+			"map_msg":             &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapMsg))},
 			"e_f_o_e":             &graphql.InputObjectFieldConfig{Type: common.CommonEnum},
 			"e_f_o_s":             &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
 			"e_f_o_m":             &graphql.InputObjectFieldConfig{Type: common.CommonMessage},
 			"e_f_o_em":            &graphql.InputObjectFieldConfig{Type: scalars.NoDataScalar},
 			"s_f_o_s":             &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
-			"s_f_o_e":             &graphql.InputObjectFieldConfig{Type: RootEnum},
+			"s_f_o_e":             &graphql.InputObjectFieldConfig{Type: ExmplRootEnum},
 			"s_f_o_mes":           &graphql.InputObjectFieldConfig{Type: ExmplRootMessage2},
 			"s_f_o_m":             &graphql.InputObjectFieldConfig{Type: scalars.NoDataScalar},
 			"m_f_o_m":             &graphql.InputObjectFieldConfig{Type: ExmplRootMessage2},
 			"m_f_o_s":             &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
-			"m_f_o_e":             &graphql.InputObjectFieldConfig{Type: RootEnum},
+			"m_f_o_e":             &graphql.InputObjectFieldConfig{Type: ExmplRootEnum},
 			"m_f_o_em":            &graphql.InputObjectFieldConfig{Type: scalars.NoDataScalar},
 			"em_f_o_em":           &graphql.InputObjectFieldConfig{Type: scalars.NoDataScalar},
 			"em_f_o_s":            &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
-			"em_f_o_en":           &graphql.InputObjectFieldConfig{Type: RootEnum},
+			"em_f_o_en":           &graphql.InputObjectFieldConfig{Type: ExmplRootEnum},
 			"em_f_o_m":            &graphql.InputObjectFieldConfig{Type: ExmplRootMessage2},
 		}
 	}),
@@ -102,8 +102,8 @@ var ExmplRootMessageNestedMessageInput = graphql.NewInputObject(graphql.InputObj
 	Name: "ExmplRootMessage__NestedMessageInput",
 	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
 		return graphql.InputObjectConfigFieldMap{
-			"sub_r_enum":     &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(NestedEnum))},
-			"sub_sub_r_enum": &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(NestedNestedEnum))},
+			"sub_r_enum":     &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplNestedEnum))},
+			"sub_sub_r_enum": &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplNestedNestedEnum))},
 		}
 	}),
 })
@@ -431,7 +431,7 @@ func init() {
 	})
 	ExmplRootMessage.AddFieldConfig("r_enum", &graphql.Field{
 		Name: "r_enum",
-		Type: RootEnum,
+		Type: ExmplRootEnum,
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			switch src := p.Source.(type) {
 			case *testdata.RootMessage:
@@ -551,7 +551,7 @@ var ExmplRootMessageNestedMessage = graphql.NewObject(graphql.ObjectConfig{
 func init() {
 	ExmplRootMessageNestedMessage.AddFieldConfig("sub_r_enum", &graphql.Field{
 		Name: "sub_r_enum",
-		Type: NestedEnum,
+		Type: ExmplNestedEnum,
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			switch src := p.Source.(type) {
 			case *testdata.RootMessage_NestedMessage:
@@ -567,7 +567,7 @@ func init() {
 	})
 	ExmplRootMessageNestedMessage.AddFieldConfig("sub_sub_r_enum", &graphql.Field{
 		Name: "sub_sub_r_enum",
-		Type: NestedNestedEnum,
+		Type: ExmplNestedNestedEnum,
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			switch src := p.Source.(type) {
 			case *testdata.RootMessage_NestedMessage:
@@ -640,17 +640,17 @@ func init() {
 }
 
 // Maps input objects
-var ExmplRootMessageInput__map_enum = graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "ExmplRootMessageInput__map_enum",
+var ExmplRootMessageInput__MapEnum = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplRootMessageInput__MapEnum",
 	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
 		return graphql.InputObjectConfigFieldMap{
 			"key":   &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
-			"value": &graphql.InputObjectFieldConfig{Type: NestedEnum},
+			"value": &graphql.InputObjectFieldConfig{Type: ExmplNestedEnum},
 		}
 	}),
 })
-var ExmplRootMessageInput__map_scalar = graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "ExmplRootMessageInput__map_scalar",
+var ExmplRootMessageInput__MapScalar = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplRootMessageInput__MapScalar",
 	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
 		return graphql.InputObjectConfigFieldMap{
 			"key":   &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
@@ -658,8 +658,8 @@ var ExmplRootMessageInput__map_scalar = graphql.NewInputObject(graphql.InputObje
 		}
 	}),
 })
-var ExmplRootMessageInput__map_msg = graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "ExmplRootMessageInput__map_msg",
+var ExmplRootMessageInput__MapMsg = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplRootMessageInput__MapMsg",
 	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
 		return graphql.InputObjectConfigFieldMap{
 			"key":   &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -669,8 +669,8 @@ var ExmplRootMessageInput__map_msg = graphql.NewInputObject(graphql.InputObjectC
 })
 
 // Maps input objects resolvers
-func ResolveExmplRootMessageInput__map_enum(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[int32]testdata.RootMessage_NestedEnum, rerr error) {
-	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessageInput__map_enum")
+func ResolveExmplRootMessageInput__MapEnum(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[int32]testdata.RootMessage_NestedEnum, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessageInput__MapEnum")
 	defer span.Finish()
 	defer func() {
 		if perr := recover(); perr != nil {
@@ -696,8 +696,8 @@ func ResolveExmplRootMessageInput__map_enum(tr tracer.Tracer, ctx context.Contex
 	}
 	return result, nil
 }
-func ResolveExmplRootMessageInput__map_scalar(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[int32]int32, rerr error) {
-	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessageInput__map_scalar")
+func ResolveExmplRootMessageInput__MapScalar(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[int32]int32, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessageInput__MapScalar")
 	defer span.Finish()
 	defer func() {
 		if perr := recover(); perr != nil {
@@ -723,8 +723,8 @@ func ResolveExmplRootMessageInput__map_scalar(tr tracer.Tracer, ctx context.Cont
 	}
 	return result, nil
 }
-func ResolveExmplRootMessageInput__map_msg(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[string]*testdata.RootMessage_NestedMessage, rerr error) {
-	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessageInput__map_msg")
+func ResolveExmplRootMessageInput__MapMsg(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[string]*testdata.RootMessage_NestedMessage, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessageInput__MapMsg")
 	defer span.Finish()
 	defer func() {
 		if perr := recover(); perr != nil {
@@ -774,7 +774,7 @@ func init() {
 	})
 	ExmplRootMessage__map_enum.AddFieldConfig("value", &graphql.Field{
 		Name: "value",
-		Type: NestedEnum,
+		Type: ExmplNestedEnum,
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			src := p.Source.(map[string]interface{})
 			if src == nil {
@@ -851,6 +851,20 @@ func GetServiceExampleServiceMethods(c testdata.ServiceExampleClient, ih *interc
 		"getQueryMethod": &graphql.Field{
 			Name: "getQueryMethod",
 			Type: ExmplRootMessage,
+			Args: graphql.FieldConfigArgument{
+				"r_msg":               &graphql.ArgumentConfig{Type: ExmplRootMessageNestedMessageInput},
+				"r_scalar":            &graphql.ArgumentConfig{Type: scalars.GraphQLInt32Scalar},
+				"r_enum":              &graphql.ArgumentConfig{Type: ExmplRootEnum},
+				"r_empty_msg":         &graphql.ArgumentConfig{Type: scalars.NoDataScalar},
+				"n_r_enum":            &graphql.ArgumentConfig{Type: common.CommonEnum},
+				"n_r_scalar":          &graphql.ArgumentConfig{Type: scalars.GraphQLInt32Scalar},
+				"n_r_msg":             &graphql.ArgumentConfig{Type: common.CommonMessageInput},
+				"scalar_from_context": &graphql.ArgumentConfig{Type: scalars.GraphQLInt32Scalar},
+				"n_r_empty_msg":       &graphql.ArgumentConfig{Type: scalars.NoDataScalar},
+				"map_enum":            &graphql.ArgumentConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapEnum))},
+				"map_scalar":          &graphql.ArgumentConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapScalar))},
+				"map_msg":             &graphql.ArgumentConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapMsg))},
+			},
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
 				span := tr.CreateChildSpanFromContext(p.Context, "ServiceExample.getQueryMethod Resolver")
 				defer span.Finish()
@@ -902,6 +916,9 @@ func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, i
 		"mutationMethod": &graphql.Field{
 			Name: "mutationMethod",
 			Type: ExmplRootMessageNestedMessage,
+			Args: graphql.FieldConfigArgument{
+				"some_field": &graphql.ArgumentConfig{Type: scalars.GraphQLInt32Scalar},
+			},
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
 				span := tr.CreateChildSpanFromContext(p.Context, "MutationsServiceExample.mutationMethod Resolver")
 				defer span.Finish()
@@ -996,6 +1013,9 @@ func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, i
 		"MsgsWithEpmty": &graphql.Field{
 			Name: "MsgsWithEpmty",
 			Type: ExmplMessageWithEmpty,
+			Args: graphql.FieldConfigArgument{
+				"empt": &graphql.ArgumentConfig{Type: scalars.NoDataScalar},
+			},
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
 				span := tr.CreateChildSpanFromContext(p.Context, "MutationsServiceExample.MsgsWithEpmty Resolver")
 				defer span.Finish()

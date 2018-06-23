@@ -69,8 +69,8 @@ type SchemaConfig struct {
 }
 
 type GenerateConfig struct {
-	Tracer     bool                 `yaml:"generate_tracer"`
-	VendorPath string               `yaml:"vendor_path"`
-	Paths      []string             `yaml:"paths"`
-	Protos     []*proto.ProtoConfig `yaml:"protos"`
+	GenerateTraces bool               `yaml:"generate_tracer"`
+	VendorPath     string             `yaml:"vendor_path"`
+	Protos         proto.ProtosConfig `yaml:"protos"`
+	Shemas         []SchemaConfig     `yaml:"schemas"`
 }

@@ -90,32 +90,6 @@ func resolveGoPackage(path, vendorPath string) (string, error) {
 	return "", errors.Errorf("path '%s' is outside GOPATH or Vendor folder", path)
 }
 
-func mergePathsConfig(in ...[]string) []string {
-	var res []string
-	for i := len(in) - 1; i >= 0; i-- {
-		res = append(res, in[i]...)
-	}
-	return res
-}
-func mergeStringsConfig(in ...string) string {
-	var l int
-	for i, value := range in {
-		if len(value) > 0 {
-			l = i
-		}
-	}
-	return in[l]
-}
-func mergeAliases(in ...map[string]string) map[string]string {
-	var res = make(map[string]string)
-	for _, i := range in {
-		for k, v := range i {
-			res[k] = v
-		}
-	}
-	return res
-}
-
 // Is c an ASCII lower-case letter?
 func isASCIILower(c byte) bool {
 	return 'a' <= c && c <= 'z'
@@ -169,7 +143,3 @@ func camelCase(s string) string {
 // be joined with "_".
 func camelCaseSlice(elem []string) string      { return camelCase(strings.Join(elem, "")) }
 func snakeCamelCaseSlice(elem []string) string { return camelCase(strings.Join(elem, "_")) }
-
-func isSamePackage(f1, f2 *parser.File) bool {
-	return f1.PkgName == f2.PkgName && filepath.Dir(f1.FilePath) == filepath.Dir(f2.FilePath)
-}

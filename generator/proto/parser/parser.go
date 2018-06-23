@@ -24,10 +24,14 @@ func (p *Parser) parsedFile(filePath string) (*File, bool) {
 	return nil, false
 }
 
-func (p *Parser) importFilePath(filename string, importsAliases map[string]string, paths []string) (filePath string, err error) {
-	if v, ok := importsAliases[filename]; ok {
-		filename = v
+func (p *Parser) importFilePath(filename string, importsAliases []map[string]string, paths []string) (filePath string, err error) {
+	for _, aliases := range importsAliases {
+		if v, ok := aliases[filename]; ok {
+			filename = v
+			break
+		}
 	}
+
 	for _, path := range paths {
 		p := filepath.Join(path, filename)
 		if _, err := os.Stat(p); err == nil {
@@ -37,7 +41,7 @@ func (p *Parser) importFilePath(filename string, importsAliases map[string]strin
 	return "", errors.Errorf("can't find import %s in any of %s", filename, paths)
 }
 
-func (p *Parser) parseFileImports(file *File, importsAliases map[string]string, paths []string) error {
+func (p *Parser) parseFileImports(file *File, importsAliases []map[string]string, paths []string) error {
 	for _, v := range file.protoFile.Elements {
 		imprt, ok := v.(*proto.Import)
 		if !ok {
@@ -64,7 +68,7 @@ func (p *Parser) parseFileImports(file *File, importsAliases map[string]string, 
 	return nil
 }
 
-func (p *Parser) Parse(path string, importAliases map[string]string, paths []string) (*File, error) {
+func (p *Parser) Parse(path string, importAliases []map[string]string, paths []string) (*File, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve File absolute path")

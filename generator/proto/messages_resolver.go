@@ -23,9 +23,9 @@ func (g *Generator) oneOfValueAssigningWrapper(msg *parser.Message, field *parse
 	}
 }
 
-func (g *Generator) fileInputMessagesResolvers(file parsedFile) ([]common.InputObjectResolver, error) {
+func (g *Generator) fileInputMessagesResolvers(file *parser.File) ([]common.InputObjectResolver, error) {
 	var res []common.InputObjectResolver
-	for _, msg := range file.File.Messages {
+	for _, msg := range file.Messages {
 		goType, err := goTypeByParserType(msg.Type)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve message go type")
@@ -34,7 +34,7 @@ func (g *Generator) fileInputMessagesResolvers(file parsedFile) ([]common.InputO
 		for _, oneOf := range msg.OneOffs {
 			var fields []common.InputObjectResolverOneOfField
 			for _, field := range oneOf.Fields {
-				resolver, withErr, err := g.TypeValueResolver(file.File, field.Type)
+				resolver, withErr, err := g.TypeValueResolver(field.Type)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to get type value resolver")
 				}
@@ -52,7 +52,7 @@ func (g *Generator) fileInputMessagesResolvers(file parsedFile) ([]common.InputO
 		}
 		var fields []common.InputObjectResolverField
 		for _, field := range msg.Fields {
-			resolver, withErr, err := g.TypeValueResolver(file.File, field.Type)
+			resolver, withErr, err := g.TypeValueResolver(field.Type)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to get type value resolver")
 			}

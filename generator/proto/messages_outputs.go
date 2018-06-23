@@ -16,7 +16,7 @@ func (g *Generator) outputMessageVariable(message *parser.Message) string {
 	return g.fileConfig(message.File).GetGQLMessagePrefix() + strings.Join(message.TypeName, "")
 }
 
-func (g *Generator) outputMessageTypeResolver(currentFile *parser.File, message *parser.Message) (common.TypeResolver, error) {
+func (g *Generator) outputMessageTypeResolver(message *parser.Message) (common.TypeResolver, error) {
 	if !message.HaveFields() {
 		return common.GqlNoDataTypeResolver, nil
 	}
@@ -29,10 +29,10 @@ func (g *Generator) outputMessageTypeResolver(currentFile *parser.File, message 
 	}, nil
 }
 
-func (g *Generator) outputMessageFields(file parsedFile, msg *parser.Message) ([]common.ObjectField, error) {
+func (g *Generator) outputMessageFields(msg *parser.Message) ([]common.ObjectField, error) {
 	var res []common.ObjectField
 	for _, field := range msg.Fields {
-		typeResolver, err := g.TypeOutputTypeResolver(file.File, field.Type)
+		typeResolver, err := g.TypeOutputTypeResolver(field.Type)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to prepare message %s field %s output type resolver", msg.Name, field.Name)
 		}
@@ -44,10 +44,10 @@ func (g *Generator) outputMessageFields(file parsedFile, msg *parser.Message) ([
 	}
 	return res, nil
 }
-func (g *Generator) fileOutputMessages(file parsedFile) ([]common.OutputObject, error) {
+func (g *Generator) fileOutputMessages(file *parser.File) ([]common.OutputObject, error) {
 	var res []common.OutputObject
-	for _, msg := range file.File.Messages {
-		fields, err := g.outputMessageFields(file, msg)
+	for _, msg := range file.Messages {
+		fields, err := g.outputMessageFields(msg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to resolve message %s fields", msg.Name)
 		}
@@ -58,7 +58,7 @@ func (g *Generator) fileOutputMessages(file parsedFile) ([]common.OutputObject, 
 			GoType: common.GoType{
 				Kind: reflect.Struct,
 				Name: snakeCamelCaseSlice(msg.TypeName),
-				Pkg:  g.fileGRPCSourcesPackage(file.File),
+				Pkg:  g.fileGRPCSourcesPackage(file),
 			},
 		})
 	}

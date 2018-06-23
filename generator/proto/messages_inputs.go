@@ -8,7 +8,6 @@ import (
 	"github.com/saturn4er/proto2gql/generator/proto/parser"
 )
 
-
 func (g *Generator) inputMessageGraphQLName(message *parser.Message) string {
 	return g.fileConfig(message.File).GetGQLMessagePrefix() + strings.Join(message.TypeName, "__") + "Input"
 }
@@ -30,7 +29,7 @@ func (g *Generator) inputMessageTypeResolver(currentFile *parser.File, message *
 }
 
 func (g *Generator) inputMessageFieldTypeResolver(currentFile *parser.File, field *parser.Field) (common.TypeResolver, error) {
-	resolver, err := g.TypeOutputTypeResolver(currentFile, field.Type)
+	resolver, err := g.TypeOutputTypeResolver(field.Type)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get input type resolver")
 	}
@@ -40,23 +39,20 @@ func (g *Generator) inputMessageFieldTypeResolver(currentFile *parser.File, fiel
 	return resolver, nil
 }
 
-func (g *Generator) inputObjectMapFieldTypeResolver(message *parser.Message, field *parser.MapField) (common.TypeResolver, error) {
-	if !field.Type.IsMap() {
-		return nil, errors.New("map field is not of type 'Map'")
-	}
-	_, pkg, err := g.fileOutputPackage(field.Type.File)
+func (g *Generator) inputObjectMapFieldTypeResolver(mp *parser.Map) (common.TypeResolver, error) {
+	_, pkg, err := g.fileOutputPackage(mp.Type.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve file output package")
 	}
 	res := func(ctx common.BodyContext) string {
-		return ctx.Importer.Prefix(pkg) + g.inputMapVariable(field.Map)
+		return ctx.Importer.Prefix(pkg) + g.inputMapVariable(mp)
 	}
 	return common.GqlListTypeResolver(common.GqlNonNullTypeResolver(res)), nil
 }
 
-func (g *Generator) fileInputObjects(file parsedFile) ([]common.InputObject, error) {
+func (g *Generator) fileInputObjects(file *parser.File) ([]common.InputObject, error) {
 	var res []common.InputObject
-	for _, msg := range file.File.Messages {
+	for _, msg := range file.Messages {
 		if !msg.HaveFields() {
 			continue
 		}
@@ -72,7 +68,7 @@ func (g *Generator) fileInputObjects(file parsedFile) ([]common.InputObject, err
 			})
 		}
 		for _, field := range msg.MapFields {
-			typ, err := g.inputObjectMapFieldTypeResolver(msg, field)
+			typ, err := g.inputObjectMapFieldTypeResolver(field.Map)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve field type")
 			}

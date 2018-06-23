@@ -15,83 +15,97 @@ type ServiceConfig struct {
 	Alias   string                  `yaml:"alias"`
 	Methods map[string]MethodConfig `yaml:"methods"`
 }
-type ProtoConfig struct {
-	Name             string                   `yaml:"name"`
-	Paths            []string                 `yaml:"paths"`
-	ProtoPath        string                   `yaml:"proto_path"`
-	OutputPkg        string                   `yaml:"output_package"`
-	OutputPath       string                   `yaml:"output_path"`
-	GoPackage        string                   `yaml:"go_package"`
-	GQLEnumsPrefix   string                   `yaml:"gql_enums_prefix"`
-	GQLMessagePrefix string                   `yaml:"gql_messages_prefix"`
-	ImportsAliases   map[string]string        `yaml:"imports_aliases"`
-	Services         map[string]ServiceConfig `yaml:"services"`
-	Messages         map[string]MessageConfig `yaml:"messages"`
+type ProtosConfig struct {
+	Files []*ProtoFileConfig `yaml:"files"`
+
+	// Global configs for proto files
+	Paths          []string                   `yaml:"paths"`
+	ImportsAliases []map[string]string        `yaml:"imports_aliases"`
+	Messages       []map[string]MessageConfig `yaml:"messages"`
+}
+type ProtoFileConfig struct {
+	Name string `yaml:"name"`
+
+	Paths          []string            `yaml:"paths"`
+	ImportsAliases []map[string]string `yaml:"imports_aliases"`
+
+	ProtoPath string `yaml:"proto_path"`
+
+	OutputPkg  string `yaml:"output_package"`
+	OutputPath string `yaml:"output_path"`
+
+	ProtoGoPackage string `yaml:"proto_go_package"` // go package of protoc generated code
+
+	GQLEnumsPrefix   string `yaml:"gql_enums_prefix"`
+	GQLMessagePrefix string `yaml:"gql_messages_prefix"`
+
+	Services map[string]ServiceConfig   `yaml:"services"`
+	Messages []map[string]MessageConfig `yaml:"messages"`
 }
 
-func (pc *ProtoConfig) GetName() string {
+func (pc *ProtoFileConfig) GetName() string {
 	if pc == nil {
 		return ""
 	}
 	return pc.Name
 }
-func (pc *ProtoConfig) GetPaths() []string {
+func (pc *ProtoFileConfig) GetPaths() []string {
 	if pc == nil {
 		return []string{}
 	}
 	return pc.Paths
 }
-func (pc *ProtoConfig) GetProtoPath() string {
+func (pc *ProtoFileConfig) GetProtoPath() string {
 	if pc == nil {
 		return ""
 	}
 	return pc.ProtoPath
 }
-func (pc *ProtoConfig) GetOutputPkg() string {
+func (pc *ProtoFileConfig) GetOutputPkg() string {
 	if pc == nil {
 		return ""
 	}
 	return pc.OutputPkg
 }
-func (pc *ProtoConfig) GetGoPackage() string {
+func (pc *ProtoFileConfig) GetGoPackage() string {
 	if pc == nil {
 		return ""
 	}
-	return pc.GoPackage
+	return pc.ProtoGoPackage
 }
-func (pc *ProtoConfig) GetOutputPath() string {
+func (pc *ProtoFileConfig) GetOutputPath() string {
 	if pc == nil {
 		return ""
 	}
 	return pc.OutputPath
 }
-func (pc *ProtoConfig) GetGQLEnumsPrefix() string {
+func (pc *ProtoFileConfig) GetGQLEnumsPrefix() string {
 	if pc == nil {
 		return ""
 	}
 	return pc.GQLEnumsPrefix
 }
-func (pc *ProtoConfig) GetGQLMessagePrefix() string {
+func (pc *ProtoFileConfig) GetGQLMessagePrefix() string {
 	if pc == nil {
 		return ""
 	}
 	return pc.GQLMessagePrefix
 }
-func (pc *ProtoConfig) GetImportsAliases() map[string]string {
+func (pc *ProtoFileConfig) GetImportsAliases() []map[string]string {
 	if pc == nil {
-		return map[string]string{}
+		return []map[string]string{}
 	}
 	return pc.ImportsAliases
 }
-func (pc *ProtoConfig) GetServices() map[string]ServiceConfig {
+func (pc *ProtoFileConfig) GetServices() map[string]ServiceConfig {
 	if pc == nil {
 		return map[string]ServiceConfig{}
 	}
 	return pc.Services
 }
-func (pc *ProtoConfig) GetMessages() map[string]MessageConfig {
+func (pc *ProtoFileConfig) GetMessages() []map[string]MessageConfig {
 	if pc == nil {
-		return map[string]MessageConfig{}
+		return []map[string]MessageConfig{}
 	}
 	return pc.Messages
 }

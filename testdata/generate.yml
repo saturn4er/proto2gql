@@ -1,30 +1,25 @@
-paths:
-  - "${GOPATH}/src/"
-  - "./"
-
-imports:
-  aliases:
-    google/protobuf/timestamp.proto:  "github.com/golang/protobuf/ptypes/timestamp/timestamp.proto"
 
 output_package: "graphql"
 output_path: "./out"
 generate_tracer: true
-imports:
-  output_package: "imports"
-  output_path: "./out/imports"
 
 protos:
-  -
-    name: "Example"
-    proto_path: "./test.proto"
-    output_path: "./out/test"
-    output_package: "test"
-    gql_messages_prefix: "Exmpl"
-    gql_enums_prefix: "Exmpl"
-    messages:
-      RootMessage:
-        fields:
-          scalar_from_context: {context_key: "ctx_key"}
+  paths:
+    - "$GOPATH/src"
+    - "./vendor"
+  imports_aliases:
+    - google/protobuf/timestamp.proto:  "github.com/golang/protobuf/ptypes/timestamp/timestamp.proto"
+  files:
+    - name: "Example"
+      proto_path: "./test.proto"
+      output_path: "./out/test"
+      output_package: "test"
+      gql_messages_prefix: "Exmpl"
+      gql_enums_prefix: "Exmpl"
+      messages:
+        - RootMessage:
+            fields:
+              scalar_from_context: {context_key: "ctx_key"}
 
 schemas:
   -

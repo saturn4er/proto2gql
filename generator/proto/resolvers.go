@@ -6,7 +6,7 @@ import (
 	"github.com/saturn4er/proto2gql/generator/proto/parser"
 )
 
-func (g *Generator) TypeOutputTypeResolver(currentFile *parser.File, typ *parser.Type) (common.TypeResolver, error) {
+func (g *Generator) TypeOutputTypeResolver(typ *parser.Type) (common.TypeResolver, error) {
 	if typ.IsScalar() {
 		resolver, ok := scalarsResolvers[typ.Scalar]
 		if !ok {
@@ -15,14 +15,14 @@ func (g *Generator) TypeOutputTypeResolver(currentFile *parser.File, typ *parser
 		return resolver, nil
 	}
 	if typ.IsMessage() {
-		res, err := g.outputMessageTypeResolver(currentFile, typ.Message)
+		res, err := g.outputMessageTypeResolver(typ.Message)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get message type resolver")
 		}
 		return res, nil
 	}
 	if typ.IsEnum() {
-		res, err := g.enumTypeResolver(currentFile, typ.Enum)
+		res, err := g.enumTypeResolver(typ.Enum)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get enum type resolver")
 		}
@@ -46,15 +46,18 @@ func (g *Generator) TypeInputTypeResolver(currentFile *parser.File, typ *parser.
 		return res, nil
 	}
 	if typ.IsEnum() {
-		res, err := g.enumTypeResolver(currentFile, typ.Enum)
+		res, err := g.enumTypeResolver(typ.Enum)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get enum type resolver")
 		}
 		return res, nil
 	}
+	if typ.IsMap(){
+		return g.inputObjectMapFieldTypeResolver(typ.Map)
+	}
 	return nil, errors.New("not implemented " + typ.String())
 }
-func (g *Generator) TypeValueResolver(parentFile *parser.File, typ *parser.Type) (_ common.ValueResolver, withErr bool, err error) {
+func (g *Generator) TypeValueResolver(typ *parser.Type) (_ common.ValueResolver, withErr bool, err error) {
 	if typ.IsScalar() {
 		gt, ok := goTypesScalars[typ.Scalar]
 		if !ok {

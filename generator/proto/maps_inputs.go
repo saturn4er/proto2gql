@@ -7,22 +7,22 @@ import (
 )
 
 func (g *Generator) inputMapGraphQLName(res *parser.Map) string {
-	return g.inputMessageVariable(res.Message) + "__" + res.Field.Name
+	return g.inputMessageVariable(res.Message) + "__" + camelCase(res.Field.Name)
 }
 
 func (g *Generator) inputMapVariable(res *parser.Map) string {
-	return g.inputMessageVariable(res.Message) + "__" + res.Field.Name
+	return g.inputMessageVariable(res.Message) + "__" + camelCase(res.Field.Name)
 }
 
-func (g *Generator) fileMapInputObjects(file parsedFile) ([]common.MapInputObject, error) {
+func (g *Generator) fileMapInputObjects(file *parser.File) ([]common.MapInputObject, error) {
 	var res []common.MapInputObject
-	for _, msg := range file.File.Messages {
+	for _, msg := range file.Messages {
 		for _, mapFld := range msg.MapFields {
-			keyTypResolver, err := g.TypeOutputTypeResolver(file.File, mapFld.Map.KeyType)
+			keyTypResolver, err := g.TypeOutputTypeResolver(mapFld.Map.KeyType)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve key input type resolver")
 			}
-			valueTypResolver, err := g.TypeOutputTypeResolver(file.File, mapFld.Map.ValueType)
+			valueTypResolver, err := g.TypeOutputTypeResolver(mapFld.Map.ValueType)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve value input type resolver")
 			}

@@ -12,10 +12,13 @@ type generator struct {
 	config *GenerateConfig
 }
 
-func (g *generator) generate() error {
-	protoGen := proto.Generator{}
-	for _, p := range g.config.Protos {
-		err := protoGen.AddSourceByConfig(*p)
+func (g *generator) generateProtos() error {
+	protoGen := proto.Generator{
+		VendorPath:      g.config.VendorPath,
+		GenerateTracers: g.config.GenerateTraces,
+	}
+	for _, protoFileConfig := range g.config.Protos.Files {
+		err := protoGen.AddSourceByConfig(protoFileConfig)
 		if err != nil {
 			return errors.Wrap(err, "failed to add source to protos generator")
 		}
@@ -26,13 +29,37 @@ func (g *generator) generate() error {
 	}
 	return nil
 }
+func (g *generator) generate() error {
+	err := g.generateProtos()
+	if err != nil {
+		return errors.Wrap(err, "failed to generate protos")
+	}
+	// TODO: generate swagger
+	// TODO: generate schemas
+	return nil
+}
 
+func (g *generator) extendProtoFilesConfigs() error {
+	for _, cfg := range g.config.Protos.Files {
+		cfg.Paths = append(cfg.GetPaths(), g.config.Protos.Paths...)
+		cfg.ImportsAliases = append(cfg.ImportsAliases, g.config.Protos.ImportsAliases...)
+		cfg.Messages = append(cfg.Messages, g.config.Protos.Messages...)
+		if cfg.OutputPath != "" {
+			absoluteOutPath, err := filepath.Abs(cfg.OutputPath)
+			if err != nil {
+				return errors.Wrap(err, "failed to normalize proto output path")
+			}
+			cfg.OutputPath = absoluteOutPath
+		}
+	}
+	return nil
+}
 func (g *generator) normalizeConfigPaths() error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return errors.Wrap(err, "failed to resolve working directory")
 	}
-	g.config.Paths = append(g.config.Paths, wd)
+	g.config.Protos.Paths = append(g.config.Protos.Paths, wd)
 
 	if g.config.VendorPath != "" {
 		vp, err := filepath.Abs(g.config.VendorPath)
@@ -41,17 +68,8 @@ func (g *generator) normalizeConfigPaths() error {
 		}
 		g.config.VendorPath = vp
 	}
-	for _, cfg := range g.config.Protos {
-		cfg.Paths = append(cfg.Paths, g.config.Paths...)
-		if cfg.OutputPath != "" {
-			vp, err := filepath.Abs(cfg.OutputPath)
-			if err != nil {
-				return errors.Wrap(err, "failed to normalize proto output path")
-			}
-			cfg.OutputPath = vp
-		}
-	}
-	return nil
+
+	return g.extendProtoFilesConfigs()
 }
 
 func Generate(gc *GenerateConfig) error {
