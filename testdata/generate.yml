@@ -12,6 +12,11 @@ generate_tracer: true
 imports:
   output_package: "imports"
   output_path: "./out/imports"
+message:
+  - "Request$":
+    fields:
+      operator_id: {}
+
 
 protos:
   -
@@ -22,9 +27,12 @@ protos:
     gql_messages_prefix: "Exmpl"
     gql_enums_prefix: "Exmpl"
     messages:
-      RootMessage:
-        fields:
-          scalar_from_context: {context_key: "ctx_key"}
+      - "Request$":
+          fields:
+            scalar_from_context: {context_key: "ctx_key"}
+      - "st$":
+          fields:
+            scalar_from_context: {context_key: "ctx"}
 
 schemas:
   -

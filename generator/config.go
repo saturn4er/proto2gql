@@ -24,16 +24,16 @@ type ServiceConfig struct {
 	Methods map[string]MethodConfig `yaml:"methods"`
 }
 type ProtoConfig struct {
-	Name             string                   `yaml:"name"`
-	Paths            []string                 `yaml:"paths"`
-	ProtoPath        string                   `yaml:"proto_path"`
-	OutputPkg        string                   `yaml:"output_package"`
-	OutputPath       string                   `yaml:"output_path"`
-	GQLEnumsPrefix   string                   `yaml:"gql_enums_prefix"`
-	GQLMessagePrefix string                   `yaml:"gql_messages_prefix"`
-	ImportsAliases   map[string]string        `yaml:"imports_aliases"`
-	Services         map[string]ServiceConfig `yaml:"services"`
-	Messages         map[string]MessageConfig `yaml:"messages"`
+	Name             string                     `yaml:"name"`
+	Paths            []string                   `yaml:"paths"`
+	ProtoPath        string                     `yaml:"proto_path"`
+	OutputPkg        string                     `yaml:"output_package"`
+	OutputPath       string                     `yaml:"output_path"`
+	GQLEnumsPrefix   string                     `yaml:"gql_enums_prefix"`
+	GQLMessagePrefix string                     `yaml:"gql_messages_prefix"`
+	ImportsAliases   map[string]string          `yaml:"imports_aliases"`
+	Services         map[string]ServiceConfig   `yaml:"services"`
+	Messages         []map[string]MessageConfig `yaml:"messages"`
 }
 type ImportConfig struct {
 	GoPackage        string `yaml:"go_package"`

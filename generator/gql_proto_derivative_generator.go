@@ -2,8 +2,10 @@ package generator
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -303,13 +305,14 @@ func (g *gqlProtoDerivativeFileGenerator) messageHaveFieldsExceptError(msg *pars
 	return msg.HaveFieldsExcept(ef.Name)
 }
 func (g *gqlProtoDerivativeFileGenerator) errorFieldOfMessage(msg *parser.Message) *ErrorField {
-	m, ok := g.file.Messages[msg.Name]
-	if !ok || m.ErrorField == "" {
+	cfg, ok := g.messageConfig(msg.Name)
+	if !ok {
 		return nil
 	}
+
 	// Iterating over fields to be sure, that specified in config field exists
 	for _, f := range msg.Fields {
-		if f.Name == m.ErrorField {
+		if f.Name == cfg.ErrorField {
 			return &ErrorField{
 				Name:     f.Name,
 				Repeated: f.Repeated,
@@ -318,7 +321,7 @@ func (g *gqlProtoDerivativeFileGenerator) errorFieldOfMessage(msg *parser.Messag
 		}
 	}
 	for _, f := range msg.MapFields {
-		if f.Name == m.ErrorField {
+		if f.Name == cfg.ErrorField {
 			return &ErrorField{
 				Name:     f.Name,
 				Repeated: false,
@@ -328,7 +331,7 @@ func (g *gqlProtoDerivativeFileGenerator) errorFieldOfMessage(msg *parser.Messag
 	}
 	for _, of := range msg.OneOffs {
 		for _, f := range of.Fields {
-			if f.Name == m.ErrorField {
+			if f.Name == cfg.ErrorField {
 				return &ErrorField{
 					Name:     f.Name,
 					Repeated: f.Repeated,
@@ -340,14 +343,37 @@ func (g *gqlProtoDerivativeFileGenerator) errorFieldOfMessage(msg *parser.Messag
 	return nil
 }
 func (g *gqlProtoDerivativeFileGenerator) isErrorField(msg *parser.Message, name string) bool {
-	if m, ok := g.file.Messages[msg.Name]; ok {
-		return name == m.ErrorField
+	cfg, ok := g.messageConfig(msg.Name)
+	if !ok {
+		return false
 	}
-	return false
+	return cfg.ErrorField == name
 }
 
 func (g *gqlProtoDerivativeFileGenerator) fieldContextKey(msg *parser.Message, name string) string {
-	return g.file.Messages[msg.Name].Fields[name].ContextKey
+	cfg, ok := g.messageConfig(msg.Name)
+	if !ok {
+		return ""
+	}
+	return cfg.Fields[name].ContextKey
+}
+func (g *gqlProtoDerivativeFileGenerator) messageConfig(msgName string) (*MessageConfig, bool) {
+	for _, msgPack := range g.file.Messages {
+		for regex, cfg := range msgPack {
+			r, err := regexp.Compile(regex)
+			if err != nil {
+				panic("failed to compile regex:" + regex)
+			}
+			if msgName == "UserLoginRequest" {
+				fmt.Println(msgName, regex, r.MatchString(msgName))
+			}
+			if r.MatchString(msgName) {
+				return &cfg, true
+			}
+		}
+	}
+	return nil, false
+
 }
 
 func (g *gqlProtoDerivativeFileGenerator) templateContext(imports *importer) map[string]interface{} {

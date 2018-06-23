@@ -25,7 +25,7 @@ type gqlProtoDerivativeFile struct {
 	GQLEnumsPrefix   string
 	GQLMessagePrefix string
 	Services         map[string]ServiceConfig
-	Messages         map[string]MessageConfig
+	Messages         []map[string]MessageConfig
 	Generator        *gqlProtoDerivativeFileGenerator
 }
 type generator struct {
@@ -91,17 +91,17 @@ func (g *generator) generate() error {
 			return errors.Wrap(err, "failed to resolve go pkg")
 		}
 		f := &gqlProtoDerivativeFile{
-			OutGoPkg:         pkg,
-			OutGoPkgName:     mergeStringsConfig(g.config.OutputPkg, cfg.OutputPkg),
-			OutDir:           outDir,
-			GoProtoPkg:       goProtoPkg,
-			OutFilePath:      path.Join(outDir, filename),
-			ProtoFile:        file,
-			GQLEnumsPrefix:   cfg.GQLEnumsPrefix,
-			GQLMessagePrefix: cfg.GQLMessagePrefix,
-			Services:         cfg.Services,
-			TracerEnabled:    g.config.Tracer,
-			Messages:         cfg.Messages,
+			OutGoPkg:              pkg,
+			OutGoPkgName:          mergeStringsConfig(g.config.OutputPkg, cfg.OutputPkg),
+			OutDir:                outDir,
+			GoProtoPkg:            goProtoPkg,
+			OutFilePath:           path.Join(outDir, filename),
+			ProtoFile:             file,
+			GQLEnumsPrefix:        cfg.GQLEnumsPrefix,
+			GQLMessagePrefix:      cfg.GQLMessagePrefix,
+			Services:              cfg.Services,
+			TracerEnabled:         g.config.Tracer,
+			Messages:              cfg.Messages,
 		}
 		filesToGenerate = append(filesToGenerate, f)
 		generatedProtos[cfg] = f
