@@ -9,7 +9,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"golang.org/x/tools/imports"
 )
@@ -44,22 +43,7 @@ func (g generator) bodyTemplateContext() interface{} {
 
 }
 func (g generator) goTypeStr(typ GoType) string {
-	if typeIsScalar(typ) && typ.Name == "" {
-		return typ.Kind.String()
-	}
-	switch typ.Kind {
-	case reflect.Slice:
-		return "[]" + g.goTypeStr(*typ.ElemType)
-	case reflect.Ptr:
-		return "*" + g.goTypeStr(*typ.ElemType)
-	case reflect.Struct, reflect.Interface:
-		return g.imports.Prefix(typ.Pkg) + typ.Name
-	}
-	if typ.Name != "" {
-		return g.imports.Prefix(typ.Pkg) + typ.Name
-	}
-	spew.Dump(typ)
-	panic("type " + typ.Kind.String() + " is not supported")
+	return typ.String(g.imports)
 }
 
 func (g generator) goTypeForNew(typ GoType) string {

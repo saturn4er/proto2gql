@@ -2,18 +2,44 @@ package common
 
 import (
 	"reflect"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 type TypeResolver func(ctx BodyContext) string
 type ValueResolver func(arg string, ctx BodyContext) string
 type AssigningWrapper func(arg string, ctx BodyContext) string
+type PayloadErrorChecker func(arg string) string
+type PayloadErrorAccessor func(arg string) string
 
 type GoType struct {
-	Scalar   bool
-	Kind     reflect.Kind
-	ElemType *GoType
-	Name     string
-	Pkg      string
+	Scalar    bool
+	Kind      reflect.Kind
+	ElemType  *GoType
+	Elem2Type *GoType
+	Name      string
+	Pkg       string
+}
+
+func (g GoType) String(i *Importer) string {
+	if typeIsScalar(g) && g.Name == "" {
+		return g.Kind.String()
+	}
+	switch g.Kind {
+	case reflect.Slice:
+		return "[]" + g.ElemType.String(i)
+	case reflect.Ptr:
+		return "*" + g.ElemType.String(i)
+	case reflect.Struct, reflect.Interface:
+		return i.Prefix(g.Pkg) + g.Name
+	case reflect.Map:
+		return "map[" + g.ElemType.String(i) + "]" + g.Elem2Type.String(i)
+	}
+	if g.Name != "" {
+		return i.Prefix(g.Pkg) + g.Name
+	}
+	spew.Dump(g)
+	panic("type " + g.Kind.String() + " is not supported")
 }
 
 type InputObjectResolver struct {
@@ -102,7 +128,8 @@ type Method struct {
 	RequestResolverFunctionName string
 	CallMethod                  string
 	RequestType                 GoType
-	ResponseType                GoType
+	PayloadErrorChecker         PayloadErrorChecker
+	PayloadErrorAccessor        PayloadErrorAccessor
 }
 type MethodArgument struct {
 	Name string

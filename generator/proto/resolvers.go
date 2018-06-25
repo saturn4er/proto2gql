@@ -52,12 +52,24 @@ func (g *Generator) TypeInputTypeResolver(currentFile *parser.File, typ *parser.
 		}
 		return res, nil
 	}
-	if typ.IsMap(){
+	if typ.IsMap() {
 		return g.inputObjectMapFieldTypeResolver(typ.Map)
 	}
 	return nil, errors.New("not implemented " + typ.String())
 }
-func (g *Generator) TypeValueResolver(typ *parser.Type) (_ common.ValueResolver, withErr bool, err error) {
+func (g *Generator) TypeValueFromContextResolver(typ *parser.Type) (_ common.ValueResolver, withErr bool, err error) {
+	return nil, false, nil
+}
+func (g *Generator) TypeValueResolver(typ *parser.Type, ctxKey string) (_ common.ValueResolver, withErr bool, err error) {
+	if ctxKey != "" {
+		goType, err := goTypeByParserType(typ)
+		if err != nil {
+			return nil, false, errors.Wrap(err, "failed to resolve go type")
+		}
+		return func(arg string, ctx common.BodyContext) string {
+			return `ctx.Value("` + ctxKey + `").(` + goType.String(ctx.Importer) + `)`
+		}, false, nil
+	}
 	if typ.IsScalar() {
 		gt, ok := goTypesScalars[typ.Scalar]
 		if !ok {
@@ -82,6 +94,19 @@ func (g *Generator) TypeValueResolver(typ *parser.Type) (_ common.ValueResolver,
 				return ctx.Importer.Prefix(pkg) + g.inputMessageResolverName(typ.Message) + "(tr, tr.ContextWithSpan(ctx,span), " + arg + ")"
 			} else {
 				return ctx.Importer.Prefix(pkg) + g.inputMessageResolverName(typ.Message) + "(ctx, " + arg + ")"
+			}
+		}, true, nil
+	}
+	if typ.IsMap() {
+		_, pkg, err := g.fileOutputPackage(typ.File)
+		if err != nil {
+			return nil, false, errors.Wrapf(err, "failed to resolve type %s output package", typ)
+		}
+		return func(arg string, ctx common.BodyContext) string {
+			if ctx.TracerEnabled {
+				return ctx.Importer.Prefix(pkg) + g.mapResolverFunctionName(typ.Map) + "(tr, tr.ContextWithSpan(ctx,span), " + arg + ")"
+			} else {
+				return ctx.Importer.Prefix(pkg) + g.mapResolverFunctionName(typ.Map) + "(ctx, " + arg + ")"
 			}
 		}, true, nil
 	}

@@ -42,15 +42,20 @@ func (g *generator) generate() error {
 func (g *generator) extendProtoFilesConfigs() error {
 	for _, cfg := range g.config.Protos.Files {
 		cfg.Paths = append(cfg.GetPaths(), g.config.Protos.Paths...)
+		for i, path := range cfg.Paths {
+			cfg.Paths[i] = os.ExpandEnv(path)
+		}
+		cfg.ProtoPath = os.ExpandEnv(cfg.ProtoPath)
 		cfg.ImportsAliases = append(cfg.ImportsAliases, g.config.Protos.ImportsAliases...)
 		cfg.Messages = append(cfg.Messages, g.config.Protos.Messages...)
 		if cfg.OutputPath != "" {
-			absoluteOutPath, err := filepath.Abs(cfg.OutputPath)
+			absoluteOutPath, err := filepath.Abs(os.ExpandEnv(cfg.OutputPath))
 			if err != nil {
 				return errors.Wrap(err, "failed to normalize proto output path")
 			}
 			cfg.OutputPath = absoluteOutPath
 		}
+
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package proto
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/common"
@@ -9,13 +10,9 @@ import (
 )
 
 func (g *Generator) inputMessageResolverName(message *parser.Message) string {
-	return "Resolve" + camelCaseSlice(message.TypeName)
+	return "Resolve" + g.inputMessageGraphQLName(message)
 }
-func (g *Generator) oneOfValueResolver(oneof *parser.OneOf, field *parser.Field) (_ common.ValueResolver, withErr bool) {
-	return func(arg string, ctx common.BodyContext) string {
-		return arg
-	}, true
-}
+
 func (g *Generator) oneOfValueAssigningWrapper(msg *parser.Message, field *parser.Field) common.AssigningWrapper {
 	return func(arg string, ctx common.BodyContext) string {
 		pkg := g.fileGRPCSourcesPackage(msg.Type.File)
@@ -25,24 +22,26 @@ func (g *Generator) oneOfValueAssigningWrapper(msg *parser.Message, field *parse
 
 func (g *Generator) fileInputMessagesResolvers(file *parser.File) ([]common.InputObjectResolver, error) {
 	var res []common.InputObjectResolver
+	fileCfg := g.fileConfig(file)
 	for _, msg := range file.Messages {
-		goType, err := goTypeByParserType(msg.Type)
+		msgCfg, err := fileCfg.MessageConfig(strings.Join(msg.TypeName, "."))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to resolve message go type")
+
 		}
 		var oneOffs []common.InputObjectResolverOneOf
 		for _, oneOf := range msg.OneOffs {
 			var fields []common.InputObjectResolverOneOfField
-			for _, field := range oneOf.Fields {
-				resolver, withErr, err := g.TypeValueResolver(field.Type)
+			for _, fld := range oneOf.Fields {
+				fldCfg := msgCfg.Fields[fld.Name]
+				resolver, withErr, err := g.TypeValueResolver(fld.Type, fldCfg.ContextKey)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to get type value resolver")
 				}
 				fields = append(fields, common.InputObjectResolverOneOfField{
-					GraphQLInputFieldName: field.Name,
+					GraphQLInputFieldName: fld.Name,
 					ValueResolver:         resolver,
 					ResolverWithError:     withErr,
-					AssigningWrapper:      g.oneOfValueAssigningWrapper(msg, field),
+					AssigningWrapper:      g.oneOfValueAssigningWrapper(msg, fld),
 				})
 			}
 			oneOffs = append(oneOffs, common.InputObjectResolverOneOf{
@@ -51,16 +50,17 @@ func (g *Generator) fileInputMessagesResolvers(file *parser.File) ([]common.Inpu
 			})
 		}
 		var fields []common.InputObjectResolverField
-		for _, field := range msg.Fields {
-			resolver, withErr, err := g.TypeValueResolver(field.Type)
+		for _, fld := range msg.Fields {
+			fldCfg := msgCfg.Fields[fld.Name]
+			resolver, withErr, err := g.TypeValueResolver(fld.Type, fldCfg.ContextKey)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to get type value resolver")
 			}
-			goType, err := goTypeByParserType(field.Type)
+			goType, err := goTypeByParserType(fld.Type)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to get go type by parser type")
 			}
-			if field.Repeated {
+			if fld.Repeated {
 				gt := goType
 				goType = common.GoType{
 					Kind:     reflect.Slice,
@@ -68,16 +68,33 @@ func (g *Generator) fileInputMessagesResolvers(file *parser.File) ([]common.Inpu
 				}
 			}
 			fields = append(fields, common.InputObjectResolverField{
-				GraphQLInputFieldName: field.Name,
-				OutputFieldName:       camelCase(field.Name),
+				GraphQLInputFieldName: fld.Name,
+				OutputFieldName:       camelCase(fld.Name),
 				ValueResolver:         resolver,
 				ResolverWithError:     withErr,
 				GoType:                goType,
 			})
 		}
+		for _, fld := range msg.MapFields {
+			fldCfg := msgCfg.Fields[fld.Name]
+			valueResolver, withErr, err := g.TypeValueResolver(fld.Type, fldCfg.ContextKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to get message '%s' map field '%s' value resolver", msg.Name, fld.Name)
+			}
+			fields = append(fields, common.InputObjectResolverField{
+				GraphQLInputFieldName: fld.Name,
+				OutputFieldName:       camelCase(fld.Name),
+				ValueResolver:         valueResolver,
+				ResolverWithError:     withErr,
+			})
+		}
+		msgGoType, err := goTypeByParserType(msg.Type)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to resolve message go type")
+		}
 		res = append(res, common.InputObjectResolver{
 			FunctionName: g.inputMessageResolverName(msg),
-			OutputGoType: goType,
+			OutputGoType: msgGoType,
 			OneOfFields:  oneOffs,
 			Fields:       fields,
 		})

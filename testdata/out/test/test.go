@@ -14,7 +14,9 @@ import (
 	testdata "github.com/saturn4er/proto2gql/testdata"
 	common_1 "github.com/saturn4er/proto2gql/testdata/common"
 	common "github.com/saturn4er/proto2gql/testdata/out/Users/yaroslavmytsyo/go/src/github.com/saturn4er/proto2gql/testdata/common"
-) // Enums
+)
+
+// Enums
 var ExmplRootEnum = graphql.NewEnum(graphql.EnumConfig{
 	Name:        "ExmplRootEnum",
 	Description: "",
@@ -79,6 +81,8 @@ var ExmplRootMessageInput = graphql.NewInputObject(graphql.InputObjectConfig{
 			"map_enum":            &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapEnum))},
 			"map_scalar":          &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapScalar))},
 			"map_msg":             &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapMsg))},
+			"ctx_map":             &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__CtxMap))},
+			"ctx_map_enum":        &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__CtxMapEnum))},
 			"e_f_o_e":             &graphql.InputObjectFieldConfig{Type: common.CommonEnum},
 			"e_f_o_s":             &graphql.InputObjectFieldConfig{Type: scalars.GraphQLInt32Scalar},
 			"e_f_o_m":             &graphql.InputObjectFieldConfig{Type: common.CommonMessage},
@@ -125,8 +129,8 @@ var ExmplRootMessage2Input = graphql.NewInputObject(graphql.InputObjectConfig{
 })
 
 // Input objects resolvers
-func ResolveRootMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.RootMessage, rerr error) {
-	span := tr.CreateChildSpanFromContext(ctx, "ResolveRootMessage")
+func ResolveExmplRootMessageInput(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.RootMessage, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessageInput")
 	defer span.Finish()
 	defer func() {
 		if perr := recover(); perr != nil {
@@ -147,7 +151,7 @@ func ResolveRootMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_
 		result.RMsg = make([]*testdata.RootMessage_NestedMessage, len(in))
 		for i, val := range in {
 
-			v, err := ResolveRootMessageNestedMessage(tr, tr.ContextWithSpan(ctx, span), val)
+			v, err := ResolveExmplRootMessage__NestedMessageInput(tr, tr.ContextWithSpan(ctx, span), val)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve input object field")
 			}
@@ -173,7 +177,7 @@ func ResolveRootMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_
 		result.REmptyMsg = make([]*testdata.Empty, len(in))
 		for i, val := range in {
 
-			v, err := ResolveEmpty(tr, tr.ContextWithSpan(ctx, span), val)
+			v, err := ResolveExmplEmptyInput(tr, tr.ContextWithSpan(ctx, span), val)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve input object field")
 			}
@@ -187,23 +191,48 @@ func ResolveRootMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_
 		result.NRScalar = args["n_r_scalar"].(int32)
 	}
 	if args["n_r_msg"] != nil {
-
-		v, err := common.ResolveCommonMessage(tr, tr.ContextWithSpan(ctx, span), args["n_r_msg"])
+		v, err := common.ResolveCommonMessageInput(tr, tr.ContextWithSpan(ctx, span), args["n_r_msg"])
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve input object field")
 		}
 		result.NRMsg = v
 	}
 	if args["scalar_from_context"] != nil {
-		result.ScalarFromContext = args["scalar_from_context"].(int32)
+		result.ScalarFromContext = ctx.Value("ctx_key").(int32)
 	}
 	if args["n_r_empty_msg"] != nil {
-
-		v, err := ResolveEmpty(tr, tr.ContextWithSpan(ctx, span), args["n_r_empty_msg"])
+		v, err := ResolveExmplEmptyInput(tr, tr.ContextWithSpan(ctx, span), args["n_r_empty_msg"])
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve input object field")
 		}
 		result.NREmptyMsg = v
+	}
+	if args["map_enum"] != nil {
+		v, err := ResolveExmplRootMessageInput__MapEnum(tr, tr.ContextWithSpan(ctx, span), args["map_enum"])
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to resolve input object field")
+		}
+		result.MapEnum = v
+	}
+	if args["map_scalar"] != nil {
+		v, err := ResolveExmplRootMessageInput__MapScalar(tr, tr.ContextWithSpan(ctx, span), args["map_scalar"])
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to resolve input object field")
+		}
+		result.MapScalar = v
+	}
+	if args["map_msg"] != nil {
+		v, err := ResolveExmplRootMessageInput__MapMsg(tr, tr.ContextWithSpan(ctx, span), args["map_msg"])
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to resolve input object field")
+		}
+		result.MapMsg = v
+	}
+	if args["ctx_map"] != nil {
+		result.CtxMap = ctx.Value("ctx_map").(map[string]*testdata.RootMessage_NestedMessage)
+	}
+	if args["ctx_map_enum"] != nil {
+		result.CtxMapEnum = ctx.Value("ctx_map_enum").(map[string]testdata.RootMessage_NestedEnum)
 	}
 	if e_f_o_e_, ok := args["e_f_o_e"]; ok && e_f_o_e_ != nil {
 		v := common_1.CommonEnum(e_f_o_e_.(int))
@@ -212,13 +241,13 @@ func ResolveRootMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_
 		v := e_f_o_s_.(int32)
 		result.EnumFirstOneoff = &testdata.RootMessage_EFOS{v}
 	} else if e_f_o_m_, ok := args["e_f_o_m"]; ok && e_f_o_m_ != nil {
-		v, err := common.ResolveCommonMessage(tr, tr.ContextWithSpan(ctx, span), e_f_o_m_)
+		v, err := common.ResolveCommonMessageInput(tr, tr.ContextWithSpan(ctx, span), e_f_o_m_)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve oneOf object field e_f_o_m")
 		}
 		result.EnumFirstOneoff = &testdata.RootMessage_EFOM{v}
 	} else if e_f_o_em_, ok := args["e_f_o_em"]; ok && e_f_o_em_ != nil {
-		v, err := ResolveEmpty(tr, tr.ContextWithSpan(ctx, span), e_f_o_em_)
+		v, err := ResolveExmplEmptyInput(tr, tr.ContextWithSpan(ctx, span), e_f_o_em_)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve oneOf object field e_f_o_em")
 		}
@@ -231,20 +260,20 @@ func ResolveRootMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_
 		v := testdata.RootEnum(s_f_o_e_.(int))
 		result.ScalarFirstOneoff = &testdata.RootMessage_SFOE{v}
 	} else if s_f_o_mes_, ok := args["s_f_o_mes"]; ok && s_f_o_mes_ != nil {
-		v, err := ResolveRootMessage2(tr, tr.ContextWithSpan(ctx, span), s_f_o_mes_)
+		v, err := ResolveExmplRootMessage2Input(tr, tr.ContextWithSpan(ctx, span), s_f_o_mes_)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve oneOf object field s_f_o_mes")
 		}
 		result.ScalarFirstOneoff = &testdata.RootMessage_SFOMes{v}
 	} else if s_f_o_m_, ok := args["s_f_o_m"]; ok && s_f_o_m_ != nil {
-		v, err := ResolveEmpty(tr, tr.ContextWithSpan(ctx, span), s_f_o_m_)
+		v, err := ResolveExmplEmptyInput(tr, tr.ContextWithSpan(ctx, span), s_f_o_m_)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve oneOf object field s_f_o_m")
 		}
 		result.ScalarFirstOneoff = &testdata.RootMessage_SFOM{v}
 	}
 	if m_f_o_m_, ok := args["m_f_o_m"]; ok && m_f_o_m_ != nil {
-		v, err := ResolveRootMessage2(tr, tr.ContextWithSpan(ctx, span), m_f_o_m_)
+		v, err := ResolveExmplRootMessage2Input(tr, tr.ContextWithSpan(ctx, span), m_f_o_m_)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve oneOf object field m_f_o_m")
 		}
@@ -256,14 +285,14 @@ func ResolveRootMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_
 		v := testdata.RootEnum(m_f_o_e_.(int))
 		result.MessageFirstOneoff = &testdata.RootMessage_MFOE{v}
 	} else if m_f_o_em_, ok := args["m_f_o_em"]; ok && m_f_o_em_ != nil {
-		v, err := ResolveEmpty(tr, tr.ContextWithSpan(ctx, span), m_f_o_em_)
+		v, err := ResolveExmplEmptyInput(tr, tr.ContextWithSpan(ctx, span), m_f_o_em_)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve oneOf object field m_f_o_em")
 		}
 		result.MessageFirstOneoff = &testdata.RootMessage_MFOEm{v}
 	}
 	if em_f_o_em_, ok := args["em_f_o_em"]; ok && em_f_o_em_ != nil {
-		v, err := ResolveEmpty(tr, tr.ContextWithSpan(ctx, span), em_f_o_em_)
+		v, err := ResolveExmplEmptyInput(tr, tr.ContextWithSpan(ctx, span), em_f_o_em_)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve oneOf object field em_f_o_em")
 		}
@@ -275,7 +304,7 @@ func ResolveRootMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_
 		v := testdata.RootEnum(em_f_o_en_.(int))
 		result.EmptyFirstOneoff = &testdata.RootMessage_EmFOEn{v}
 	} else if em_f_o_m_, ok := args["em_f_o_m"]; ok && em_f_o_m_ != nil {
-		v, err := ResolveRootMessage2(tr, tr.ContextWithSpan(ctx, span), em_f_o_m_)
+		v, err := ResolveExmplRootMessage2Input(tr, tr.ContextWithSpan(ctx, span), em_f_o_m_)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve oneOf object field em_f_o_m")
 		}
@@ -284,8 +313,8 @@ func ResolveRootMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_
 
 	return result, nil
 }
-func ResolveRootMessageNestedMessage(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.RootMessage_NestedMessage, rerr error) {
-	span := tr.CreateChildSpanFromContext(ctx, "ResolveRootMessageNestedMessage")
+func ResolveExmplRootMessage__NestedMessageInput(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.RootMessage_NestedMessage, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessage__NestedMessageInput")
 	defer span.Finish()
 	defer func() {
 		if perr := recover(); perr != nil {
@@ -318,8 +347,8 @@ func ResolveRootMessageNestedMessage(tr tracer.Tracer, ctx context.Context, i in
 
 	return result, nil
 }
-func ResolveEmpty(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.Empty, rerr error) {
-	span := tr.CreateChildSpanFromContext(ctx, "ResolveEmpty")
+func ResolveExmplEmptyInput(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.Empty, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplEmptyInput")
 	defer span.Finish()
 	defer func() {
 		if perr := recover(); perr != nil {
@@ -338,8 +367,8 @@ func ResolveEmpty(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *test
 
 	return result, nil
 }
-func ResolveMessageWithEmpty(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.MessageWithEmpty, rerr error) {
-	span := tr.CreateChildSpanFromContext(ctx, "ResolveMessageWithEmpty")
+func ResolveExmplMessageWithEmptyInput(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.MessageWithEmpty, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplMessageWithEmptyInput")
 	defer span.Finish()
 	defer func() {
 		if perr := recover(); perr != nil {
@@ -356,8 +385,7 @@ func ResolveMessageWithEmpty(tr tracer.Tracer, ctx context.Context, i interface{
 	_ = args
 	var result = new(testdata.MessageWithEmpty)
 	if args["empt"] != nil {
-
-		v, err := ResolveEmpty(tr, tr.ContextWithSpan(ctx, span), args["empt"])
+		v, err := ResolveExmplEmptyInput(tr, tr.ContextWithSpan(ctx, span), args["empt"])
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve input object field")
 		}
@@ -366,8 +394,8 @@ func ResolveMessageWithEmpty(tr tracer.Tracer, ctx context.Context, i interface{
 
 	return result, nil
 }
-func ResolveRootMessage2(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.RootMessage2, rerr error) {
-	span := tr.CreateChildSpanFromContext(ctx, "ResolveRootMessage2")
+func ResolveExmplRootMessage2Input(tr tracer.Tracer, ctx context.Context, i interface{}) (_ *testdata.RootMessage2, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessage2Input")
 	defer span.Finish()
 	defer func() {
 		if perr := recover(); perr != nil {
@@ -667,6 +695,24 @@ var ExmplRootMessageInput__MapMsg = graphql.NewInputObject(graphql.InputObjectCo
 		}
 	}),
 })
+var ExmplRootMessageInput__CtxMap = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplRootMessageInput__CtxMap",
+	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
+		return graphql.InputObjectConfigFieldMap{
+			"key":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"value": &graphql.InputObjectFieldConfig{Type: ExmplRootMessageNestedMessage},
+		}
+	}),
+})
+var ExmplRootMessageInput__CtxMapEnum = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "ExmplRootMessageInput__CtxMapEnum",
+	Fields: graphql.InputObjectConfigFieldMapThunk(func() graphql.InputObjectConfigFieldMap {
+		return graphql.InputObjectConfigFieldMap{
+			"key":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"value": &graphql.InputObjectFieldConfig{Type: ExmplNestedEnum},
+		}
+	}),
+})
 
 // Maps input objects resolvers
 func ResolveExmplRootMessageInput__MapEnum(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[int32]testdata.RootMessage_NestedEnum, rerr error) {
@@ -745,10 +791,67 @@ func ResolveExmplRootMessageInput__MapMsg(tr tracer.Tracer, ctx context.Context,
 		k, v := val["key"], val["value"]
 		_, _ = k, v
 		kk := k.(string)
-		vv, err := ResolveRootMessageNestedMessage(tr, tr.ContextWithSpan(ctx, span), v)
+		vv, err := ResolveExmplRootMessage__NestedMessageInput(tr, tr.ContextWithSpan(ctx, span), v)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to resolve #%d map element value", i)
 		}
+		result[kk] = vv
+	}
+	return result, nil
+}
+func ResolveExmplRootMessageInput__CtxMap(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[string]*testdata.RootMessage_NestedMessage, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessageInput__CtxMap")
+	defer span.Finish()
+	defer func() {
+		if perr := recover(); perr != nil {
+			span.SetTag("error", "true").SetTag("error_message", perr).SetTag("error_stack", string(debug.Stack()))
+		}
+		if rerr != nil {
+			span.SetTag("error", "true").SetTag("error_message", rerr.Error())
+		}
+	}()
+	if i == nil {
+		return nil, nil
+	}
+	in := i.([]interface{})
+	result := make(map[string]*testdata.RootMessage_NestedMessage)
+	for i, ival := range in {
+		_ = i
+		val := ival.(map[string]interface{})
+		k, v := val["key"], val["value"]
+		_, _ = k, v
+		kk := k.(string)
+		vv, err := ResolveExmplRootMessage__NestedMessageInput(tr, tr.ContextWithSpan(ctx, span), v)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to resolve #%d map element value", i)
+		}
+		result[kk] = vv
+	}
+	return result, nil
+}
+func ResolveExmplRootMessageInput__CtxMapEnum(tr tracer.Tracer, ctx context.Context, i interface{}) (_ map[string]testdata.RootMessage_NestedEnum, rerr error) {
+	span := tr.CreateChildSpanFromContext(ctx, "ResolveExmplRootMessageInput__CtxMapEnum")
+	defer span.Finish()
+	defer func() {
+		if perr := recover(); perr != nil {
+			span.SetTag("error", "true").SetTag("error_message", perr).SetTag("error_stack", string(debug.Stack()))
+		}
+		if rerr != nil {
+			span.SetTag("error", "true").SetTag("error_message", rerr.Error())
+		}
+	}()
+	if i == nil {
+		return nil, nil
+	}
+	in := i.([]interface{})
+	result := make(map[string]testdata.RootMessage_NestedEnum)
+	for i, ival := range in {
+		_ = i
+		val := ival.(map[string]interface{})
+		k, v := val["key"], val["value"]
+		_, _ = k, v
+		kk := k.(string)
+		vv := testdata.RootMessage_NestedEnum(v.(int))
 		result[kk] = vv
 	}
 	return result, nil
@@ -845,8 +948,192 @@ func init() {
 	})
 }
 
+var ExmplRootMessage__ctx_map = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplRootMessage__ctx_map",
+	Fields: graphql.Fields{},
+})
+
+func init() {
+	ExmplRootMessage__ctx_map.AddFieldConfig("key", &graphql.Field{
+		Name: "key",
+		Type: graphql.String,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(map[string]interface{})
+			if src == nil {
+				return nil, nil
+			}
+			return src["key"], nil
+		},
+	})
+	ExmplRootMessage__ctx_map.AddFieldConfig("value", &graphql.Field{
+		Name: "value",
+		Type: ExmplRootMessageNestedMessage,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(map[string]interface{})
+			if src == nil {
+				return nil, nil
+			}
+			return src["value"], nil
+		},
+	})
+}
+
+var ExmplRootMessage__ctx_map_enum = graphql.NewObject(graphql.ObjectConfig{
+	Name:   "ExmplRootMessage__ctx_map_enum",
+	Fields: graphql.Fields{},
+})
+
+func init() {
+	ExmplRootMessage__ctx_map_enum.AddFieldConfig("key", &graphql.Field{
+		Name: "key",
+		Type: graphql.String,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(map[string]interface{})
+			if src == nil {
+				return nil, nil
+			}
+			return src["key"], nil
+		},
+	})
+	ExmplRootMessage__ctx_map_enum.AddFieldConfig("value", &graphql.Field{
+		Name: "value",
+		Type: ExmplNestedEnum,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			src := p.Source.(map[string]interface{})
+			if src == nil {
+				return nil, nil
+			}
+			return src["value"], nil
+		},
+	})
+}
+
 // Services
 func GetServiceExampleServiceMethods(c testdata.ServiceExampleClient, ih *interceptors.InterceptorHandler, tr tracer.Tracer) graphql.Fields {
+	return graphql.Fields{
+		"mutationMethod": &graphql.Field{
+			Name: "mutationMethod",
+			Type: ExmplRootMessageNestedMessage,
+			Args: graphql.FieldConfigArgument{
+				"some_field": &graphql.ArgumentConfig{Type: scalars.GraphQLInt32Scalar},
+			},
+			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
+				span := tr.CreateChildSpanFromContext(p.Context, "ServiceExample.mutationMethod Resolver")
+				defer span.Finish()
+				defer func() {
+					if rerr != nil {
+						span.SetTag("error", "true").SetTag("error_message", rerr.Error())
+					}
+				}()
+				if ih == nil {
+					req, err := ResolveExmplRootMessage2Input(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+					if err != nil {
+						return nil, err
+					}
+					return c.MutationMethod(p.Context, req)
+				}
+				ctx := &interceptors.Context{
+					Service: "ServiceExample",
+					Method:  "mutationMethod",
+					Params:  p,
+				}
+				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
+					return ResolveExmplRootMessage2Input(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+				})
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to resolve args")
+				}
+				return ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
+					r, ok := req.(*testdata.RootMessage2)
+					if !ok {
+						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.RootMessage2", req))
+					}
+					return c.MutationMethod(ctx.Params.Context, r)
+				})
+			},
+		},
+		"EmptyMsgs": &graphql.Field{
+			Name: "EmptyMsgs",
+			Type: scalars.NoDataScalar,
+			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
+				span := tr.CreateChildSpanFromContext(p.Context, "ServiceExample.EmptyMsgs Resolver")
+				defer span.Finish()
+				defer func() {
+					if rerr != nil {
+						span.SetTag("error", "true").SetTag("error_message", rerr.Error())
+					}
+				}()
+				if ih == nil {
+					req, err := ResolveExmplEmptyInput(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+					if err != nil {
+						return nil, err
+					}
+					return c.EmptyMsgs(p.Context, req)
+				}
+				ctx := &interceptors.Context{
+					Service: "ServiceExample",
+					Method:  "EmptyMsgs",
+					Params:  p,
+				}
+				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
+					return ResolveExmplEmptyInput(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+				})
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to resolve args")
+				}
+				return ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
+					r, ok := req.(*testdata.Empty)
+					if !ok {
+						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.Empty", req))
+					}
+					return c.EmptyMsgs(ctx.Params.Context, r)
+				})
+			},
+		},
+		"MsgsWithEpmty": &graphql.Field{
+			Name: "MsgsWithEpmty",
+			Type: ExmplMessageWithEmpty,
+			Args: graphql.FieldConfigArgument{
+				"empt": &graphql.ArgumentConfig{Type: scalars.NoDataScalar},
+			},
+			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
+				span := tr.CreateChildSpanFromContext(p.Context, "ServiceExample.MsgsWithEpmty Resolver")
+				defer span.Finish()
+				defer func() {
+					if rerr != nil {
+						span.SetTag("error", "true").SetTag("error_message", rerr.Error())
+					}
+				}()
+				if ih == nil {
+					req, err := ResolveExmplMessageWithEmptyInput(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+					if err != nil {
+						return nil, err
+					}
+					return c.MsgsWithEpmty(p.Context, req)
+				}
+				ctx := &interceptors.Context{
+					Service: "ServiceExample",
+					Method:  "MsgsWithEpmty",
+					Params:  p,
+				}
+				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
+					return ResolveExmplMessageWithEmptyInput(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+				})
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to resolve args")
+				}
+				return ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
+					r, ok := req.(*testdata.MessageWithEmpty)
+					if !ok {
+						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.MessageWithEmpty", req))
+					}
+					return c.MsgsWithEpmty(ctx.Params.Context, r)
+				})
+			},
+		},
+	}
+}
+func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, ih *interceptors.InterceptorHandler, tr tracer.Tracer) graphql.Fields {
 	return graphql.Fields{
 		"getQueryMethod": &graphql.Field{
 			Name: "getQueryMethod",
@@ -864,9 +1151,11 @@ func GetServiceExampleServiceMethods(c testdata.ServiceExampleClient, ih *interc
 				"map_enum":            &graphql.ArgumentConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapEnum))},
 				"map_scalar":          &graphql.ArgumentConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapScalar))},
 				"map_msg":             &graphql.ArgumentConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__MapMsg))},
+				"ctx_map":             &graphql.ArgumentConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__CtxMap))},
+				"ctx_map_enum":        &graphql.ArgumentConfig{Type: graphql.NewList(graphql.NewNonNull(ExmplRootMessageInput__CtxMapEnum))},
 			},
 			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
-				span := tr.CreateChildSpanFromContext(p.Context, "ServiceExample.getQueryMethod Resolver")
+				span := tr.CreateChildSpanFromContext(p.Context, "MutationsServiceExample.getQueryMethod Resolver")
 				defer span.Finish()
 				defer func() {
 					if rerr != nil {
@@ -874,190 +1163,37 @@ func GetServiceExampleServiceMethods(c testdata.ServiceExampleClient, ih *interc
 					}
 				}()
 				if ih == nil {
-					req, err := ResolveRootMessage(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+					req, err := ResolveExmplRootMessageInput(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 					if err != nil {
 						return nil, err
 					}
 					return c.GetQueryMethod(p.Context, req)
 				}
 				ctx := &interceptors.Context{
-					Service: "ServiceExample",
+					Service: "MutationsServiceExample",
 					Method:  "getQueryMethod",
 					Params:  p,
 				}
 				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return ResolveRootMessage(tr, tr.ContextWithSpan(p.Context, span), p.Args)
+					return ResolveExmplRootMessageInput(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 				})
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "failed to resolve args")
 				}
-				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
+				return ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
 					r, ok := req.(*testdata.RootMessage)
 					if !ok {
 						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.RootMessage", req))
 					}
 					res, err := c.GetQueryMethod(ctx.Params.Context, r)
-					return res, err
-				})
-				if err != nil {
-					return nil, err
-				}
-				rc, ok := res.(*testdata.RootMessage)
-				if !ok {
-					return nil, errors.New(fmt.Sprintf("Call Interceptor returns bad value type(%T). Should return *testdata.RootMessage", res))
-				}
-				return rc, err
-			},
-		},
-	}
-}
-func GetMutationsServiceExampleServiceMethods(c testdata.ServiceExampleClient, ih *interceptors.InterceptorHandler, tr tracer.Tracer) graphql.Fields {
-	return graphql.Fields{
-		"mutationMethod": &graphql.Field{
-			Name: "mutationMethod",
-			Type: ExmplRootMessageNestedMessage,
-			Args: graphql.FieldConfigArgument{
-				"some_field": &graphql.ArgumentConfig{Type: scalars.GraphQLInt32Scalar},
-			},
-			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
-				span := tr.CreateChildSpanFromContext(p.Context, "MutationsServiceExample.mutationMethod Resolver")
-				defer span.Finish()
-				defer func() {
-					if rerr != nil {
-						span.SetTag("error", "true").SetTag("error_message", rerr.Error())
-					}
-				}()
-				if ih == nil {
-					req, err := ResolveRootMessage2(tr, tr.ContextWithSpan(p.Context, span), p.Args)
 					if err != nil {
 						return nil, err
 					}
-					return c.MutationMethod(p.Context, req)
-				}
-				ctx := &interceptors.Context{
-					Service: "MutationsServiceExample",
-					Method:  "mutationMethod",
-					Params:  p,
-				}
-				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return ResolveRootMessage2(tr, tr.ContextWithSpan(p.Context, span), p.Args)
-				})
-				if err != nil {
-					return nil, err
-				}
-				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
-					r, ok := req.(*testdata.RootMessage2)
-					if !ok {
-						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.RootMessage2", req))
+					if len(res.GetCtxMap()) > 0 {
+						ctx.PayloadError = res.GetCtxMap()
 					}
-					res, err := c.MutationMethod(ctx.Params.Context, r)
 					return res, err
 				})
-				if err != nil {
-					return nil, err
-				}
-				rc, ok := res.(*testdata.RootMessage_NestedMessage)
-				if !ok {
-					return nil, errors.New(fmt.Sprintf("Call Interceptor returns bad value type(%T). Should return *testdata.RootMessage_NestedMessage", res))
-				}
-				return rc, err
-			},
-		},
-		"EmptyMsgs": &graphql.Field{
-			Name: "EmptyMsgs",
-			Type: scalars.NoDataScalar,
-			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
-				span := tr.CreateChildSpanFromContext(p.Context, "MutationsServiceExample.EmptyMsgs Resolver")
-				defer span.Finish()
-				defer func() {
-					if rerr != nil {
-						span.SetTag("error", "true").SetTag("error_message", rerr.Error())
-					}
-				}()
-				if ih == nil {
-					req, err := ResolveEmpty(tr, tr.ContextWithSpan(p.Context, span), p.Args)
-					if err != nil {
-						return nil, err
-					}
-					return c.EmptyMsgs(p.Context, req)
-				}
-				ctx := &interceptors.Context{
-					Service: "MutationsServiceExample",
-					Method:  "EmptyMsgs",
-					Params:  p,
-				}
-				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return ResolveEmpty(tr, tr.ContextWithSpan(p.Context, span), p.Args)
-				})
-				if err != nil {
-					return nil, err
-				}
-				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
-					r, ok := req.(*testdata.Empty)
-					if !ok {
-						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.Empty", req))
-					}
-					res, err := c.EmptyMsgs(ctx.Params.Context, r)
-					return res, err
-				})
-				if err != nil {
-					return nil, err
-				}
-				rc, ok := res.(*testdata.Empty)
-				if !ok {
-					return nil, errors.New(fmt.Sprintf("Call Interceptor returns bad value type(%T). Should return *testdata.Empty", res))
-				}
-				return rc, err
-			},
-		},
-		"MsgsWithEpmty": &graphql.Field{
-			Name: "MsgsWithEpmty",
-			Type: ExmplMessageWithEmpty,
-			Args: graphql.FieldConfigArgument{
-				"empt": &graphql.ArgumentConfig{Type: scalars.NoDataScalar},
-			},
-			Resolve: func(p graphql.ResolveParams) (_ interface{}, rerr error) {
-				span := tr.CreateChildSpanFromContext(p.Context, "MutationsServiceExample.MsgsWithEpmty Resolver")
-				defer span.Finish()
-				defer func() {
-					if rerr != nil {
-						span.SetTag("error", "true").SetTag("error_message", rerr.Error())
-					}
-				}()
-				if ih == nil {
-					req, err := ResolveMessageWithEmpty(tr, tr.ContextWithSpan(p.Context, span), p.Args)
-					if err != nil {
-						return nil, err
-					}
-					return c.MsgsWithEpmty(p.Context, req)
-				}
-				ctx := &interceptors.Context{
-					Service: "MutationsServiceExample",
-					Method:  "MsgsWithEpmty",
-					Params:  p,
-				}
-				req, err := ih.ResolveArgs(ctx, func(ctx *interceptors.Context, next interceptors.ResolveArgsInvoker) (result interface{}, err error) {
-					return ResolveMessageWithEmpty(tr, tr.ContextWithSpan(p.Context, span), p.Args)
-				})
-				if err != nil {
-					return nil, err
-				}
-				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
-					r, ok := req.(*testdata.MessageWithEmpty)
-					if !ok {
-						return nil, errors.New(fmt.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: *testdata.MessageWithEmpty", req))
-					}
-					res, err := c.MsgsWithEpmty(ctx.Params.Context, r)
-					return res, err
-				})
-				if err != nil {
-					return nil, err
-				}
-				rc, ok := res.(*testdata.MessageWithEmpty)
-				if !ok {
-					return nil, errors.New(fmt.Sprintf("Call Interceptor returns bad value type(%T). Should return *testdata.MessageWithEmpty", res))
-				}
-				return rc, err
 			},
 		},
 	}

@@ -42,7 +42,8 @@ message RootMessage {
     // scalar map
     map<int32, int32> map_scalar = 28; // Map with scalar value
     map<string, NestedMessage> map_msg = 2; // Map with Message value
-
+    map<string, NestedMessage> ctx_map = 30;
+    map<string, NestedEnum> ctx_map_enum = 31;
     // repeated Message
     repeated NestedMessage r_msg = 3;
     // repeated Scalar

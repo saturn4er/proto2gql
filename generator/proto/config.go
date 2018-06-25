@@ -1,5 +1,11 @@
 package proto
 
+import (
+	"regexp"
+
+	"github.com/pkg/errors"
+)
+
 type FieldsConfig struct {
 	ContextKey string `yaml:"context_key"`
 }
@@ -43,6 +49,23 @@ type ProtoFileConfig struct {
 	Messages []map[string]MessageConfig `yaml:"messages"`
 }
 
+func (pc *ProtoFileConfig) MessageConfig(msgName string) (MessageConfig, error) {
+	if pc == nil {
+		return MessageConfig{}, nil
+	}
+	for _, cfgs := range pc.Messages {
+		for msgNameRegex, cfg := range cfgs {
+			r, err := regexp.Compile(msgNameRegex)
+			if err != nil {
+				return MessageConfig{}, errors.Wrapf(err, "failed to compile message name regex '%s'", msgNameRegex)
+			}
+			if r.MatchString(msgName) {
+				return cfg, nil
+			}
+		}
+	}
+	return MessageConfig{}, nil
+}
 func (pc *ProtoFileConfig) GetName() string {
 	if pc == nil {
 		return ""

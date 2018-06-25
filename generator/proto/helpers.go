@@ -60,6 +60,22 @@ func goTypeByParserType(typ *parser.Type) (_ common.GoType, err error) {
 			ElemType: msgType,
 		}, nil
 	}
+	if typ.IsMap() {
+		keyT, err := goTypeByParserType(typ.Map.KeyType)
+		if err != nil {
+			return common.GoType{}, errors.Wrap(err, "failed to resolve key type")
+		}
+		valueT, err := goTypeByParserType(typ.Map.ValueType)
+		if err != nil {
+			return common.GoType{}, errors.Wrap(err, "failed to resolve value type")
+		}
+		return common.GoType{
+			Pkg:       typ.File.GoPackage,
+			Kind:      reflect.Map,
+			ElemType:  &keyT,
+			Elem2Type: &valueT,
+		}, nil
+	}
 	err = errors.Errorf("unknown type " + typ.String())
 	return
 }
@@ -143,3 +159,4 @@ func camelCase(s string) string {
 // be joined with "_".
 func camelCaseSlice(elem []string) string      { return camelCase(strings.Join(elem, "")) }
 func snakeCamelCaseSlice(elem []string) string { return camelCase(strings.Join(elem, "_")) }
+func dotedTypeName(elems []string) string      { return camelCase(strings.Join(elems, ".")) }

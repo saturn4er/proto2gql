@@ -71,7 +71,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 					{{ end -}}
 				}
 			{{ else -}}
-				{{ if $field.ResolverWithError }}
+				{{ if $field.ResolverWithError -}}
 					v, err := {{call $field.ValueResolver (concat "args[\"" $field.GraphQLInputFieldName "\"]") $}}
 					if err != nil {
 						return nil, {{errorsPkg}}.Wrap(err, "failed to resolve input object field")
@@ -306,21 +306,31 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 									return new({{goTypeForNew $method.RequestType}}), nil
 								{{ end -}}
 							})
-							if err != nil { return nil, err }
-							res, err := ih.Call(ctx, req, func(ctx *{{interceptorsPkg}}.Context, req interface{}, next {{interceptorsPkg}}.CallMethodInvoker) (result interface{}, err error) {
+							if err != nil {
+								return nil, {{errorsPkg}}.Wrap(err, "failed to resolve args")
+							}
+							return ih.Call(ctx, req, func(ctx *{{interceptorsPkg}}.Context, req interface{}, next {{interceptorsPkg}}.CallMethodInvoker) (result interface{}, err error) {
 								r, ok := req.({{goType $method.RequestType}})
 								if !ok {
 									return nil, {{errorsPkg}}.New({{fmtPkg}}.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: {{goType $method.RequestType}}", req))
 								}
-								res, err := c.{{$method.CallMethod}}(ctx.Params.Context, r)
-								return res, err
+								{{if $method.PayloadErrorChecker -}}
+                                    res, err := c.{{$method.CallMethod}}(ctx.Params.Context, r)
+                                    if err != nil {
+                                        return nil, err
+                                    }
+                                	if {{call $method.PayloadErrorChecker "res"}} {
+                                        {{ if $method.PayloadErrorAccessor -}}
+                                            ctx.PayloadError = {{call $method.PayloadErrorAccessor "res"}}
+                                        {{ else -}}
+                                            ctx.PayloadError = res
+                                        {{ end -}}
+									}
+									return res, err
+                                {{else -}}
+                                    return c.{{$method.CallMethod}}(ctx.Params.Context, r)
+								{{end -}}
 							})
-							if err != nil { return nil, err }
-							rc, ok :=res.({{goType $method.ResponseType}})
-							if !ok {
-								return nil, {{errorsPkg}}.New({{fmtPkg}}.Sprintf("Call Interceptor returns bad value type(%T). Should return {{goType $method.ResponseType}}", res))
-							}
-							return rc, err
 						},
 					},
 				{{ end -}}
