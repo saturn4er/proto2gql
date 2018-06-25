@@ -194,11 +194,11 @@ func testFileInfo(file *File) *File {
 
 func TestParser_Parse(t *testing.T) {
 	Convey("Test Parser.Parse", t, func() {
-		parser := New(map[string]string{"common/commo.proto": "common/common.proto"}, []string{"../testdata"})
-		test, err := parser.Parse("../testdata/test.proto")
+		parser := Parser{}
+		test, err := parser.Parse("../testdata/test.proto", []map[string]string{{"common/commo.proto": "common/common.proto"}}, []string{"../testdata"})
 		So(err, ShouldBeNil)
 		So(test, ShouldNotBeNil)
-		test2, err := parser.Parse("../testdata/test2.proto")
+		test2, err := parser.Parse("../testdata/test2.proto", []map[string]string{{"common/commo.proto": "common/common.proto"}}, []string{"../testdata"})
 		So(err, ShouldBeNil)
 		So(test2, ShouldNotBeNil)
 		So(test, ShouldNotEqual, test2)
@@ -209,7 +209,7 @@ func TestParser_Parse(t *testing.T) {
 			So(test.Imports[0], ShouldEqual, test2.Imports[0])
 		})
 		Convey("If we trying to parse same File, it should return pointer to parsed one", func() {
-			test22, err := parser.Parse("../testdata/test2.proto")
+			test22, err := parser.Parse("../testdata/test2.proto", []map[string]string{{"common/commo.proto": "common/common.proto"}}, []string{"../testdata"})
 			So(err, ShouldBeNil)
 			So(test22, ShouldEqual, test2)
 		})
@@ -219,7 +219,7 @@ func TestParser_Parse(t *testing.T) {
 			for i, enum := range test.Enums {
 				validEnum := f.Enums[i]
 				Convey("Should contain "+validEnum.Name, func() {
-					So(enum.file, ShouldEqual, validEnum.File)
+					So(enum.File, ShouldEqual, validEnum.File)
 					So(enum.Name, ShouldEqual, validEnum.Name)
 					So(enum.Type.Enum, ShouldEqual, enum)
 					So(enum.Type.File, ShouldEqual, test)
@@ -245,7 +245,7 @@ func TestParser_Parse(t *testing.T) {
 			for i, msg := range test.Messages {
 				validMsg := f.Messages[i]
 				Convey("Should have valid parsed "+strings.Join(validMsg.TypeName, "_")+" message ", func() {
-					So(msg.file, ShouldEqual, validMsg.File)
+					So(msg.File, ShouldEqual, validMsg.File)
 					So(msg.Name, ShouldEqual, validMsg.Name)
 					So(msg.Type.Message, ShouldEqual, msg)
 					So(msg.Type.File, ShouldEqual, test)

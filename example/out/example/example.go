@@ -3,20 +3,19 @@
 package example
 
 import (
-	context "context"
-	errors "errors"
-	fmt "fmt"
-	debug "runtime/debug"
-	strconv "strconv"
+	"context"
+	"errors"
+	"fmt"
+	"runtime/debug"
+	"strconv"
 
-	timestamp "github.com/golang/protobuf/ptypes/timestamp"
-	graphql "github.com/graphql-go/graphql"
+	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/graphql-go/graphql"
 	opentracing_go "github.com/opentracing/opentracing-go"
-	interceptors "github.com/saturn4er/proto2gql/api/interceptors"
-	scalars "github.com/saturn4er/proto2gql/api/scalars"
+	"github.com/saturn4er/proto2gql/api/interceptors"
+	"github.com/saturn4er/proto2gql/api/scalars"
 	timestamp_1 "github.com/saturn4er/proto2gql/example/out/imports/github.com/golang/protobuf/ptypes/timestamp"
 	proto "github.com/saturn4er/proto2gql/example/proto"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -1204,12 +1203,12 @@ func GetServiceExampleGraphQLQueriesFields(c proto.ServiceExampleClient, ih *int
 				if err != nil {
 					return nil, err
 				}
-				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error) {
+				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
 					r, ok := req.(*proto.AOneOffs)
 					if !ok {
 						return nil, errors.New(fmt.Sprintf("resolve args interceptor returns bad request type(%T). Should be: *proto.AOneOffs", req))
 					}
-					res, err := c.GetQueryMethod(ctx.Params.Context, r, opts...)
+					res, err := c.GetQueryMethod(ctx.Params.Context, r)
 					return res, err
 				})
 				rc, ok := res.(*proto.B)
@@ -1247,12 +1246,12 @@ func GetServiceExampleGraphQLQueriesFields(c proto.ServiceExampleClient, ih *int
 				if err != nil {
 					return nil, err
 				}
-				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error) {
+				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
 					r, ok := req.(*proto.MsgWithEmpty)
 					if !ok {
 						return nil, errors.New(fmt.Sprintf("resolve args interceptor returns bad request type(%T). Should be: *proto.MsgWithEmpty", req))
 					}
-					res, err := c.GetMutatuionMethod(ctx.Params.Context, r, opts...)
+					res, err := c.GetMutatuionMethod(ctx.Params.Context, r)
 					return res, err
 				})
 				rc, ok := res.(*proto.MsgWithEmpty)
@@ -1293,12 +1292,12 @@ func GetServiceExampleGraphQLQueriesFields(c proto.ServiceExampleClient, ih *int
 				if err != nil {
 					return nil, err
 				}
-				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error) {
+				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
 					r, ok := req.(*timestamp.Timestamp)
 					if !ok {
 						return nil, errors.New(fmt.Sprintf("resolve args interceptor returns bad request type(%T). Should be: *timestamp.Timestamp", req))
 					}
-					res, err := c.GetEmptiesMsg(ctx.Params.Context, r, opts...)
+					res, err := c.GetEmptiesMsg(ctx.Params.Context, r)
 					return res, err
 				})
 				rc, ok := res.(*proto.Empty)
@@ -1367,12 +1366,12 @@ func GetServiceExampleGraphQLMutationsFields(c proto.ServiceExampleClient, ih *i
 				if err != nil {
 					return nil, err
 				}
-				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error) {
+				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
 					r, ok := req.(*proto.B)
 					if !ok {
 						return nil, errors.New(fmt.Sprintf("resolve args interceptor returns bad request type(%T). Should be: *proto.B", req))
 					}
-					res, err := c.MutationMethod(ctx.Params.Context, r, opts...)
+					res, err := c.MutationMethod(ctx.Params.Context, r)
 					return res, err
 				})
 				rc, ok := res.(*proto.A)
@@ -1443,12 +1442,12 @@ func GetServiceExampleGraphQLMutationsFields(c proto.ServiceExampleClient, ih *i
 				if err != nil {
 					return nil, err
 				}
-				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker, opts ...grpc.CallOption) (result interface{}, err error) {
+				res, err := ih.Call(ctx, req, func(ctx *interceptors.Context, req interface{}, next interceptors.CallMethodInvoker) (result interface{}, err error) {
 					r, ok := req.(*proto.A)
 					if !ok {
 						return nil, errors.New(fmt.Sprintf("resolve args interceptor returns bad request type(%T). Should be: *proto.A", req))
 					}
-					res, err := c.QueryMethod(ctx.Params.Context, r, opts...)
+					res, err := c.QueryMethod(ctx.Params.Context, r)
 					return res, err
 				})
 				rc, ok := res.(*proto.B)
