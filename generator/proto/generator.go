@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/common"
 	"github.com/saturn4er/proto2gql/generator/proto/parser"
@@ -96,7 +97,7 @@ func (g *Generator) prepareFile(file parsedFile) (*common.File, error) {
 
 func (g *Generator) fileConfig(file *parser.File) *ProtoFileConfig {
 	for _, f := range g.parsedFiles {
-		if f.File == file {
+ 		if f.File == file {
 			return f.Config
 		}
 	}
@@ -105,11 +106,25 @@ func (g *Generator) fileConfig(file *parser.File) *ProtoFileConfig {
 
 // fileGRPCSourcesPackage returns golang package of protobuf golang sources
 func (g *Generator) fileGRPCSourcesPackage(file *parser.File) string {
+	if file.FilePath == "/Users/yaroslavmytsyo/go/src/gitlab.egt-ua.com/back-office/backend/vendor/github.com/gogo/protobuf/protobuf/google/protobuf/timestamp.proto" {
+		spew.Dump(file.GoPackage)
+		spew.Dump(file.FilePath)
+	}
 	cfg := g.fileConfig(file)
-	if cfg.GetGoPackage() != "" {
+	cfgGoPkg := cfg.GetGoPackage()
+
+	if cfgGoPkg != "" {
 		return cfg.GetGoPackage()
 	}
-	return file.GoPackage
+
+	if file.GoPackage != "" {
+		return file.GoPackage
+	}
+	pkg, err := resolveGoPackage(filepath.Dir(file.FilePath), g.VendorPath)
+	if err != nil {
+		panic(err)
+	}
+	return pkg
 }
 
 func (g *Generator) fileOutputPath(file *parser.File) (string, error) {
@@ -120,13 +135,19 @@ func (g *Generator) fileOutputPath(file *parser.File) (string, error) {
 			return "", errors.Wrap(err, "failed to resolve file absolute path")
 		}
 		fileName := filepath.Base(file.FilePath)
-		res, err := filepath.Abs(filepath.Join("./out/", "."+filepath.Dir(absFilePath), strings.TrimSuffix(fileName, ".proto")+".go"))
+		pkg, err := resolveGoPackage(filepath.Dir(absFilePath), g.VendorPath)
+		var res string
+		if err != nil {
+			res, err = filepath.Abs(filepath.Join("./out/", "."+filepath.Dir(absFilePath), strings.TrimSuffix(fileName, ".proto")+".go"))
+		} else {
+			res, err = filepath.Abs(filepath.Join("./out/", "."+pkg, strings.TrimSuffix(fileName, ".proto")+".go"))
+		}
 		if err != nil {
 			return "", errors.Wrap(err, "failed to resolve absolute output path")
 		}
 		return res, nil
 	}
-	return strings.TrimSuffix(filepath.Join(cfg.OutputPath, cfg.ProtoPath), ".proto") + ".go", nil
+	return filepath.Join(cfg.OutputPath, strings.TrimSuffix(filepath.Base(cfg.ProtoPath), ".proto")+".go"), nil
 }
 
 func (g *Generator) fileOutputPackage(file *parser.File) (name, pkg string, err error) {
@@ -138,7 +159,7 @@ func (g *Generator) fileOutputPackage(file *parser.File) (name, pkg string, err 
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve file go package")
 	}
-	return filepath.Base(pkg), pkg, nil
+	return strings.Replace(filepath.Base(pkg), "-", "_", -1), pkg, nil
 }
 
 func (g *Generator) Generate() error {

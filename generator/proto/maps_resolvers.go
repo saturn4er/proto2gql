@@ -13,11 +13,11 @@ func (g *Generator) fileInputMapResolvers(file *parser.File) ([]common.MapInputO
 	var res []common.MapInputObjectResolver
 	for _, msg := range file.Messages {
 		for _, mapFld := range msg.MapFields {
-			keyGoType, err := goTypeByParserType(mapFld.Map.KeyType)
+			keyGoType, err := g.goTypeByParserType(mapFld.Map.KeyType)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve key go type")
 			}
-			valueGoType, err := goTypeByParserType(mapFld.Map.ValueType)
+			valueGoType, err := g.goTypeByParserType(mapFld.Map.ValueType)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve value go type")
 			}

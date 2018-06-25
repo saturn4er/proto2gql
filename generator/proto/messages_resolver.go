@@ -56,7 +56,7 @@ func (g *Generator) fileInputMessagesResolvers(file *parser.File) ([]common.Inpu
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to get type value resolver")
 			}
-			goType, err := goTypeByParserType(fld.Type)
+			goType, err := g.goTypeByParserType(fld.Type)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to get go type by parser type")
 			}
@@ -88,7 +88,7 @@ func (g *Generator) fileInputMessagesResolvers(file *parser.File) ([]common.Inpu
 				ResolverWithError:     withErr,
 			})
 		}
-		msgGoType, err := goTypeByParserType(msg.Type)
+		msgGoType, err := g.goTypeByParserType(msg.Type)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve message go type")
 		}

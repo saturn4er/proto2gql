@@ -104,7 +104,7 @@ func (g Generator) serviceMethod(cfg MethodConfig, file *parser.File, method *pa
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get output type resolver for method: ", method.Name)
 	}
-	requestType, err := goTypeByParserType(method.InputMessage.Type)
+	requestType, err := g.goTypeByParserType(method.InputMessage.Type)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get request go type for method: ", method.Name)
 	}

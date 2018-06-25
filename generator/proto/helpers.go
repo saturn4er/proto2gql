@@ -31,8 +31,7 @@ var goTypesScalars = map[string]common.GoType{
 	"uint64":  {Scalar: true, Kind: reflect.Uint64},
 	"fixed64": {Scalar: true, Kind: reflect.Uint64},
 }
-
-func goTypeByParserType(typ *parser.Type) (_ common.GoType, err error) {
+func (g *Generator) goTypeByParserType(typ *parser.Type) (_ common.GoType, err error) {
 	if typ.IsScalar() {
 		res, ok := goTypesScalars[typ.Scalar]
 		if !ok {
@@ -41,31 +40,33 @@ func goTypeByParserType(typ *parser.Type) (_ common.GoType, err error) {
 		}
 		return res, nil
 	}
+
 	if typ.IsEnum() {
 		return common.GoType{
-			Pkg:  typ.File.GoPackage,
+			Pkg:  g.fileGRPCSourcesPackage(typ.File),
 			Name: snakeCamelCaseSlice(typ.Enum.TypeName),
 			Kind: reflect.Int32,
 		}, nil
 	}
+
 	if typ.IsMessage() {
 		msgType := &common.GoType{
-			Pkg:  typ.File.GoPackage,
+			Pkg:   g.fileGRPCSourcesPackage(typ.File),
 			Name: snakeCamelCaseSlice(typ.Message.TypeName),
 			Kind: reflect.Struct,
 		}
 		return common.GoType{
-			Pkg:      typ.File.GoPackage,
+			Pkg:       g.fileGRPCSourcesPackage(typ.File),
 			Kind:     reflect.Ptr,
 			ElemType: msgType,
 		}, nil
 	}
 	if typ.IsMap() {
-		keyT, err := goTypeByParserType(typ.Map.KeyType)
+		keyT, err := g.goTypeByParserType(typ.Map.KeyType)
 		if err != nil {
 			return common.GoType{}, errors.Wrap(err, "failed to resolve key type")
 		}
-		valueT, err := goTypeByParserType(typ.Map.ValueType)
+		valueT, err := g.goTypeByParserType(typ.Map.ValueType)
 		if err != nil {
 			return common.GoType{}, errors.Wrap(err, "failed to resolve value type")
 		}

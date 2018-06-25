@@ -62,7 +62,7 @@ func (g *Generator) TypeValueFromContextResolver(typ *parser.Type) (_ common.Val
 }
 func (g *Generator) TypeValueResolver(typ *parser.Type, ctxKey string) (_ common.ValueResolver, withErr bool, err error) {
 	if ctxKey != "" {
-		goType, err := goTypeByParserType(typ)
+		goType, err := g.goTypeByParserType(typ)
 		if err != nil {
 			return nil, false, errors.Wrap(err, "failed to resolve go type")
 		}
