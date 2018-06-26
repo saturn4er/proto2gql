@@ -7,7 +7,15 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"github.com/saturn4er/proto2gql/generator/importer"
 	"golang.org/x/tools/imports"
+)
+
+const (
+	GraphqlPkgPath     = "github.com/graphql-go/graphql"
+	OpentracingPkgPath = "github.com/opentracing/opentracing-go"
+	TracerPkgPath      = "github.com/saturn4er/proto2gql/api/tracer"
+	ErrorsPkgPath      = "github.com/pkg/errors"
 )
 
 type ConstructorResolver func() string
@@ -42,61 +50,72 @@ type Generator struct {
 func (g Generator) AddServices(s ...Service) {
 	g.services = append(g.services, s...)
 }
-func (g Generator) headTemplateFuncs() template.FuncMap {
+
+func (g Generator) importFunc(imports *importer.Importer, importPath string) func() string {
+	return func() string {
+		return imports.New(importPath)
+	}
+}
+func (g Generator) headTemplateFuncs(imports *importer.Importer) template.FuncMap {
 	return nil
 }
-func (g Generator) headTemplateContext() map[string]interface{} {
-	return nil
+func (g Generator) headTemplateContext(imports *importer.Importer) map[string]interface{} {
+	return map[string]interface{}{
+		"imports": imports.Imports(),
+	}
 }
-func (g Generator) bodyTemplateFuncs() template.FuncMap {
-	return nil
+func (g Generator) bodyTemplateFuncs(imports *importer.Importer) template.FuncMap {
+	return map[string]interface{}{
+		"gqlPkg": g.importFunc(imports, GraphqlPkgPath),
+	}
 }
 func (g Generator) bodyTemplateContext() map[string]interface{} {
 	return nil
 }
-func (g Generator) generateHead() ([]byte, error) {
+func (g Generator) generateHead(imports *importer.Importer) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	t, err := templatesHeadGohtmlBytes()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get templates/body.gohtml")
 	}
-	bodyTpl, err := template.New("head").Funcs(g.headTemplateFuncs()).Parse(string(t))
+	bodyTpl, err := template.New("head").Funcs(g.headTemplateFuncs(imports)).Parse(string(t))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse template")
 	}
-	err = bodyTpl.Execute(buf, g.headTemplateContext())
+	err = bodyTpl.Execute(buf, g.headTemplateContext(imports))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute template")
 	}
 	return buf.Bytes(), nil
 }
-func (g Generator) generateBody() ([]byte, error) {
+func (g Generator) generateBody(imports *importer.Importer) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	t, err := templatesBodyGohtmlBytes()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get templates/body.gohtml")
 	}
-	bodyTpl, err := template.New("head").Funcs(g.headTemplateFuncs()).Parse(string(t))
+	bodyTpl, err := template.New("head").Funcs(g.bodyTemplateFuncs(imports)).Parse(string(t))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse template")
 	}
-	err = bodyTpl.Execute(buf, g.headTemplateContext())
+	err = bodyTpl.Execute(buf, g.bodyTemplateContext())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute template")
 	}
 	return buf.Bytes(), nil
 }
 func (g Generator) Generate(config Config) error {
+	imprt := new(importer.Importer)
 	file, err := os.OpenFile(config.OutputPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open file '%s'", config.OutputPath)
 	}
 	defer file.Close()
-	body, err := g.generateBody()
+	body, err := g.generateBody(imprt)
 	if err != nil {
 		return errors.Wrap(err, "failed to generate body")
 	}
-	head, err := g.generateHead()
+	head, err := g.generateHead(imprt)
 	if err != nil {
 		return errors.Wrap(err, "failed to generate head")
 	}

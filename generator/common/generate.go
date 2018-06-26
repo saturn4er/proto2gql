@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"github.com/saturn4er/proto2gql/generator/importer"
 	"golang.org/x/tools/imports"
 )
 
@@ -25,7 +26,7 @@ const (
 type generator struct {
 	File *File
 
-	imports *Importer
+	imports *importer.Importer
 }
 
 func (g generator) importFunc(importPath string) func() string {
@@ -154,7 +155,7 @@ func Generate(file *File, w io.Writer) error {
 	g := generator{
 		File: file,
 
-		imports: &Importer{
+		imports: &importer.Importer{
 			CurrentPackage: file.Package,
 		},
 	}

@@ -28,7 +28,6 @@ func (g *generator) generateProtos() (*proto.Generator, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate proto derivative files")
 	}
-
 	return protoGen, nil
 }
 
@@ -44,6 +43,7 @@ func (g *generator) generate() error {
 			return errors.Wrapf(err, "failed to generate schema '%s'", schemaConfig.Name)
 		}
 	}
+
 	// TODO: generate swagger
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/saturn4er/proto2gql/generator/importer"
 )
 
 type TypeResolver func(ctx BodyContext) string
@@ -21,7 +22,7 @@ type GoType struct {
 	Pkg       string
 }
 
-func (g GoType) String(i *Importer) string {
+func (g GoType) String(i *importer.Importer) string {
 	if typeIsScalar(g) && g.Name == "" {
 		return g.Kind.String()
 	}
@@ -151,6 +152,6 @@ type File struct {
 
 type BodyContext struct {
 	File          *File
-	Importer      *Importer
+	Importer      *importer.Importer
 	TracerEnabled bool
 }
