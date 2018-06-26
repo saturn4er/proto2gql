@@ -13,7 +13,7 @@ import (
 	tracer "github.com/saturn4er/proto2gql/api/tracer"
 	testdata "github.com/saturn4er/proto2gql/testdata"
 	common_1 "github.com/saturn4er/proto2gql/testdata/common"
-	common "github.com/saturn4er/proto2gql/testdata/out/.github.com/saturn4er/proto2gql/testdata/common"
+	common "github.com/saturn4er/proto2gql/testdata/out/github.com/saturn4er/proto2gql/testdata/common"
 )
 
 // Enums

@@ -8,12 +8,45 @@ import (
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/common"
 	"github.com/saturn4er/proto2gql/generator/proto/parser"
+	"github.com/saturn4er/proto2gql/generator/schema"
 )
 
-func (g Generator) serviceMethodArguments(cfg MethodConfig, file *parsedFile, method *parser.Method) ([]common.MethodArgument, error) {
+func (g Generator) SchemaServices() []schema.Service {
+	var res []schema.Service
+	for _, file := range g.ParsedFiles {
+		for _, service := range file.File.Services {
+			sc := file.Config.GetServices()[service.Name]
+			queryService := schema.Service{
+				Name: g.serviceQueryName(sc, service),
+				Pkg:  file.OutputPkg,
+			}
+			mutationService := schema.Service{
+				Name: g.serviceMutationName(sc, service),
+				Pkg:  file.OutputPkg,
+			}
+			for _, method := range service.Methods {
+				methodCfg := sc.Methods[method.Name]
+				if g.methodIsQuery(methodCfg, method) {
+					queryService.Fields = append(queryService.Fields, g.methodName(methodCfg, method))
+				}
+				if g.methodIsMutation(methodCfg, method) {
+					mutationService.Fields = append(mutationService.Fields, g.methodName(methodCfg, method))
+				}
+			}
+
+			res = append(res, queryService, mutationService)
+		}
+	}
+	return res
+}
+func (g Generator) serviceMethodArguments(cfg MethodConfig, method *parser.Method) ([]common.MethodArgument, error) {
 	var args []common.MethodArgument
 	for _, field := range method.InputMessage.Fields {
-		typResolver, err := g.TypeInputTypeResolver(file, field.Type)
+		typeFile, err := g.parsedFile(field.Type.File)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to resolve field '%s' file", field.Name)
+		}
+		typResolver, err := g.TypeInputTypeResolver(typeFile, field.Type)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to prepare input type resolver")
 		}
@@ -23,7 +56,11 @@ func (g Generator) serviceMethodArguments(cfg MethodConfig, file *parsedFile, me
 		})
 	}
 	for _, field := range method.InputMessage.MapFields {
-		typResolver, err := g.TypeInputTypeResolver(file, field.Type)
+		typeFile, err := g.parsedFile(field.Type.File)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to resolve field '%s' file", field.Name)
+		}
+		typResolver, err := g.TypeInputTypeResolver(typeFile, field.Type)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to prepare input type resolver")
 		}
@@ -33,10 +70,6 @@ func (g Generator) serviceMethodArguments(cfg MethodConfig, file *parsedFile, me
 		})
 	}
 	return args, nil
-}
-func (g Generator) messageContainsField(message *parser.Message, field string) bool {
-
-	return false
 }
 func (g Generator) messagePayloadErrorParams(message *parser.Message) (checker common.PayloadErrorChecker, accessor common.PayloadErrorAccessor, err error) {
 	outMsgCfg, err := g.fileConfig(message.File).MessageConfig(dotedTypeName(message.TypeName))
@@ -98,7 +131,12 @@ func (g Generator) messagePayloadErrorParams(message *parser.Message) (checker c
 	}
 	return nil, nil, nil
 }
-
+func (g Generator) methodName(cfg MethodConfig, method *parser.Method) string {
+	if cfg.Alias != "" {
+		return cfg.Alias
+	}
+	return method.Name
+}
 func (g Generator) serviceMethod(cfg MethodConfig, file *parsedFile, method *parser.Method) (*common.Method, error) {
 	outType, err := g.TypeOutputTypeResolver(method.OutputMessage.Type)
 	if err != nil {
@@ -108,13 +146,9 @@ func (g Generator) serviceMethod(cfg MethodConfig, file *parsedFile, method *par
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get request go type for method: ", method.Name)
 	}
-	args, err := g.serviceMethodArguments(cfg, file, method)
+	args, err := g.serviceMethodArguments(cfg, method)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare service method arguments")
-	}
-	name := method.Name
-	if cfg.Alias != "" {
-		name = cfg.Alias
 	}
 	payloadErrChecker, payloadErrAccessor, err := g.messagePayloadErrorParams(method.OutputMessage)
 	if err != nil {
@@ -124,15 +158,20 @@ func (g Generator) serviceMethod(cfg MethodConfig, file *parsedFile, method *par
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to resolve message '%s' parsed file", dotedTypeName(method.InputMessage.TypeName))
 	}
+	valueResolver, valueResolverWithErr, err := g.TypeValueResolver(inputMessageFile, method.InputMessage.Type, "")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to resolve message value resolver")
+	}
 	return &common.Method{
-		Name:                        name,
-		GraphQLOutputType:           outType,
-		RequestType:                 requestType,
-		CallMethod:                  camelCase(method.Name),
-		RequestResolverFunctionName: g.inputMessageResolverName(inputMessageFile, method.InputMessage),
-		Arguments:                   args,
-		PayloadErrorChecker:         payloadErrChecker,
-		PayloadErrorAccessor:        payloadErrAccessor,
+		Name:                   g.methodName(cfg, method),
+		GraphQLOutputType:      outType,
+		RequestType:            requestType,
+		CallMethod:             camelCase(method.Name),
+		RequestResolver:        valueResolver,
+		RequestResolverWithErr: valueResolverWithErr,
+		Arguments:              args,
+		PayloadErrorChecker:    payloadErrChecker,
+		PayloadErrorAccessor:   payloadErrAccessor,
 	}, nil
 }
 func (g Generator) serviceQueryMethods(sc ServiceConfig, file *parsedFile, service *parser.Service) ([]common.Method, error) {
@@ -172,24 +211,32 @@ func (g Generator) serviceMutationsMethods(cfg ServiceConfig, file *parsedFile, 
 func (g Generator) methodIsMutation(cfg MethodConfig, method *parser.Method) bool {
 	return strings.HasPrefix(strings.ToLower(method.Name), "get")
 }
+func (g Generator) serviceQueryName(sc ServiceConfig, service *parser.Service) string {
+	if sc.Alias != "" {
+		return sc.Alias
+	}
+	return service.Name
+}
+func (g Generator) serviceMutationName(sc ServiceConfig, service *parser.Service) string {
+	if sc.Alias != "" {
+		return "Mutations" + sc.Alias
+	}
+	return "Mutations" + service.Name
+}
 func (g Generator) fileServices(file *parsedFile) ([]common.Service, error) {
 	var res []common.Service
 	for _, service := range file.File.Services {
-		serviceName := service.Name
 		sc := file.Config.GetServices()[service.Name]
-		if sc.Alias != "" {
-			serviceName = sc.Alias
-		}
 		queryMethods, err := g.serviceQueryMethods(sc, file, service)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve service methods")
 		}
 		res = append(res, common.Service{
-			Name: serviceName,
+			Name: g.serviceQueryName(sc, service),
 			CallInterface: common.GoType{
 				Kind: reflect.Interface,
 				Pkg:  file.GRPCSourcesPkg,
-				Name: serviceName + "Client",
+				Name: service.Name + "Client",
 			},
 			Methods: queryMethods,
 		})
@@ -198,11 +245,11 @@ func (g Generator) fileServices(file *parsedFile) ([]common.Service, error) {
 			return nil, errors.Wrap(err, "failed to resolve service methods")
 		}
 		res = append(res, common.Service{
-			Name: "Mutations" + serviceName,
+			Name: g.serviceMutationName(sc, service),
 			CallInterface: common.GoType{
 				Kind: reflect.Interface,
 				Pkg:  file.GRPCSourcesPkg,
-				Name: serviceName + "Client",
+				Name: service.Name + "Client",
 			},
 			Methods: mutationsMethods,
 		})

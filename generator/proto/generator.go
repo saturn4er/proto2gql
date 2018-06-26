@@ -153,7 +153,7 @@ func (g *Generator) fileGRPCSourcesPackage(cfg *ProtoFileConfig, file *parser.Fi
 }
 
 func (g *Generator) fileOutputPath(cfg *ProtoFileConfig, file *parser.File) (string, error) {
-	if cfg == nil {
+	if cfg.GetOutputPath() == "" {
 		absFilePath, err := filepath.Abs(file.FilePath)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to resolve file absolute path")
@@ -162,16 +162,16 @@ func (g *Generator) fileOutputPath(cfg *ProtoFileConfig, file *parser.File) (str
 		pkg, err := GoPackageByPath(filepath.Dir(absFilePath), g.VendorPath)
 		var res string
 		if err != nil {
-			res, err = filepath.Abs(filepath.Join("./out/", "."+filepath.Dir(absFilePath), strings.TrimSuffix(fileName, ".proto")+".go"))
+			res, err = filepath.Abs(filepath.Join("./out/", "./"+filepath.Dir(absFilePath), strings.TrimSuffix(fileName, ".proto")+".go"))
 		} else {
-			res, err = filepath.Abs(filepath.Join("./out/", "."+pkg, strings.TrimSuffix(fileName, ".proto")+".go"))
+			res, err = filepath.Abs(filepath.Join("./out/", "./"+pkg, strings.TrimSuffix(fileName, ".proto")+".go"))
 		}
 		if err != nil {
 			return "", errors.Wrap(err, "failed to resolve absolute output path")
 		}
 		return res, nil
 	}
-	return filepath.Join(cfg.OutputPath, strings.TrimSuffix(filepath.Base(cfg.ProtoPath), ".proto")+".go"), nil
+	return filepath.Join(cfg.OutputPath, strings.TrimSuffix(filepath.Base(file.FilePath), ".proto")+".go"), nil
 }
 
 func (g *Generator) fileOutputPackage(cfg *ProtoFileConfig, file *parser.File) (name, pkg string, err error) {
@@ -207,7 +207,12 @@ func (g *Generator) Generate() error {
 		}
 		err = common.Generate(commonFile, f)
 		if err != nil {
+			f.Close()
 			return errors.Wrap(err, "failed to generate file")
+		}
+		err = f.Close()
+		if err != nil {
+			return errors.Wrap(err, "failed to close file")
 		}
 	}
 	return nil

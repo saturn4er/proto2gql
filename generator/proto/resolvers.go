@@ -61,9 +61,6 @@ func (g *Generator) TypeInputTypeResolver(typeFile *parsedFile, typ *parser.Type
 	}
 	return nil, errors.New("not implemented " + typ.String())
 }
-func (g *Generator) TypeValueFromContextResolver(typ *parser.Type) (_ common.ValueResolver, withErr bool, err error) {
-	return nil, false, nil
-}
 func (g *Generator) TypeValueResolver(typeFile *parsedFile, typ *parser.Type, ctxKey string) (_ common.ValueResolver, withErr bool, err error) {
 	if ctxKey != "" {
 		goType, err := g.goTypeByParserType(typ)

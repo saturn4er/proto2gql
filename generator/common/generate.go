@@ -23,7 +23,6 @@ const (
 )
 
 type generator struct {
-	Out  io.Writer
 	File *File
 
 	imports *Importer
@@ -121,7 +120,7 @@ func (g generator) generateHead() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
-func (g generator) generate() error {
+func (g generator) generate(out io.Writer) error {
 	body, err := g.generateBody()
 	if err != nil {
 		return errors.Wrap(err, "failed to generate body")
@@ -144,7 +143,7 @@ func (g generator) generate() error {
 	} else {
 		r = res
 	}
-	_, err = g.Out.Write(r)
+	_, err = out.Write(r)
 	if err != nil {
 		return errors.Wrap(err, "failed to write  output")
 	}
@@ -154,11 +153,10 @@ func (g generator) generate() error {
 func Generate(file *File, w io.Writer) error {
 	g := generator{
 		File: file,
-		Out:  w,
 
 		imports: &Importer{
 			CurrentPackage: file.Package,
 		},
 	}
-	return g.generate()
+	return g.generate(w)
 }

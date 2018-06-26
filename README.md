@@ -138,6 +138,7 @@ func main(){
 
  - [x] fields generation
  - [x] schema generation
+ - [ ] validate config
  - [ ] bytes fields
  - [ ] test resolvers
  - [ ] other languages support ???

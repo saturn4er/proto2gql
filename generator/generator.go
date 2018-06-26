@@ -4,40 +4,47 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/proto"
+	"github.com/saturn4er/proto2gql/generator/schema"
 )
 
 type generator struct {
 	config *GenerateConfig
 }
 
-func (g *generator) generateProtos() error {
-	protoGen := proto.Generator{
+func (g *generator) generateProtos() (*proto.Generator, error) {
+	protoGen := &proto.Generator{
 		VendorPath:      g.config.VendorPath,
 		GenerateTracers: g.config.GenerateTraces,
 	}
 	for _, protoFileConfig := range g.config.Protos.Files {
 		err := protoGen.AddSourceByConfig(protoFileConfig)
 		if err != nil {
-			return errors.Wrap(err, "failed to add source to protos generator")
+			return nil, errors.Wrap(err, "failed to add source to protos generator")
 		}
 	}
 	err := protoGen.Generate()
 	if err != nil {
-		return errors.Wrap(err, "failed to generate proto derivative files")
+		return nil, errors.Wrap(err, "failed to generate proto derivative files")
 	}
-	spew.Dump(protoGen.ParsedFiles)
-	return nil
+
+	return protoGen, nil
 }
+
 func (g *generator) generate() error {
-	err := g.generateProtos()
+	protos, err := g.generateProtos()
 	if err != nil {
 		return errors.Wrap(err, "failed to generate protos")
 	}
+	schemaGen := schema.Generator{}
+	schemaGen.AddServices(protos.SchemaServices()...)
+	for _, schemaConfig := range g.config.Shemas {
+		if err := schemaGen.Generate(schemaConfig); err != nil {
+			return errors.Wrapf(err, "failed to generate schema '%s'", schemaConfig.Name)
+		}
+	}
 	// TODO: generate swagger
-	// TODO: generate schemas
 	return nil
 }
 

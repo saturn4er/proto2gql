@@ -12,11 +12,11 @@ func (g *Generator) enumTypeResolver(enumFile *parsedFile, enum *parser.Enum) (c
 }
 
 func (g *Generator) enumGraphQLName(enumFile *parsedFile, enum *parser.Enum) string {
-	return enumFile.Config.GetGQLEnumsPrefix() + enum.Name
+	return enumFile.Config.GetGQLEnumsPrefix() + snakeCamelCaseSlice(enum.TypeName)
 }
 
 func (g *Generator) enumVariable(enumFile *parsedFile, enum *parser.Enum) string {
-	return enumFile.Config.GetGQLEnumsPrefix() + enum.Name
+	return enumFile.Config.GetGQLEnumsPrefix() + snakeCamelCaseSlice(enum.TypeName)
 }
 
 func (g *Generator) prepareFileEnums(file *parsedFile) ([]common.Enum, error) {

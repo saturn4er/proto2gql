@@ -122,14 +122,15 @@ type Service struct {
 	Methods       []Method
 }
 type Method struct {
-	Name                        string
-	GraphQLOutputType           TypeResolver
-	Arguments                   []MethodArgument
-	RequestResolverFunctionName string
-	CallMethod                  string
-	RequestType                 GoType
-	PayloadErrorChecker         PayloadErrorChecker
-	PayloadErrorAccessor        PayloadErrorAccessor
+	Name                   string
+	GraphQLOutputType      TypeResolver
+	Arguments              []MethodArgument
+	RequestResolver        ValueResolver
+	RequestResolverWithErr bool
+	CallMethod             string
+	RequestType            GoType
+	PayloadErrorChecker    PayloadErrorChecker
+	PayloadErrorAccessor   PayloadErrorAccessor
 }
 type MethodArgument struct {
 	Name string

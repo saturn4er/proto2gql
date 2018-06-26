@@ -81,8 +81,12 @@ func (g *Generator) fileInputMessagesResolvers(file *parsedFile) ([]common.Input
 			})
 		}
 		for _, fld := range msg.MapFields {
+			valueTypeParsedFile, err := g.parsedFile(fld.Type.File)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to resolve message '%s' parsed file", dotedTypeName(msg.TypeName))
+			}
 			fldCfg := msgCfg.Fields[fld.Name]
-			valueResolver, withErr, err := g.TypeValueResolver(file, fld.Type, fldCfg.ContextKey)
+			valueResolver, withErr, err := g.TypeValueResolver(valueTypeParsedFile, fld.Type, fldCfg.ContextKey)
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to get message '%s' map field '%s' value resolver", msg.Name, fld.Name)
 			}

@@ -21,7 +21,7 @@ type ServiceConfig struct {
 	Alias   string                  `yaml:"alias"`
 	Methods map[string]MethodConfig `yaml:"methods"`
 }
-type ProtosConfig struct {
+type Config struct {
 	Files []*ProtoFileConfig `yaml:"files"`
 
 	// Global configs for proto files
