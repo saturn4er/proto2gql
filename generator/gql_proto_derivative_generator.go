@@ -2,7 +2,6 @@ package generator
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -363,9 +362,6 @@ func (g *gqlProtoDerivativeFileGenerator) messageConfig(msgName string) (*Messag
 			r, err := regexp.Compile(regex)
 			if err != nil {
 				panic("failed to compile regex:" + regex)
-			}
-			if msgName == "UserLoginRequest" {
-				fmt.Println(msgName, regex, r.MatchString(msgName))
 			}
 			if r.MatchString(msgName) {
 				return &cfg, true
