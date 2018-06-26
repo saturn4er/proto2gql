@@ -213,7 +213,7 @@ var GraphQLFloat32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 	},
 	ParseLiteral: func(valueAST ast.Value) interface{} {
 		switch valueAST.GetKind() {
-		case kinds.IntValue, kinds.StringValue:
+		case kinds.IntValue, kinds.StringValue, kinds.FloatValue:
 			val, err := strconv.ParseFloat(valueAST.GetValue().(string), 32)
 			if err != nil {
 				return nil
@@ -252,7 +252,7 @@ var GraphQLFloat64Scalar = graphql.NewScalar(graphql.ScalarConfig{
 	},
 	ParseLiteral: func(valueAST ast.Value) interface{} {
 		switch valueAST.GetKind() {
-		case kinds.IntValue, kinds.StringValue:
+		case kinds.IntValue, kinds.StringValue, kinds.FloatValue:
 			val, err := strconv.ParseFloat(valueAST.GetValue().(string), 64)
 			if err != nil {
 				return nil
