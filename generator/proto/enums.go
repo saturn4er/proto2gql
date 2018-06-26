@@ -1,32 +1,27 @@
 package proto
 
 import (
-	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/common"
 	"github.com/saturn4er/proto2gql/generator/proto/parser"
 )
 
-func (g *Generator) enumTypeResolver(enum *parser.Enum) (common.TypeResolver, error) {
-	_, pkg, err := g.fileOutputPackage(enum.File)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to resolve file output package")
-	}
+func (g *Generator) enumTypeResolver(enumFile *parsedFile, enum *parser.Enum) (common.TypeResolver, error) {
 	return func(ctx common.BodyContext) string {
-		return ctx.Importer.Prefix(pkg) + g.enumVariable(enum)
+		return ctx.Importer.Prefix(enumFile.OutputPkg) + g.enumVariable(enumFile, enum)
 	}, nil
 }
 
-func (g *Generator) enumGraphQLName(enum *parser.Enum) string {
-	return g.fileConfig(enum.File).GetGQLEnumsPrefix() + enum.Name
+func (g *Generator) enumGraphQLName(enumFile *parsedFile, enum *parser.Enum) string {
+	return enumFile.Config.GetGQLEnumsPrefix() + enum.Name
 }
 
-func (g *Generator) enumVariable(enum *parser.Enum) string {
-	return g.fileConfig(enum.File).GetGQLEnumsPrefix() + enum.Name
+func (g *Generator) enumVariable(enumFile *parsedFile, enum *parser.Enum) string {
+	return enumFile.Config.GetGQLEnumsPrefix() + enum.Name
 }
 
-func (g *Generator) prepareFileEnums(file *parser.File) ([]common.Enum, error) {
+func (g *Generator) prepareFileEnums(file *parsedFile) ([]common.Enum, error) {
 	var res []common.Enum
-	for _, enum := range file.Enums {
+	for _, enum := range file.File.Enums {
 		vals := make([]common.EnumValue, len(enum.Values))
 		for i, value := range enum.Values {
 			vals[i] = common.EnumValue{
@@ -36,8 +31,8 @@ func (g *Generator) prepareFileEnums(file *parser.File) ([]common.Enum, error) {
 			}
 		}
 		res = append(res, common.Enum{
-			VariableName: g.enumVariable(enum),
-			GraphQLName:  g.enumGraphQLName(enum),
+			VariableName: g.enumVariable(file, enum),
+			GraphQLName:  g.enumGraphQLName(file, enum),
 			Comment:      enum.QuotedComment,
 			Values:       vals,
 		})

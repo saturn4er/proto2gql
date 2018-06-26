@@ -8,27 +8,24 @@ import (
 	"github.com/saturn4er/proto2gql/generator/proto/parser"
 )
 
-func (g *Generator) inputMessageGraphQLName(message *parser.Message) string {
-	return g.fileConfig(message.File).GetGQLMessagePrefix() + strings.Join(message.TypeName, "__") + "Input"
+func (g *Generator) inputMessageGraphQLName(file *parsedFile, message *parser.Message) string {
+	return file.Config.GetGQLMessagePrefix() + strings.Join(message.TypeName, "__") + "Input"
 }
-func (g *Generator) inputMessageVariable(message *parser.Message) string {
-	return g.fileConfig(message.File).GetGQLMessagePrefix() + strings.Join(message.TypeName, "") + "Input"
+func (g *Generator) inputMessageVariable(msgFile *parsedFile, message *parser.Message) string {
+	return msgFile.Config.GetGQLMessagePrefix() + strings.Join(message.TypeName, "") + "Input"
 }
 
-func (g *Generator) inputMessageTypeResolver(currentFile *parser.File, message *parser.Message) (common.TypeResolver, error) {
+func (g *Generator) inputMessageTypeResolver(msgFile *parsedFile, message *parser.Message) (common.TypeResolver, error) {
 	if !message.HaveFields() {
 		return common.GqlNoDataTypeResolver, nil
 	}
-	_, pkg, err := g.fileOutputPackage(message.File)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to resolve file output package")
-	}
+
 	return func(ctx common.BodyContext) string {
-		return ctx.Importer.Prefix(pkg) + g.inputMessageVariable(message)
+		return ctx.Importer.Prefix(msgFile.OutputPkg) + g.inputMessageVariable(msgFile, message)
 	}, nil
 }
 
-func (g *Generator) inputMessageFieldTypeResolver(currentFile *parser.File, field *parser.Field) (common.TypeResolver, error) {
+func (g *Generator) inputMessageFieldTypeResolver(field *parser.Field) (common.TypeResolver, error) {
 	resolver, err := g.TypeOutputTypeResolver(field.Type)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get input type resolver")
@@ -39,26 +36,22 @@ func (g *Generator) inputMessageFieldTypeResolver(currentFile *parser.File, fiel
 	return resolver, nil
 }
 
-func (g *Generator) inputObjectMapFieldTypeResolver(mp *parser.Map) (common.TypeResolver, error) {
-	_, pkg, err := g.fileOutputPackage(mp.Type.File)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to resolve file output package")
-	}
+func (g *Generator) inputObjectMapFieldTypeResolver(mapFile *parsedFile, mp *parser.Map) (common.TypeResolver, error) {
 	res := func(ctx common.BodyContext) string {
-		return ctx.Importer.Prefix(pkg) + g.inputMapVariable(mp)
+		return ctx.Importer.Prefix(mapFile.OutputPkg) + g.inputMapVariable(mapFile, mp)
 	}
 	return common.GqlListTypeResolver(common.GqlNonNullTypeResolver(res)), nil
 }
 
-func (g *Generator) fileInputObjects(file *parser.File) ([]common.InputObject, error) {
+func (g *Generator) fileInputObjects(file *parsedFile) ([]common.InputObject, error) {
 	var res []common.InputObject
-	for _, msg := range file.Messages {
+	for _, msg := range file.File.Messages {
 		if !msg.HaveFields() {
 			continue
 		}
 		var fields []common.ObjectField
 		for _, field := range msg.Fields {
-			typ, err := g.inputMessageFieldTypeResolver(msg.File, field)
+			typ, err := g.inputMessageFieldTypeResolver(field)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve field type")
 			}
@@ -68,7 +61,7 @@ func (g *Generator) fileInputObjects(file *parser.File) ([]common.InputObject, e
 			})
 		}
 		for _, field := range msg.MapFields {
-			typ, err := g.inputObjectMapFieldTypeResolver(field.Map)
+			typ, err := g.inputObjectMapFieldTypeResolver(file, field.Map)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve field type")
 			}
@@ -79,7 +72,7 @@ func (g *Generator) fileInputObjects(file *parser.File) ([]common.InputObject, e
 		}
 		for _, oneOf := range msg.OneOffs {
 			for _, fld := range oneOf.Fields {
-				typ, err := g.inputMessageFieldTypeResolver(msg.File, fld)
+				typ, err := g.inputMessageFieldTypeResolver(fld)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to resolve field type")
 				}
@@ -91,8 +84,8 @@ func (g *Generator) fileInputObjects(file *parser.File) ([]common.InputObject, e
 		}
 		// TODO: oneof fields
 		res = append(res, common.InputObject{
-			VariableName: g.inputMessageVariable(msg),
-			GraphQLName:  g.inputMessageGraphQLName(msg),
+			VariableName: g.inputMessageVariable(file, msg),
+			GraphQLName:  g.inputMessageGraphQLName(file, msg),
 			Fields:       fields,
 		})
 	}

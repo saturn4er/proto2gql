@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/proto"
 )
@@ -27,6 +28,7 @@ func (g *generator) generateProtos() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to generate proto derivative files")
 	}
+	spew.Dump(protoGen.ParsedFiles)
 	return nil
 }
 func (g *generator) generate() error {

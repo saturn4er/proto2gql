@@ -14,9 +14,9 @@ func (g *Generator) outputMapVariable(res *parser.Map) string {
 	return g.outputMessageVariable(res.Message) + "__" + res.Field.Name
 }
 
-func (g *Generator) fileMapOutputObjects(file *parser.File) ([]common.MapOutputObject, error) {
+func (g *Generator) fileMapOutputObjects(file *parsedFile) ([]common.MapOutputObject, error) {
 	var res []common.MapOutputObject
-	for _, msg := range file.Messages {
+	for _, msg := range file.File.Messages {
 		for _, mapFld := range msg.MapFields {
 			keyTypResolver, err := g.TypeOutputTypeResolver(mapFld.Map.KeyType)
 			if err != nil {

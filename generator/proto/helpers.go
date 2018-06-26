@@ -31,6 +31,7 @@ var goTypesScalars = map[string]common.GoType{
 	"uint64":  {Scalar: true, Kind: reflect.Uint64},
 	"fixed64": {Scalar: true, Kind: reflect.Uint64},
 }
+
 func (g *Generator) goTypeByParserType(typ *parser.Type) (_ common.GoType, err error) {
 	if typ.IsScalar() {
 		res, ok := goTypesScalars[typ.Scalar]
@@ -40,10 +41,14 @@ func (g *Generator) goTypeByParserType(typ *parser.Type) (_ common.GoType, err e
 		}
 		return res, nil
 	}
-
+	file, err := g.parsedFile(typ.File)
+	if err != nil {
+		err = errors.Wrap(err, "failed to resolve type parsed file")
+		return
+	}
 	if typ.IsEnum() {
 		return common.GoType{
-			Pkg:  g.fileGRPCSourcesPackage(typ.File),
+			Pkg:  file.GRPCSourcesPkg,
 			Name: snakeCamelCaseSlice(typ.Enum.TypeName),
 			Kind: reflect.Int32,
 		}, nil
@@ -51,12 +56,12 @@ func (g *Generator) goTypeByParserType(typ *parser.Type) (_ common.GoType, err e
 
 	if typ.IsMessage() {
 		msgType := &common.GoType{
-			Pkg:   g.fileGRPCSourcesPackage(typ.File),
+			Pkg:  file.GRPCSourcesPkg,
 			Name: snakeCamelCaseSlice(typ.Message.TypeName),
 			Kind: reflect.Struct,
 		}
 		return common.GoType{
-			Pkg:       g.fileGRPCSourcesPackage(typ.File),
+			Pkg:      file.GRPCSourcesPkg,
 			Kind:     reflect.Ptr,
 			ElemType: msgType,
 		}, nil
@@ -80,7 +85,7 @@ func (g *Generator) goTypeByParserType(typ *parser.Type) (_ common.GoType, err e
 	err = errors.Errorf("unknown type " + typ.String())
 	return
 }
-func resolveGoPackage(path, vendorPath string) (string, error) {
+func GoPackageByPath(path, vendorPath string) (string, error) {
 	path, err := filepath.Abs(path)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to resolve absolute filepath")

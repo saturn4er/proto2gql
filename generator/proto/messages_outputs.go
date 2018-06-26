@@ -20,12 +20,12 @@ func (g *Generator) outputMessageTypeResolver(message *parser.Message) (common.T
 	if !message.HaveFields() {
 		return common.GqlNoDataTypeResolver, nil
 	}
-	_, pkg, err := g.fileOutputPackage(message.File)
+	f, err := g.parsedFile(message.File)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to resolve file output package")
+		return nil, errors.Wrap(err, "failed to resolve message parsed file")
 	}
 	return func(ctx common.BodyContext) string {
-		return ctx.Importer.Prefix(pkg) + g.outputMessageVariable(message)
+		return ctx.Importer.Prefix(f.OutputPkg) + g.outputMessageVariable(message)
 	}, nil
 }
 
@@ -44,9 +44,9 @@ func (g *Generator) outputMessageFields(msg *parser.Message) ([]common.ObjectFie
 	}
 	return res, nil
 }
-func (g *Generator) fileOutputMessages(file *parser.File) ([]common.OutputObject, error) {
+func (g *Generator) fileOutputMessages(file *parsedFile) ([]common.OutputObject, error) {
 	var res []common.OutputObject
-	for _, msg := range file.Messages {
+	for _, msg := range file.File.Messages {
 		fields, err := g.outputMessageFields(msg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to resolve message %s fields", msg.Name)
@@ -58,7 +58,7 @@ func (g *Generator) fileOutputMessages(file *parser.File) ([]common.OutputObject
 			GoType: common.GoType{
 				Kind: reflect.Struct,
 				Name: snakeCamelCaseSlice(msg.TypeName),
-				Pkg:  g.fileGRPCSourcesPackage(file),
+				Pkg:  file.GRPCSourcesPkg,
 			},
 		})
 	}

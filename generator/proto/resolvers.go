@@ -22,7 +22,11 @@ func (g *Generator) TypeOutputTypeResolver(typ *parser.Type) (common.TypeResolve
 		return res, nil
 	}
 	if typ.IsEnum() {
-		res, err := g.enumTypeResolver(typ.Enum)
+		file, err := g.parsedFile(typ.File)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to resolve type parsed file")
+		}
+		res, err := g.enumTypeResolver(file, typ.Enum)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get enum type resolver")
 		}
@@ -30,7 +34,7 @@ func (g *Generator) TypeOutputTypeResolver(typ *parser.Type) (common.TypeResolve
 	}
 	return nil, errors.New("not implemented " + typ.String())
 }
-func (g *Generator) TypeInputTypeResolver(currentFile *parser.File, typ *parser.Type) (common.TypeResolver, error) {
+func (g *Generator) TypeInputTypeResolver(typeFile *parsedFile, typ *parser.Type) (common.TypeResolver, error) {
 	if typ.IsScalar() {
 		resolver, ok := scalarsResolvers[typ.Scalar]
 		if !ok {
@@ -39,28 +43,28 @@ func (g *Generator) TypeInputTypeResolver(currentFile *parser.File, typ *parser.
 		return resolver, nil
 	}
 	if typ.IsMessage() {
-		res, err := g.inputMessageTypeResolver(currentFile, typ.Message)
+		res, err := g.inputMessageTypeResolver(typeFile, typ.Message)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get message type resolver")
 		}
 		return res, nil
 	}
 	if typ.IsEnum() {
-		res, err := g.enumTypeResolver(typ.Enum)
+		res, err := g.enumTypeResolver(typeFile, typ.Enum)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get enum type resolver")
 		}
 		return res, nil
 	}
 	if typ.IsMap() {
-		return g.inputObjectMapFieldTypeResolver(typ.Map)
+		return g.inputObjectMapFieldTypeResolver(typeFile, typ.Map)
 	}
 	return nil, errors.New("not implemented " + typ.String())
 }
 func (g *Generator) TypeValueFromContextResolver(typ *parser.Type) (_ common.ValueResolver, withErr bool, err error) {
 	return nil, false, nil
 }
-func (g *Generator) TypeValueResolver(typ *parser.Type, ctxKey string) (_ common.ValueResolver, withErr bool, err error) {
+func (g *Generator) TypeValueResolver(typeFile *parsedFile, typ *parser.Type, ctxKey string) (_ common.ValueResolver, withErr bool, err error) {
 	if ctxKey != "" {
 		goType, err := g.goTypeByParserType(typ)
 		if err != nil {
@@ -81,32 +85,24 @@ func (g *Generator) TypeValueResolver(typ *parser.Type, ctxKey string) (_ common
 	}
 	if typ.IsEnum() {
 		return func(arg string, ctx common.BodyContext) string {
-			return ctx.Importer.Prefix(g.fileGRPCSourcesPackage(typ.File)) + snakeCamelCaseSlice(typ.Enum.TypeName) + "(" + arg + ".(int))"
+			return ctx.Importer.Prefix(typeFile.GRPCSourcesPkg) + snakeCamelCaseSlice(typ.Enum.TypeName) + "(" + arg + ".(int))"
 		}, false, nil
 	}
 	if typ.IsMessage() {
-		_, pkg, err := g.fileOutputPackage(typ.File)
-		if err != nil {
-			return nil, false, errors.Wrapf(err, "failed to resolve type %s output package", typ)
-		}
 		return func(arg string, ctx common.BodyContext) string {
 			if ctx.TracerEnabled {
-				return ctx.Importer.Prefix(pkg) + g.inputMessageResolverName(typ.Message) + "(tr, tr.ContextWithSpan(ctx,span), " + arg + ")"
+				return ctx.Importer.Prefix(typeFile.OutputPkg) + g.inputMessageResolverName(typeFile, typ.Message) + "(tr, tr.ContextWithSpan(ctx,span), " + arg + ")"
 			} else {
-				return ctx.Importer.Prefix(pkg) + g.inputMessageResolverName(typ.Message) + "(ctx, " + arg + ")"
+				return ctx.Importer.Prefix(typeFile.OutputPkg) + g.inputMessageResolverName(typeFile, typ.Message) + "(ctx, " + arg + ")"
 			}
 		}, true, nil
 	}
 	if typ.IsMap() {
-		_, pkg, err := g.fileOutputPackage(typ.File)
-		if err != nil {
-			return nil, false, errors.Wrapf(err, "failed to resolve type %s output package", typ)
-		}
 		return func(arg string, ctx common.BodyContext) string {
 			if ctx.TracerEnabled {
-				return ctx.Importer.Prefix(pkg) + g.mapResolverFunctionName(typ.Map) + "(tr, tr.ContextWithSpan(ctx,span), " + arg + ")"
+				return ctx.Importer.Prefix(typeFile.OutputPkg) + g.mapResolverFunctionName(typeFile, typ.Map) + "(tr, tr.ContextWithSpan(ctx,span), " + arg + ")"
 			} else {
-				return ctx.Importer.Prefix(pkg) + g.mapResolverFunctionName(typ.Map) + "(ctx, " + arg + ")"
+				return ctx.Importer.Prefix(typeFile.OutputPkg) + g.mapResolverFunctionName(typeFile, typ.Map) + "(ctx, " + arg + ")"
 			}
 		}, true, nil
 	}

@@ -6,17 +6,17 @@ import (
 	"github.com/saturn4er/proto2gql/generator/proto/parser"
 )
 
-func (g *Generator) inputMapGraphQLName(res *parser.Map) string {
-	return g.inputMessageVariable(res.Message) + "__" + camelCase(res.Field.Name)
+func (g *Generator) inputMapGraphQLName(mapFile *parsedFile, res *parser.Map) string {
+	return g.inputMessageVariable(mapFile, res.Message) + "__" + camelCase(res.Field.Name)
 }
 
-func (g *Generator) inputMapVariable(res *parser.Map) string {
-	return g.inputMessageVariable(res.Message) + "__" + camelCase(res.Field.Name)
+func (g *Generator) inputMapVariable(mapFile *parsedFile, res *parser.Map) string {
+	return g.inputMessageVariable(mapFile, res.Message) + "__" + camelCase(res.Field.Name)
 }
 
-func (g *Generator) fileMapInputObjects(file *parser.File) ([]common.MapInputObject, error) {
+func (g *Generator) fileMapInputObjects(file *parsedFile) ([]common.MapInputObject, error) {
 	var res []common.MapInputObject
-	for _, msg := range file.Messages {
+	for _, msg := range file.File.Messages {
 		for _, mapFld := range msg.MapFields {
 			keyTypResolver, err := g.TypeOutputTypeResolver(mapFld.Map.KeyType)
 			if err != nil {
@@ -28,8 +28,8 @@ func (g *Generator) fileMapInputObjects(file *parser.File) ([]common.MapInputObj
 			}
 
 			res = append(res, common.MapInputObject{
-				VariableName:    g.inputMapVariable(mapFld.Map),
-				GraphQLName:     g.inputMapGraphQLName(mapFld.Map),
+				VariableName:    g.inputMapVariable(file, mapFld.Map),
+				GraphQLName:     g.inputMapGraphQLName(file, mapFld.Map),
 				KeyObjectType:   keyTypResolver,
 				ValueObjectType: valueTypResolver,
 			})
