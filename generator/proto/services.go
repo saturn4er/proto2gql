@@ -16,13 +16,22 @@ func (g Generator) SchemaServices() []schema.Service {
 	for _, file := range g.ParsedFiles {
 		for _, service := range file.File.Services {
 			sc := file.Config.GetServices()[service.Name]
+			clientGoType := schema.GoType{
+				Kind: reflect.Interface,
+				Pkg:  file.GRPCSourcesPkg,
+				Name: service.Name + "Client",
+			}
 			queryService := schema.Service{
-				Name: g.serviceQueryName(sc, service),
-				Pkg:  file.OutputPkg,
+				Name:          g.serviceQueryName(sc, service),
+				Pkg:           file.OutputPkg,
+				ClientGoType:  clientGoType,
+				TracerEnabled: g.GenerateTracers,
 			}
 			mutationService := schema.Service{
-				Name: g.serviceMutationName(sc, service),
-				Pkg:  file.OutputPkg,
+				Name:          g.serviceMutationName(sc, service),
+				Pkg:           file.OutputPkg,
+				ClientGoType:  clientGoType,
+				TracerEnabled: g.GenerateTracers,
 			}
 			for _, method := range service.Methods {
 				methodCfg := sc.Methods[method.Name]
@@ -138,7 +147,11 @@ func (g Generator) methodName(cfg MethodConfig, method *parser.Method) string {
 	return method.Name
 }
 func (g Generator) serviceMethod(cfg MethodConfig, file *parsedFile, method *parser.Method) (*common.Method, error) {
-	outType, err := g.TypeOutputTypeResolver(method.OutputMessage.Type)
+	outputMsgTypeFile, err := g.parsedFile(method.OutputMessage.File)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to resolve file type file")
+	}
+	outType, err := g.TypeOutputTypeResolver(outputMsgTypeFile, method.OutputMessage.Type)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get output type resolver for method: ", method.Name)
 	}
@@ -219,9 +232,9 @@ func (g Generator) serviceQueryName(sc ServiceConfig, service *parser.Service) s
 }
 func (g Generator) serviceMutationName(sc ServiceConfig, service *parser.Service) string {
 	if sc.Alias != "" {
-		return "Mutations" + sc.Alias
+		return sc.Alias + "Mutations"
 	}
-	return "Mutations" + service.Name
+	return service.Name + "Mutations"
 }
 func (g Generator) fileServices(file *parsedFile) ([]common.Service, error) {
 	var res []common.Service

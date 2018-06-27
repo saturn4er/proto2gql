@@ -29,6 +29,7 @@ func (f *File) parseGoPackage() {
 		}
 	}
 }
+
 func (f *File) messageByTypeName(typeName TypeName) (*Message, bool) {
 	for _, msg := range f.Messages {
 		if msg.TypeName.Equal(typeName) {

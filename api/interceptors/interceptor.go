@@ -11,6 +11,7 @@ type Context struct {
 	Request      interface{}
 	PayloadError interface{}
 }
+
 type ResolveArgsInvoker func() (result interface{}, err error)
 type CallMethodInvoker func(req interface{}) (result interface{}, err error)
 

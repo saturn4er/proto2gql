@@ -1,0 +1,1056 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="f73c691c-0eda-4c30-9826-19b782dca565" name="Default" comment="Fix scalars Float32 parsing" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="generator.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/generator/generator.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="228">
+              <caret line="25" selection-start-line="25" selection-end-line="25" />
+              <folding>
+                <element signature="e#19#179#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="test.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/generator/plugins/test1/test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="345">
+              <caret line="23" selection-start-line="23" selection-end-line="23" />
+              <folding>
+                <element signature="e#15#69#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="maps_inputs.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/generator/proto/maps_inputs.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="300">
+              <caret line="24" column="12" selection-start-line="24" selection-start-column="12" selection-end-line="27" selection-end-column="13" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="maps_resolvers.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/generator/proto/maps_resolvers.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="405">
+              <caret line="31" column="97" lean-forward="true" selection-start-line="31" selection-start-column="97" selection-end-line="31" selection-end-column="97" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="file.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/generator/proto/parser/file.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="654">
+              <caret line="20" selection-start-line="20" selection-end-line="20" selection-end-column="15" />
+              <caret line="32" lean-forward="true" selection-start-line="32" selection-end-line="32" selection-end-column="15" />
+              <caret line="41" lean-forward="true" selection-start-line="41" selection-end-line="41" selection-end-column="15" />
+              <caret line="49" lean-forward="true" selection-start-line="49" selection-end-line="49" selection-end-column="15" />
+              <caret line="68" lean-forward="true" selection-start-line="68" selection-end-line="68" selection-end-column="15" />
+              <caret line="103" lean-forward="true" selection-start-line="103" selection-end-line="103" selection-end-column="15" />
+              <caret line="140" lean-forward="true" selection-start-line="140" selection-end-line="140" selection-end-column="15" />
+              <caret line="211" lean-forward="true" selection-start-line="211" selection-end-line="211" selection-end-column="15" />
+              <caret line="223" lean-forward="true" selection-start-line="223" selection-end-line="223" selection-end-column="15" />
+              <caret line="235" lean-forward="true" selection-start-line="235" selection-end-line="235" selection-end-column="15" />
+              <caret line="247" lean-forward="true" selection-start-line="247" selection-end-line="247" selection-end-column="15" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="scalars.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/api/scalars/scalars.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="3240">
+              <caret line="222" column="18" selection-start-line="222" selection-start-column="18" selection-end-line="222" selection-end-column="18" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="interceptor.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/api/interceptors/interceptor.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="403">
+              <caret line="40" column="45" selection-start-line="40" selection-start-column="45" selection-end-line="40" selection-end-column="45" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="config.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/generator/config.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="75">
+              <caret line="8" column="4" selection-start-line="8" selection-start-column="4" selection-end-line="8" selection-end-column="4" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="main.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/cmd/proto2gql/main.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="399">
+              <caret line="43" selection-start-line="43" selection-end-line="43" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="test.go" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/generator/plugins/test2/test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="330">
+              <caret line="22" column="35" selection-start-line="22" selection-start-column="35" selection-end-line="22" selection-end-column="35" />
+              <folding>
+                <element signature="e#15#69#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>.Val</find>
+      <find>escape</find>
+      <find>map[</find>
+      <find>ctx_map</find>
+      <find>Ctx</find>
+      <find>CtxM</find>
+      <find>C</find>
+      <find>CtxMap</find>
+      <find>servi</find>
+      <find>Service</find>
+      <find>if true</find>
+      <find>ResolveExmplRootMessage</find>
+      <find>spew.D</find>
+      <find>.Ptr</find>
+      <find>out/</find>
+      <find>vendorPa</find>
+      <find>file_wit</find>
+      <find>Resolver</find>
+      <find>fmt.Pr</find>
+      <find>cfg</find>
+      <find>if</find>
+      <find>fmt.</find>
+      <find>arg</find>
+      <find>file</find>
+      <find>ctx</find>
+      <find>mapFile</find>
+      <find>Floa</find>
+      <find>Enabled</find>
+      <find>outpiut</find>
+      <find>GoObjectField</find>
+    </findStrings>
+    <dirStrings>
+      <dir>$PROJECT_DIR$/generator/proto</dir>
+      <dir>/usr/local/go/src/strings</dir>
+      <dir>$PROJECT_DIR$/generator</dir>
+      <dir>$PROJECT_DIR$</dir>
+    </dirStrings>
+  </component>
+  <component name="GOROOT" path="/usr/local/go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
+    <option name="PUSH_TAGS">
+      <GitPushTagMode />
+    </option>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/testdata/main.go" />
+        <option value="$PROJECT_DIR$/testdata/test.pb.go" />
+        <option value="$PROJECT_DIR$/generator/proto/parser/parser.go" />
+        <option value="$PROJECT_DIR$/generator/common/templates/head.gohtml" />
+        <option value="$PROJECT_DIR$/testdata/out/Users/yaroslavmytsyo/go/src/github.com/saturn4er/proto2gql/testdata/common/common.go" />
+        <option value="$PROJECT_DIR$/testdata/out/test/test.go" />
+        <option value="$PROJECT_DIR$/testdata/test.proto" />
+        <option value="$PROJECT_DIR$/testdata/a/main.go" />
+        <option value="$PROJECT_DIR$/generator/common/templates.go" />
+        <option value="$PROJECT_DIR$/testdata/generate.yml" />
+        <option value="$PROJECT_DIR$/example/out/example/example.go" />
+        <option value="$PROJECT_DIR$/api/interceptors/interceptors_test.go" />
+        <option value="$PROJECT_DIR$/generator/proto/parser/parser_test.go" />
+        <option value="$PROJECT_DIR$/generator/common/importer.go" />
+        <option value="$PROJECT_DIR$/generator/proto/config.go" />
+        <option value="$PROJECT_DIR$/generator/proto/helpers.go" />
+        <option value="$PROJECT_DIR$/generator/gql_proto_derivative_generator.go" />
+        <option value="$PROJECT_DIR$/../../../gitlab.egt-ua.com/back-office/backend/new-generate.yml" />
+        <option value="$PROJECT_DIR$/generator/proto/enums.go" />
+        <option value="$PROJECT_DIR$/generator/proto/messages_resolver.go" />
+        <option value="$PROJECT_DIR$/generator/proto/maps_resolvers.go" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/generator/config.go" />
+        <option value="$PROJECT_DIR$/generator/proto/generator.go" />
+        <option value="$PROJECT_DIR$/generator/common/generate.go" />
+        <option value="$PROJECT_DIR$/api/scalars/scalars.go" />
+        <option value="$PROJECT_DIR$/generator/schema/templates/head.gohtml" />
+        <option value="$PROJECT_DIR$/generator/schema/go_type.go" />
+        <option value="$PROJECT_DIR$/generator/schema/templates/body.gohtml" />
+        <option value="$PROJECT_DIR$/generator/schema/schema_generator.go" />
+        <option value="$PROJECT_DIR$/generator/schema/generator.go" />
+        <option value="$PROJECT_DIR$/generator/proto/resolvers.go" />
+        <option value="$PROJECT_DIR$/generator/proto/maps_inputs.go" />
+        <option value="$PROJECT_DIR$/generator/proto/maps_outputs.go" />
+        <option value="$PROJECT_DIR$/generator/proto/messages_inputs.go" />
+        <option value="$PROJECT_DIR$/generator/proto/services.go" />
+        <option value="$PROJECT_DIR$/generator/common/models.go" />
+        <option value="$PROJECT_DIR$/generator/proto/messages_outputs.go" />
+        <option value="$PROJECT_DIR$/generator/common/templates/body.gohtml" />
+        <option value="$PROJECT_DIR$/Makefile" />
+        <option value="$PROJECT_DIR$/generator/swagger/parser/parser.go" />
+        <option value="$PROJECT_DIR$/generator/swagger/generator.go" />
+        <option value="$PROJECT_DIR$/generator/proto/parser/file.go" />
+        <option value="$PROJECT_DIR$/api/interceptors/еуые/a.gop.go" />
+        <option value="$PROJECT_DIR$/api/interceptors/еуые/a.gop1.go" />
+        <option value="$PROJECT_DIR$/api/interceptors/interceptor.go" />
+        <option value="$PROJECT_DIR$/generator/data/plugins.go" />
+        <option value="$PROJECT_DIR$/cmd/proto2gql/main.go" />
+        <option value="$PROJECT_DIR$/generator/generator.go" />
+        <option value="$PROJECT_DIR$/generator/plugins/test1/test.go" />
+        <option value="$PROJECT_DIR$/generator/plugins/test2/test.go" />
+      </list>
+    </option>
+  </component>
+  <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsGulpfileManager">
+    <detection-done>true</detection-done>
+    <sorting>DEFINITION_ORDER</sorting>
+  </component>
+  <component name="NodePackageJsonFileManager">
+    <packageJsonPaths />
+  </component>
+  <component name="ProjectFrameBounds" fullScreen="true">
+    <option name="x" value="-1920" />
+    <option name="width" value="1920" />
+    <option name="height" value="1080" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="proto2gql" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="proto2gql" type="462c0819:PsiDirectoryNode" />
+              <item name="api" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="proto2gql" type="462c0819:PsiDirectoryNode" />
+              <item name="api" type="462c0819:PsiDirectoryNode" />
+              <item name="interceptors" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="proto2gql" type="462c0819:PsiDirectoryNode" />
+              <item name="api" type="462c0819:PsiDirectoryNode" />
+              <item name="scalars" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="proto2gql" type="462c0819:PsiDirectoryNode" />
+              <item name="api" type="462c0819:PsiDirectoryNode" />
+              <item name="tracer" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="proto2gql" type="462c0819:PsiDirectoryNode" />
+              <item name="bin" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="proto2gql" type="462c0819:PsiDirectoryNode" />
+              <item name="generator" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="proto2gql" type="462c0819:PsiDirectoryNode" />
+              <item name="generator" type="462c0819:PsiDirectoryNode" />
+              <item name="plugins" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="proto2gql" type="462c0819:PsiDirectoryNode" />
+              <item name="generator" type="462c0819:PsiDirectoryNode" />
+              <item name="plugins" type="462c0819:PsiDirectoryNode" />
+              <item name="test1" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="proto2gql" type="462c0819:PsiDirectoryNode" />
+              <item name="generator" type="462c0819:PsiDirectoryNode" />
+              <item name="plugins" type="462c0819:PsiDirectoryNode" />
+              <item name="test2" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+            </path>
+            <path>
+              <item name="proto2gql" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="GOPATH &lt;proto2gql&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DefaultGoTemplateProperty" value="Go File" />
+    <property name="GO_FMT" value="false" />
+    <property name="SearchEverywhereHistoryKey" value="service&#9;FILE&#9;file:///Users/yaroslavmytsyo/go/src/github.com/saturn4er/proto2gql/generator/proto/services.go&#10;gene&#9;FILE&#9;file:///Users/yaroslavmytsyo/go/src/github.com/saturn4er/proto2gql/generator/common/generate.go&#10;models&#9;FILE&#9;file:///Users/yaroslavmytsyo/go/src/github.com/saturn4er/proto2gql/generator/common/models.go&#10;impor&#9;FILE&#9;file:///Users/yaroslavmytsyo/go/src/github.com/saturn4er/proto2gql/generator/common/importer.go&#10;genera&#9;FILE&#9;file:///Users/yaroslavmytsyo/go/src/github.com/saturn4er/proto2gql/generator/generator.go&#10;com&#9;FILE&#9;file:///Users/yaroslavmytsyo/go/src/github.com/saturn4er/proto2gql/testdata/out/imports/github.com/saturn4er/proto2gql/testdata/common/common.go" />
+    <property name="go.gopath.indexing.explicitly.defined" value="true" />
+    <property name="go.sdk.automatically.set" value="true" />
+    <property name="go.vendoring.notification.had.been.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/generator/importer" />
+      <recent name="$PROJECT_DIR$/testdata/a" />
+      <recent name="$PROJECT_DIR$/generator/common" />
+      <recent name="$PROJECT_DIR$/common_generator/common" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/generator/plugins/test2" />
+      <recent name="$PROJECT_DIR$/api/interceptors/еуые" />
+      <recent name="$PROJECT_DIR$/generator/schema" />
+      <recent name="$PROJECT_DIR$/gener/proto" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Go Build.go build backoffice">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="proto2gql" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <go_parameters value="-i" />
+      <kind value="FILE" />
+    </configuration>
+    <configuration name="go build backoffice" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="proto2gql" />
+      <working_directory value="$PROJECT_DIR$/../../../gitlab.egt-ua.com/back-office/backend/" />
+      <go_parameters value="-i" />
+      <parameters value="--config generate.yml" />
+      <kind value="FILE" />
+      <filePath value="$PROJECT_DIR$/cmd/proto2gql/main.go" />
+      <method>
+        <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_bindata" />
+        <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_bindata-schema" />
+      </method>
+    </configuration>
+    <configuration name="go build main.go (2)" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="proto2gql" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <go_parameters value="-i" />
+      <kind value="FILE" />
+      <filePath value="$PROJECT_DIR$/testdata/a/main.go" />
+    </configuration>
+    <configuration name="go run testdata" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="proto2gql" />
+      <working_directory value="$PROJECT_DIR$/testdata" />
+      <go_parameters value="-i" />
+      <kind value="FILE" />
+      <filePath value="$PROJECT_DIR$/cmd/proto2gql/main.go" />
+      <method>
+        <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_bindata" />
+      </method>
+    </configuration>
+    <configuration name="TestGenerate in github.com/saturn4er/proto2gql/common_generator" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="proto2gql" />
+      <working_directory value="$PROJECT_DIR$/common_generator" />
+      <go_parameters value="-i" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/saturn4er/proto2gql/common_generator" />
+      <pattern value="^TestGenerate$" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="proto2gql" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <go_parameters value="-i" />
+      <framework value="gotest" />
+      <kind value="DIRECTORY" />
+    </configuration>
+    <configuration name="go test proto2gql" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="proto2gql" />
+      <working_directory value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+    </configuration>
+    <configuration name="build" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile" temporary="true">
+      <makefile filename="$PROJECT_DIR$/Makefile" target="build" workingDirectory="" arguments="">
+        <envs />
+      </makefile>
+    </configuration>
+    <configuration name="default" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile" temporary="true">
+      <makefile filename="$PROJECT_DIR$/Makefile" target="default" workingDirectory="" arguments="">
+        <envs />
+      </makefile>
+    </configuration>
+    <list>
+      <item itemvalue="Go Build.go run testdata" />
+      <item itemvalue="Go Build.go build backoffice" />
+      <item itemvalue="Go Build.go build main.go (2)" />
+      <item itemvalue="Go Test.TestGenerate in github.com/saturn4er/proto2gql/common_generator" />
+      <item itemvalue="Go Test.go test proto2gql" />
+      <item itemvalue="Makefile.default" />
+      <item itemvalue="Makefile.build" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Makefile.build" />
+        <item itemvalue="Makefile.default" />
+        <item itemvalue="Go Test.go test proto2gql" />
+        <item itemvalue="Go Test.TestGenerate in github.com/saturn4er/proto2gql/common_generator" />
+        <item itemvalue="Go Build.go build main.go (2)" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="StructureViewFactory">
+    <option name="ACTIVE_ACTIONS" value=",Show package structure" />
+  </component>
+  <component name="TestHistory">
+    <history-entry file="go_test_proto2gql - 2018.06.25 at 17h 46m 16s.xml">
+      <configuration name="go test proto2gql" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="go_test_proto2gql - 2018.06.25 at 17h 46m 53s.xml">
+      <configuration name="go test proto2gql" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="go_test_proto2gql - 2018.06.25 at 17h 47m 22s.xml">
+      <configuration name="go test proto2gql" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="go_test_proto2gql - 2018.06.25 at 17h 47m 30s.xml">
+      <configuration name="go test proto2gql" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="go_test_proto2gql - 2018.06.25 at 17h 47m 40s.xml">
+      <configuration name="go test proto2gql" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="go_test_proto2gql - 2018.06.25 at 17h 49m 02s.xml">
+      <configuration name="go test proto2gql" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="go_test_proto2gql - 2018.06.25 at 17h 57m 38s.xml">
+      <configuration name="go test proto2gql" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="go_test_proto2gql - 2018.06.25 at 17h 59m 09s.xml">
+      <configuration name="go test proto2gql" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="go_test_proto2gql - 2018.06.25 at 18h 00m 13s.xml">
+      <configuration name="go test proto2gql" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="go_test_proto2gql - 2018.06.25 at 18h 04m 51s.xml">
+      <configuration name="go test proto2gql" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-1920" y="0" width="1920" height="1080" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32790223" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.30040732" />
+      <window_info anchor="bottom" id="Terminal" order="7" weight="0.3778004" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.88646287" visible="true" weight="0.185836" />
+      <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
+      <window_info anchor="right" id="Database" order="3" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.3268839" />
+      <window_info id="Structure" order="1" sideWeight="0.11353712" side_tool="true" visible="true" weight="0.185836" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.398167" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="Messages" order="7" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+    </layout>
+    <layout-to-restore>
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="bottom" id="Docker" order="12" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.31059062" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.72131145" visible="true" weight="0.21306472" />
+      <window_info id="Structure" order="1" sideWeight="0.27868852" side_tool="true" weight="0.1965812" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.3277311" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="right" id="Database" order="3" />
+      <window_info anchor="bottom" id="Terminal" order="8" weight="0.37815127" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39915967" />
+      <window_info anchor="bottom" id="Version Control" order="9" weight="0.32878152" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Messages" order="11" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+    </layout-to-restore>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="RECENTLY_FILTERED_USER_GROUPS">
+                <collection />
+              </option>
+              <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
+                <collection />
+              </option>
+              <option name="COLUMN_ORDER">
+                <list>
+                  <option value="0" />
+                  <option value="1" />
+                  <option value="2" />
+                  <option value="3" />
+                </list>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="LOCAL_CHANGES_DETAILS_PREVIEW_SHOWN" value="true" />
+    <MESSAGE value="Add presque all generations to common generator" />
+    <MESSAGE value="Puuush" />
+    <MESSAGE value="Save unformatted file and then, save formatted" />
+    <MESSAGE value="some fixes" />
+    <MESSAGE value="Now it generates services" />
+    <MESSAGE value="remove syystem" />
+    <MESSAGE value="generate output messages" />
+    <MESSAGE value="Add possibility to describe message configs via RegExps" />
+    <MESSAGE value="Working on generator config" />
+    <MESSAGE value="Add possibility to configure payload errors and fields from contexts" />
+    <MESSAGE value="Fix some tests" />
+    <MESSAGE value="Skip some failing tests" />
+    <MESSAGE value="Fix smth" />
+    <MESSAGE value="Remote unused log" />
+    <MESSAGE value="Start to generate schema" />
+    <MESSAGE value="neeed to go to master" />
+    <MESSAGE value="Add kinds.Float to Float32 and Float64 parsing" />
+    <MESSAGE value="Fix scalars Float32 parsing" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix scalars Float32 parsing" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/cmd/proto2gql/main.go</url>
+          <line>38</line>
+          <properties />
+          <option name="timeStamp" value="45" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="46" />
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="GoApplicationRunConfiguration">
+        <watch expression="stack[stackPos]" language="go" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="watch">
+      <expression>
+        <expression-string>stack[stackPos]</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>stack[stackPos].Result</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+    <expressions id="evaluateExpression">
+      <expression>
+        <expression-string>odds[</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>stack[stackPos]</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>stack[stackPos].Result</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>length+len(odds)</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>length+len(odds)-1</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>len(outcomesOdds)-dimensionMin-stack[stackPos].From &gt;= 0</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>outcomesOdds[stack[stackPos].From+1:]</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>outcomeOdds[stack[stackPos].From+1:]</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file:///usr/local/go/src/strings/strings.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="12555">
+          <caret line="840" column="5" selection-start-line="840" selection-start-column="5" selection-end-line="840" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testdata/generate.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" selection-start-line="1" selection-end-line="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/parser/parser.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="705">
+          <caret line="53" column="51" selection-start-line="53" selection-start-column="51" selection-end-line="53" selection-end-column="51" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/templates.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/gql_proto_derivative_generator.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="297">
+          <caret line="391" selection-start-line="391" selection-end-line="391" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../graphql-go/graphql/language/kinds/kinds.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="23" column="4" selection-start-line="23" selection-start-column="4" selection-end-line="23" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../graphql-go/graphql/definition.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3270">
+          <caret line="225" column="4" selection-start-line="225" selection-start-column="4" selection-end-line="225" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/go/src/strconv/atof.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7980">
+          <caret line="532" column="5" selection-start-line="532" selection-start-column="5" selection-end-line="532" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/schema/go_type.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="236">
+          <caret line="36" selection-start-line="36" selection-end-line="36" />
+          <folding>
+            <element signature="e#16#126#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/common/generate.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="18" column="75" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="75" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/common/reflect.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/schema/templates.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="25" selection-start-line="25" selection-end-line="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/schema/schema_generator.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="4" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/common/templates/head.gohtml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/schema/templates/body.gohtml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="420">
+          <caret line="28" column="30" selection-start-line="28" selection-start-column="30" selection-end-line="28" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/schema/templates/head.gohtml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" column="12" selection-start-line="1" selection-start-column="12" selection-end-line="1" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/schema/generator.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="273">
+          <caret line="82" column="44" selection-start-line="82" selection-start-column="44" selection-end-line="82" selection-end-column="44" />
+          <folding>
+            <element signature="e#16#174#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/messages_resolver.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="632">
+          <caret line="84" column="27" selection-start-line="84" selection-start-column="27" selection-end-line="84" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/resolvers.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="8" column="20" selection-start-line="8" selection-start-column="20" selection-end-line="8" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/services.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="271">
+          <caret line="151" column="72" selection-start-line="151" selection-start-column="72" selection-end-line="151" selection-end-column="72" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/maps_outputs.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="28" column="72" selection-start-line="28" selection-start-column="72" selection-end-line="28" selection-end-column="72" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/messages_inputs.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="499">
+          <caret line="88" column="74" selection-start-line="88" selection-start-column="74" selection-end-line="88" selection-end-column="74" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/common/models.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="400">
+          <caret line="77" column="18" selection-start-line="77" selection-start-column="4" selection-end-line="77" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/common/templates/body.gohtml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="179">
+          <caret line="152" column="21" selection-start-line="152" selection-start-column="21" selection-end-line="152" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/messages_outputs.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="429">
+          <caret line="102" column="5" selection-start-line="102" selection-start-column="5" selection-end-line="102" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/swagger/parser/parser.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="2" column="17" selection-start-line="2" selection-start-column="17" selection-end-line="2" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Makefile">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="9" column="107" selection-start-line="9" selection-start-column="107" selection-end-line="9" selection-end-column="107" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/helpers.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="556">
+          <caret line="166" column="5" selection-start-line="166" selection-start-column="5" selection-end-line="166" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/config.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-261">
+          <caret line="34" column="53" selection-start-line="34" selection-start-column="53" selection-end-line="34" selection-end-column="53" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/generator.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1926">
+          <caret line="48" column="20" selection-start-line="48" selection-start-column="20" selection-end-line="48" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../yvasiyarov/swagger/parser/parser.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="60" column="5" selection-start-line="60" selection-start-column="5" selection-end-line="60" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../go-swagger/go-swagger/doc.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../go-swagger/go-swagger/Dockerfile">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../go-swagger/go-swagger/generator/template_repo.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="36">
+          <caret line="193" column="21" selection-start-line="193" selection-start-column="21" selection-end-line="193" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../go-swagger/go-swagger/cmd/swagger/commands/generate/server.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1167">
+          <caret line="95" column="19" selection-start-line="95" selection-start-column="19" selection-end-line="95" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../go-swagger/go-swagger/generator/support.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="195">
+          <caret line="37" column="10" lean-forward="true" selection-start-line="37" selection-start-column="10" selection-end-line="37" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/swagger/generator.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="6" column="1" lean-forward="true" selection-start-line="6" selection-start-column="1" selection-end-line="6" selection-end-column="1" />
+          <folding>
+            <element signature="e#17#116#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/parser/file.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="654">
+          <caret line="20" selection-start-line="20" selection-end-line="20" selection-end-column="15" />
+          <caret line="32" lean-forward="true" selection-start-line="32" selection-end-line="32" selection-end-column="15" />
+          <caret line="41" lean-forward="true" selection-start-line="41" selection-end-line="41" selection-end-column="15" />
+          <caret line="49" lean-forward="true" selection-start-line="49" selection-end-line="49" selection-end-column="15" />
+          <caret line="68" lean-forward="true" selection-start-line="68" selection-end-line="68" selection-end-column="15" />
+          <caret line="103" lean-forward="true" selection-start-line="103" selection-end-line="103" selection-end-column="15" />
+          <caret line="140" lean-forward="true" selection-start-line="140" selection-end-line="140" selection-end-column="15" />
+          <caret line="211" lean-forward="true" selection-start-line="211" selection-end-line="211" selection-end-column="15" />
+          <caret line="223" lean-forward="true" selection-start-line="223" selection-end-line="223" selection-end-column="15" />
+          <caret line="235" lean-forward="true" selection-start-line="235" selection-end-line="235" selection-end-column="15" />
+          <caret line="247" lean-forward="true" selection-start-line="247" selection-end-line="247" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/api/scalars/scalars.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3240">
+          <caret line="222" column="18" selection-start-line="222" selection-start-column="18" selection-end-line="222" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/api/interceptors/еуые/a.gop1.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="2" column="16" selection-start-line="2" selection-start-column="16" selection-end-line="2" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/api/interceptors/еуые/a.gop.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="6" selection-start-line="6" selection-end-line="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/api/interceptors/еуые/aaa">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="6" selection-start-line="6" selection-end-line="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/api/interceptors/interceptor.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="403">
+          <caret line="40" column="45" selection-start-line="40" selection-start-column="45" selection-end-line="40" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/maps_inputs.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="24" column="12" selection-start-line="24" selection-start-column="12" selection-end-line="27" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/proto/maps_resolvers.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="405">
+          <caret line="31" column="97" lean-forward="true" selection-start-line="31" selection-start-column="97" selection-end-line="31" selection-end-column="97" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/data/plugins.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/config.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="8" column="4" selection-start-line="8" selection-start-column="4" selection-end-line="8" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/generator.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="228">
+          <caret line="25" selection-start-line="25" selection-end-line="25" />
+          <folding>
+            <element signature="e#19#179#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cmd/proto2gql/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="399">
+          <caret line="43" selection-start-line="43" selection-end-line="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/plugins/test1/test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="23" selection-start-line="23" selection-end-line="23" />
+          <folding>
+            <element signature="e#15#69#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generator/plugins/test2/test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="330">
+          <caret line="22" column="35" selection-start-line="22" selection-start-column="35" selection-end-line="22" selection-end-column="35" />
+          <folding>
+            <element signature="e#15#69#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

@@ -73,17 +73,18 @@ type InputObject struct {
 	Fields       []ObjectField
 }
 type ObjectField struct {
-	Name          string
-	Type          TypeResolver
-	GoObjectField string
-	NeedCast      bool
-	CastTo        GoType
+	Name           string
+	Type           TypeResolver
+	GoObjectGetter string
+	NeedCast       bool
+	CastTo         GoType
 }
 type OutputObject struct {
 	VariableName string
 	GraphQLName  string
 	GoType       GoType
 	Fields       []ObjectField
+	MapFields    []ObjectField
 }
 type Enum struct {
 	VariableName string

@@ -25,8 +25,8 @@ func (g *Generator) inputMessageTypeResolver(msgFile *parsedFile, message *parse
 	}, nil
 }
 
-func (g *Generator) inputMessageFieldTypeResolver(field *parser.Field) (common.TypeResolver, error) {
-	resolver, err := g.TypeOutputTypeResolver(field.Type)
+func (g *Generator) inputMessageFieldTypeResolver(file *parsedFile, field *parser.Field) (common.TypeResolver, error) {
+	resolver, err := g.TypeOutputTypeResolver(file, field.Type)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get input type resolver")
 	}
@@ -36,6 +36,12 @@ func (g *Generator) inputMessageFieldTypeResolver(field *parser.Field) (common.T
 	return resolver, nil
 }
 
+func (g *Generator) outputObjectMapFieldTypeResolver(mapFile *parsedFile, mp *parser.Map) (common.TypeResolver, error) {
+	res := func(ctx common.BodyContext) string {
+		return ctx.Importer.Prefix(mapFile.OutputPkg) + g.outputMapVariable(mapFile, mp)
+	}
+	return common.GqlListTypeResolver(common.GqlNonNullTypeResolver(res)), nil
+}
 func (g *Generator) inputObjectMapFieldTypeResolver(mapFile *parsedFile, mp *parser.Map) (common.TypeResolver, error) {
 	res := func(ctx common.BodyContext) string {
 		return ctx.Importer.Prefix(mapFile.OutputPkg) + g.inputMapVariable(mapFile, mp)
@@ -51,7 +57,11 @@ func (g *Generator) fileInputObjects(file *parsedFile) ([]common.InputObject, er
 		}
 		var fields []common.ObjectField
 		for _, field := range msg.Fields {
-			typ, err := g.inputMessageFieldTypeResolver(field)
+			fieldTypeFile, err := g.parsedFile(field.Type.File)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to resolve value type file")
+			}
+			typ, err := g.inputMessageFieldTypeResolver(fieldTypeFile, field)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve field type")
 			}
@@ -72,7 +82,11 @@ func (g *Generator) fileInputObjects(file *parsedFile) ([]common.InputObject, er
 		}
 		for _, oneOf := range msg.OneOffs {
 			for _, fld := range oneOf.Fields {
-				typ, err := g.inputMessageFieldTypeResolver(fld)
+				fieldTypeFile, err := g.parsedFile(fld.Type.File)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to resolve value type file")
+				}
+				typ, err := g.inputMessageFieldTypeResolver(fieldTypeFile, fld)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to resolve field type")
 				}

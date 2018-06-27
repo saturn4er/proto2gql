@@ -8,6 +8,7 @@ build:
 
 build_templates:
 	go-bindata -prefix ./generator/common -o ./generator/common/templates.go -pkg common ./generator/common/templates
+	go-bindata -prefix ./generator/schema -o ./generator/schema/templates.go -pkg schema ./generator/schema/templates
 
 test:
 	go test ./...
