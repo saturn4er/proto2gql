@@ -5,8 +5,9 @@ import (
 	"os"
 
 	"github.com/saturn4er/proto2gql/generator"
-	"github.com/saturn4er/proto2gql/generator/plugins/test1"
-	"github.com/saturn4er/proto2gql/generator/plugins/test2"
+	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
+	"github.com/saturn4er/proto2gql/generator/plugins/proto2gql"
+	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql"
 	"gopkg.in/urfave/cli.v1"
 	"gopkg.in/yaml.v2"
 )
@@ -37,8 +38,9 @@ func main() {
 				Config: gc,
 			}
 			plugins := []generator.Plugin{
-				new(test1.Plugin),
-				new(test2.Plugin),
+				new(graphql.Plugin),
+				new(proto2gql.Plugin),
+				new(swagger2gql.Plugin),
 			}
 			for _, plugin := range plugins {
 				err := g.RegisterPlugin(plugin)
