@@ -1,15 +1,13 @@
 package swagger2gql
 
 import (
-	"regexp"
-
 	"github.com/pkg/errors"
 )
 
 type FieldsConfig struct {
 	ContextKey string `mapstructure:"context_key"`
 }
-type MessageConfig struct {
+type ObjectConfig struct {
 	ErrorField string                  `mapstructure:"error_field"`
 	Fields     map[string]FieldsConfig `mapstructure:"fields"`
 }
@@ -17,7 +15,7 @@ type MethodConfig struct {
 	Alias       string `mapstructure:"alias"`
 	RequestType string `mapstructure:"request_type"` // QUERY | MUTATION
 }
-type ServiceConfig struct {
+type TagConfig struct {
 	Alias   string                  `mapstructure:"alias"`
 	Methods map[string]MethodConfig `mapstructure:"methods"`
 }
@@ -25,14 +23,16 @@ type Config struct {
 	Files []*SwaggerFileConfig `mapstructure:"files"`
 
 	// Global configs for proto files
-	Paths          []string                   `mapstructure:"paths"`
-	ImportsAliases []map[string]string        `mapstructure:"imports_aliases"`
-	Messages       []map[string]MessageConfig `mapstructure:"messages"`
+	Paths          []string                  `mapstructure:"paths"`
+	ImportsAliases []map[string]string       `mapstructure:"imports_aliases"`
+	Messages       []map[string]ObjectConfig `mapstructure:"messages"`
 }
 type SwaggerFileConfig struct {
 	Name string `mapstructure:"name"`
 
 	Path string `mapstructure:"path"`
+
+	ModelsGoPath string `mapstructure:"models_go_path"`
 
 	OutputPkg  string `mapstructure:"output_package"`
 	OutputPath string `mapstructure:"output_path"`
@@ -42,27 +42,10 @@ type SwaggerFileConfig struct {
 	GQLEnumsPrefix   string `mapstructure:"gql_enums_prefix"`
 	GQLMessagePrefix string `mapstructure:"gql_messages_prefix"`
 
-	Services map[string]ServiceConfig   `mapstructure:"services"`
-	Messages []map[string]MessageConfig `mapstructure:"messages"`
+	Tags    map[string]TagConfig      `mapstructure:"tags"`
+	Objects []map[string]ObjectConfig `mapstructure:"messages"`
 }
 
-func (pc *SwaggerFileConfig) MessageConfig(msgName string) (MessageConfig, error) {
-	if pc == nil {
-		return MessageConfig{}, nil
-	}
-	for _, cfgs := range pc.Messages {
-		for msgNameRegex, cfg := range cfgs {
-			r, err := regexp.Compile(msgNameRegex)
-			if err != nil {
-				return MessageConfig{}, errors.Wrapf(err, "failed to compile message name regex '%s'", msgNameRegex)
-			}
-			if r.MatchString(msgName) {
-				return cfg, nil
-			}
-		}
-	}
-	return MessageConfig{}, nil
-}
 func (pc *SwaggerFileConfig) GetName() string {
 	if pc == nil {
 		return ""
@@ -110,37 +93,15 @@ func (pc *SwaggerFileConfig) GetGQLMessagePrefix() string {
 	}
 	return pc.GQLMessagePrefix
 }
-func (pc *SwaggerFileConfig) GetServices() map[string]ServiceConfig {
+func (pc *SwaggerFileConfig) GetTags() map[string]TagConfig {
 	if pc == nil {
-		return map[string]ServiceConfig{}
+		return map[string]TagConfig{}
 	}
-	return pc.Services
+	return pc.Tags
 }
-func (pc *SwaggerFileConfig) GetMessages() []map[string]MessageConfig {
+func (pc *SwaggerFileConfig) GetObjects() []map[string]ObjectConfig {
 	if pc == nil {
-		return []map[string]MessageConfig{}
+		return []map[string]ObjectConfig{}
 	}
-	return pc.Messages
-}
-
-type SchemaNodeConfig struct {
-	Type           string             `mapstructure:"type"` // "OBJECT|SERVICE"
-	Proto          string             `mapstructure:"proto"`
-	Service        string             `mapstructure:"service"`
-	ObjectName     string             `mapstructure:"object_name"`
-	Field          string             `mapstructure:"field"`
-	Fields         []SchemaNodeConfig `mapstructure:"fields"`
-	ExcludeMethods []string           `mapstructure:"exclude_methods"`
-	FilterMethods  []string           `mapstructure:"filter_methods"`
-}
-type SchemaConfig struct {
-	Name          string            `mapstructure:"name"`
-	OutputPath    string            `mapstructure:"output_path"`
-	OutputPackage string            `mapstructure:"output_package"`
-	Queries       *SchemaNodeConfig `mapstructure:"queries"`
-	Mutations     *SchemaNodeConfig `mapstructure:"mutations"`
-}
-type GenerateConfig struct {
-	Tracer     bool
-	VendorPath string
+	return pc.Objects
 }

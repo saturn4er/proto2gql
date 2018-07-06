@@ -39,8 +39,8 @@ func main() {
 			}
 			plugins := []generator.Plugin{
 				new(graphql.Plugin),
-				new(proto2gql.Plugin),
 				new(swagger2gql.Plugin),
+				new(proto2gql.Plugin),
 			}
 			for _, plugin := range plugins {
 				err := g.RegisterPlugin(plugin)

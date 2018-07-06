@@ -1,48 +1,66 @@
 package swagger2gql
 
 import (
-	"fmt"
-
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
-	"github.com/saturn4er/proto2gql/generator/plugins/proto2gql/parser"
+	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-func (g *Plugin) enumTypeResolver(enumFile *parsedFile, enum *parser.Enum) (graphql.TypeResolver, error) {
+func (g *Plugin) enumTypeResolver(enumFile *parsedFile, enum *parser.Type) (graphql.TypeResolver, error) {
 	return func(ctx graphql.BodyContext) string {
 		return ctx.Importer.Prefix(enumFile.OutputPkg) + g.enumVariable(enumFile, enum)
 	}, nil
 }
 
-func (g *Plugin) enumGraphQLName(enumFile *parsedFile, enum *parser.Enum) string {
-	return enumFile.Config.GetGQLEnumsPrefix() + snakeCamelCaseSlice(enum.TypeName)
+func (g *Plugin) enumGraphQLName(enumFile *parsedFile, enum *parser.Type) string {
+	return enumFile.Config.GetGQLEnumsPrefix() + snakeCamelCaseSlice(enum.Route)
 }
 
-func (g *Plugin) enumVariable(enumFile *parsedFile, enum *parser.Enum) string {
-	return enumFile.Config.GetGQLEnumsPrefix() + snakeCamelCaseSlice(enum.TypeName)
+func (g *Plugin) enumVariable(enumFile *parsedFile, enum *parser.Type) string {
+	return enumFile.Config.GetGQLEnumsPrefix() + snakeCamelCaseSlice(enum.Route)
 }
 
 func (g *Plugin) prepareFileEnums(file *parsedFile) ([]graphql.Enum, error) {
 	var res []graphql.Enum
-	for path, methods := range file.File.Paths {
-		for method, endpoint := range methods {
-			for _, parameter := range endpoint.Parameters {
-				fmt.Println(parameter.)
+	var handledEnums = map[string]struct{}{}
+	var handleType func(typ *parser.Type)
+	handleType = func(typ *parser.Type) {
+		switch typ.Type {
+		case parser.TypeString:
+			_, handled := handledEnums[snakeCamelCaseSlice(typ.Route)]
+			if len(typ.Enum) == 0 || handled {
+				return
+			}
+			values := make([]graphql.EnumValue, len(typ.Enum))
+			for i, value := range typ.Enum {
+				values[i] = graphql.EnumValue{
+					Name:    value,
+					Value:   i,
+					Comment: `""`,
+				}
+			}
+			res = append(res, graphql.Enum{
+				VariableName: g.enumVariable(file, typ),
+				GraphQLName:  g.enumGraphQLName(file, typ),
+				Values:       values,
+			})
+			handledEnums[snakeCamelCaseSlice(typ.Route)] = struct{}{}
+		case parser.TypeObject:
+			for _, property := range typ.Object.Properties {
+				handleType(property.Type)
+			}
+		case parser.TypeArray:
+			handleType(typ.ElemType)
+		}
+	}
+	for _, tag := range file.File.Tags {
+		for _, method := range tag.Methods {
+			for _, param := range method.Parameters {
+				handleType(param.Type)
+			}
+			for _, response := range method.Responses {
+				handleType(response.ResultType)
 			}
 		}
-		vals := make([]graphql.EnumValue, len(enum.Values))
-		for i, value := range enum.Values {
-			vals[i] = graphql.EnumValue{
-				Name:    value.Name,
-				Value:   value.Value,
-				Comment: value.QuotedComment,
-			}
-		}
-		res = append(res, graphql.Enum{
-			VariableName: g.enumVariable(file, enum),
-			GraphQLName:  g.enumGraphQLName(file, enum),
-			Comment:      enum.QuotedComment,
-			Values:       vals,
-		})
 	}
 	return res, nil
 }

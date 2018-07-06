@@ -1,13 +1,15 @@
 package parser
 
+//go:generate stringer -type=Typ
 import (
 	"github.com/go-openapi/spec"
 )
 
+type Typ byte
+
 const (
-	TypeUnknown  byte = iota
+	TypeUnknown Typ = iota
 	TypeString
-	TypeNumber
 	TypeInt32
 	TypeInt64
 	TypeFloat32
@@ -19,23 +21,29 @@ const (
 	TypeNull
 )
 const (
-	ParameterPositionQuery  byte = iota
+	ParameterPositionQuery byte = iota
 	ParameterPositionBody
-	ParameterPositionParams
+	ParameterPositionPath
 )
 
+var parameterPositions = map[string]byte{
+	"path":  ParameterPositionPath,
+	"query": ParameterPositionQuery,
+	"body":  ParameterPositionBody,
+}
 // Parsed DTO's
 type Type struct {
-	Type     byte
+	Type     Typ
 	Enum     []string
 	Object   *Object
 	ElemType *Type
+	Route    []string
 }
 type ObjectProperty struct {
 	Name        string
 	Description string
 	Required    bool
-	Type        Type
+	Type        *Type
 }
 type Object struct {
 	Name       string
@@ -43,7 +51,7 @@ type Object struct {
 	Properties []ObjectProperty
 }
 type MethodParameter struct {
-	Type        Type
+	Type        *Type
 	Position    byte
 	Name        string
 	Description string
@@ -60,12 +68,12 @@ type Tag struct {
 	Methods     []Method
 }
 type Method struct {
-	Path             string
-	OperationID      string
-	Description      string
-	HTTPMethod       string
-	MethodParameters []MethodParameter
-	Responses        []MethodResponse
+	Path        string
+	OperationID string
+	Description string
+	HTTPMethod  string
+	Parameters  []MethodParameter
+	Responses   []MethodResponse
 }
 type File struct {
 	file     *spec.Swagger

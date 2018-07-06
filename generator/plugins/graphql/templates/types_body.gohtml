@@ -9,7 +9,7 @@
             {{range $value := $enum.Values -}}
 				"{{$value.Name}}": &{{gqlPkg}}.EnumValueConfig{
 					Value: {{$value.Value}},
-					{{ if ne $value.Comment "\"\"" -}}
+					{{ if ne $value.Comment `""` -}}
 						Description: {{$value.Comment}},
 					{{ end -}}
 				},

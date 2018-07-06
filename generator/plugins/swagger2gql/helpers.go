@@ -6,9 +6,10 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/go-openapi/swag"
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
-	"github.com/saturn4er/proto2gql/generator/plugins/proto2gql/parser"
+	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
 var goTypesScalars = map[string]graphql.GoType{
@@ -32,57 +33,41 @@ var goTypesScalars = map[string]graphql.GoType{
 	"fixed64": {Scalar: true, Kind: reflect.Uint64},
 }
 
-func (g *Plugin) goTypeByParserType(typ *parser.Type) (_ graphql.GoType, err error) {
-	if typ.IsScalar() {
-		res, ok := goTypesScalars[typ.Scalar]
-		if !ok {
-			err = errors.New("unknown scalar")
-			return
-		}
-		return res, nil
-	}
-	file, err := g.parsedFile(typ.File)
-	if err != nil {
-		err = errors.Wrap(err, "failed to resolve type parsed file")
-		return
-	}
-	if typ.IsEnum() {
+func (g *Plugin) goTypeByParserType(typeFile *parsedFile, typ *parser.Type) (_ graphql.GoType, err error) {
+	switch typ.Type {
+	case parser.TypeObject:
 		return graphql.GoType{
-			Pkg:  file.GRPCSourcesPkg,
-			Name: snakeCamelCaseSlice(typ.Enum.TypeName),
+			Kind: reflect.Ptr,
+			ElemType: &graphql.GoType{
+				Kind: reflect.Struct,
+				Name: pascalize(camelCaseSlice(typ.Object.Route)),
+				Pkg:  typeFile.Config.ModelsGoPath,
+			},
+		}, nil
+	case parser.TypeString:
+		return graphql.GoType{
+			Kind: reflect.String,
+		}, nil
+	case parser.TypeInt32:
+		return graphql.GoType{
 			Kind: reflect.Int32,
 		}, nil
-	}
-
-	if typ.IsMessage() {
-		msgType := &graphql.GoType{
-			Pkg:  file.GRPCSourcesPkg,
-			Name: snakeCamelCaseSlice(typ.Message.TypeName),
-			Kind: reflect.Struct,
+	case parser.TypeInt64:
+		return graphql.GoType{
+			Kind: reflect.Int64,
+		}, nil
+	case parser.TypeArray:
+		elemGoType, err := g.goTypeByParserType(typeFile, typ.ElemType)
+		if err != nil {
+			err = errors.Wrap(err, "failed to resolve array element go type")
+			return graphql.GoType{}, err
 		}
 		return graphql.GoType{
-			Pkg:      file.GRPCSourcesPkg,
-			Kind:     reflect.Ptr,
-			ElemType: msgType,
+			Kind:     reflect.Slice,
+			ElemType: &elemGoType,
 		}, nil
 	}
-	if typ.IsMap() {
-		keyT, err := g.goTypeByParserType(typ.Map.KeyType)
-		if err != nil {
-			return graphql.GoType{}, errors.Wrap(err, "failed to resolve key type")
-		}
-		valueT, err := g.goTypeByParserType(typ.Map.ValueType)
-		if err != nil {
-			return graphql.GoType{}, errors.Wrap(err, "failed to resolve value type")
-		}
-		return graphql.GoType{
-			Pkg:       typ.File.GoPackage,
-			Kind:      reflect.Map,
-			ElemType:  &keyT,
-			Elem2Type: &valueT,
-		}, nil
-	}
-	err = errors.Errorf("unknown type " + typ.String())
+	err = errors.Errorf("unknown type %v", typ)
 	return
 }
 func GoPackageByPath(path, vendorPath string) (string, error) {
@@ -166,3 +151,17 @@ func camelCase(s string) string {
 func camelCaseSlice(elem []string) string      { return camelCase(strings.Join(elem, "")) }
 func snakeCamelCaseSlice(elem []string) string { return camelCase(strings.Join(elem, "_")) }
 func dotedTypeName(elems []string) string      { return camelCase(strings.Join(elems, ".")) }
+func pascalize(arg string) string {
+	arg = strings.NewReplacer(">=", "Ge", "<=", "Le", ">", "Gt", "<", "Lt", "=", "Eq").Replace(arg)
+	if len(arg) == 0 || arg[0] > '9' {
+		return swag.ToGoName(arg)
+	}
+	if arg[0] == '+' {
+		return swag.ToGoName("Plus " + arg[1:])
+	}
+	if arg[0] == '-' {
+		return swag.ToGoName("Minus " + arg[1:])
+	}
+
+	return swag.ToGoName("Nr " + arg)
+}

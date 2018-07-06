@@ -1,12 +1,10 @@
 package parser
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
 )
@@ -41,7 +39,6 @@ func (p *Parser) Parse(loc string, r io.Reader) (*File, error) {
 	}
 	res.Tags = tags
 	res.file = nil
-	spew.Dump(res)
 	return res, nil
 }
 
@@ -51,7 +48,6 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 	}
 	if schema.Ref.String() != "" {
 		var err error
-		fmt.Println(schema.Ref.String())
 		schema, err = spec.ResolveRef(root, &schema.Ref)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve $ref")
@@ -83,12 +79,14 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 			}
 			typ := &Type{
 				Type:     TypeMap,
+				Route:    route,
 				ElemType: elemType,
 			}
 			return typ, nil
 		}
 		typ := &Type{
-			Type: TypeObject,
+			Type:  TypeObject,
+			Route: route,
 			Object: &Object{
 				Name:  schema.Title,
 				Route: route,
@@ -109,7 +107,7 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 				Name:        name,
 				Description: prop.Description,
 				Required:    required,
-				Type:        *ptyp,
+				Type:        ptyp,
 			})
 		}
 		return typ, nil
@@ -147,8 +145,9 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 				values[i] = enum.(string)
 			}
 			return &Type{
-				Type: TypeString,
-				Enum: values,
+				Type:  TypeString,
+				Enum:  values,
+				Route: route,
 			}, nil
 		} else {
 			return &Type{
@@ -159,6 +158,27 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 		return nil, errors.Errorf("type %s is not implemented", schema.Type[0])
 
 	}
+}
+func parseMethodParams(schema *spec.Swagger, method *spec.Operation) ([]MethodParameter, error) {
+	var res []MethodParameter
+	for _, parameter := range method.Parameters {
+		typ, err := resolveSchemaType([]string{method.ID}, schema, parameter.Schema)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to resolve %s parameter type", parameter.Name)
+		}
+		pos, ok := parameterPositions[parameter.In]
+		if !ok {
+			return nil, errors.Wrapf(err, "unknown parameter position '%s'", parameter.In)
+		}
+		res = append(res, MethodParameter{
+			Name:        parameter.Name,
+			Description: parameter.Description,
+			Required:    parameter.Required,
+			Type:        typ,
+			Position:    pos,
+		})
+	}
+	return res, nil
 }
 func parseMethodResponses(schema *spec.Swagger, method *spec.Operation) ([]MethodResponse, error) {
 	var res []MethodResponse
@@ -202,18 +222,23 @@ func parseFileTags(schema *spec.Swagger, file *File) ([]Tag, error) {
 				if len(method.Tags) == 0 {
 					methodTags = []string{"operations"}
 				}
-				m := Method{
-					OperationID: method.ID,
-					HTTPMethod:  strings.ToUpper(httpMethod),
-					Description: method.Description,
-					Path:        path,
+
+				params, err := parseMethodParams(schema, method)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to parse method params")
 				}
 				resps, err := parseMethodResponses(schema, method)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to resolve method responses")
 				}
-
-				m.Responses = resps
+				m := Method{
+					OperationID: method.ID,
+					HTTPMethod:  strings.ToUpper(httpMethod),
+					Description: method.Description,
+					Path:        path,
+					Responses:   resps,
+					Parameters:  params,
+				}
 				for _, tag := range methodTags {
 					t, ok := tagsByName[tag]
 					if !ok {

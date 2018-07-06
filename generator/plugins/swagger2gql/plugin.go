@@ -1,8 +1,9 @@
 package swagger2gql
 
 import (
-	"fmt"
+	"os"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator"
@@ -11,8 +12,8 @@ import (
 )
 
 const (
-	PluginName      = "proto2gql"
-	PluginConfigKey = "proto2gql"
+	PluginName      = "swagger2gql"
+	PluginConfigKey = "swagger2gql"
 )
 
 type Plugin struct {
@@ -43,14 +44,18 @@ func (p *Plugin) Init(config *generator.GenerateConfig, plugins []generator.Plug
 	return nil
 }
 func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) {
-	enums, err := p.prepareFileEnums(file)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to resolve file enums")
-	}
+	// enums, err := p.prepareFileEnums(file)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "failed to resolve file enums")
+	// }
 	// inputs, err := p.fileInputObjects(file)
 	// if err != nil {
 	// 	return nil, errors.Wrap(err, "failed to prepare file input objects")
 	// }
+	inputsResolvers, err := p.fileInputMessagesResolvers(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to prepare file messages resolvers")
+	}
 	// mapInputs, err := p.fileMapInputObjects(file)
 	// if err != nil {
 	// 	return nil, errors.Wrap(err, "failed to prepare file map input objects")
@@ -67,10 +72,7 @@ func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) 
 	// if err != nil {
 	// 	return nil, errors.Wrap(err, "failed to prepare file output messages")
 	// }
-	// messagesResolvers, err := p.fileInputMessagesResolvers(file)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed to prepare file messages resolvers")
-	// }
+
 	// services, err := p.fileServices(file)
 	// if err != nil {
 	// 	return nil, errors.Wrap(err, "failed to prepare file services")
@@ -78,23 +80,33 @@ func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) 
 	res := &graphql.TypesFile{
 		PackageName: file.OutputPkgName,
 		Package:     file.OutputPkg,
-		// Enums:                   enums,
-		// InputObjects:            inputs,
-		// InputObjectResolvers:    messagesResolvers,
+		// Enums:        enums,
+		// InputObjects: inputs,
+		InputObjectResolvers: inputsResolvers,
 		// OutputObjects:           outputMessages,
 		// MapInputObjects:         mapInputs,
 		// MapInputObjectResolvers: mapResolvers,
 		// MapOutputObjects:        mapOutputs,
 		// Services:                services,
 	}
+	spew.Dump(res)
 	return res, nil
 }
 func (p *Plugin) Prepare() error {
-	fmt.Println(p.config.Files)
+	parser := parser.Parser{}
 	for _, cfg := range p.config.Files {
-		pf, err := parser.Parse(cfg.Path)
+		file, err := os.Open(cfg.Path)
 		if err != nil {
+			return errors.Wrap(err, "failed to open file")
+		}
+		pf, err := parser.Parse(cfg.Path, file)
+		if err != nil {
+			file.Close()
 			return errors.Wrap(err, "failed to parse swagger config")
+		}
+		err = file.Close()
+		if err != nil {
+			return errors.Wrap(err, "failed to close file")
 		}
 		outPath, err := p.fileOutputPath(cfg)
 		if err != nil {
