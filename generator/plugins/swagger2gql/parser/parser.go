@@ -42,9 +42,9 @@ func (p *Parser) Parse(loc string, r io.Reader) (*File, error) {
 	return res, nil
 }
 
-func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) (*Type, error) {
+func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) (Type, error) {
 	if schema == nil {
-		return &Type{Type: TypeNull}, nil
+		return Scalar{kind: KindNull}, nil
 	}
 	if schema.Ref.String() != "" {
 		var err error
@@ -63,8 +63,7 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve array items types")
 		}
-		return &Type{
-			Type:     TypeArray,
+		return Array{
 			ElemType: itemType,
 		}, nil
 
@@ -77,20 +76,14 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve hashmap value type")
 			}
-			typ := &Type{
-				Type:     TypeMap,
-				Route:    route,
+			typ := Map{
 				ElemType: elemType,
 			}
 			return typ, nil
 		}
-		typ := &Type{
-			Type:  TypeObject,
+		typ := Object{
 			Route: route,
-			Object: &Object{
-				Name:  schema.Title,
-				Route: route,
-			},
+			Name:  schema.Title,
 		}
 
 		requiredFields := map[string]struct{}{}
@@ -103,7 +96,7 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to resolve prop '%s' type", name)
 			}
-			typ.Object.Properties = append(typ.Object.Properties, ObjectProperty{
+			typ.Properties = append(typ.Properties, ObjectProperty{
 				Name:        name,
 				Description: prop.Description,
 				Required:    required,
@@ -114,45 +107,29 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 	case "number":
 		switch schema.Format {
 		case "float":
-			return &Type{
-				Type: TypeFloat32,
-			}, nil
+			return Scalar{kind: KindFloat32}, nil
 		default:
-			return &Type{
-				Type: TypeFloat64,
-			}, nil
+			return Scalar{kind: KindFloat64}, nil
 		}
 
 	case "integer":
 		switch schema.Format {
 		case "int32":
-			return &Type{
-				Type: TypeInt32,
-			}, nil
+			return Scalar{kind: KindInt32}, nil
 		default:
-			return &Type{
-				Type: TypeInt64,
-			}, nil
+			return Scalar{kind: KindInt64}, nil
 		}
 	case "boolean":
-		return &Type{
-			Type: TypeBoolean,
-		}, nil
+		return Scalar{kind: KindBoolean}, nil
 	case "string":
 		if len(schema.Enum) > 0 {
 			var values = make([]string, len(schema.Enum))
 			for i, enum := range schema.Enum {
 				values[i] = enum.(string)
 			}
-			return &Type{
-				Type:  TypeString,
-				Enum:  values,
-				Route: route,
-			}, nil
+			return Scalar{kind: KindString}, nil
 		} else {
-			return &Type{
-				Type: TypeString,
-			}, nil
+			return Scalar{kind: KindString}, nil
 		}
 	default:
 		return nil, errors.Errorf("type %s is not implemented", schema.Type[0])

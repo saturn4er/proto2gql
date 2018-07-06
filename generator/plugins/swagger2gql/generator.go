@@ -5,30 +5,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-var scalarsResolvers = map[string]graphql.TypeResolver{
-	"double": graphql.GqlFloat64TypeResolver,
-	"float":  graphql.GqlFloat32TypeResolver,
-	"bool":   graphql.GqlBoolTypeResolver,
-	"string": graphql.GqlStringTypeResolver,
-
-	"int64":    graphql.GqlInt64TypeResolver,
-	"sfixed64": graphql.GqlInt64TypeResolver,
-	"sint64":   graphql.GqlInt64TypeResolver,
-
-	"int32":    graphql.GqlInt32TypeResolver,
-	"sfixed32": graphql.GqlInt32TypeResolver,
-	"sint32":   graphql.GqlInt32TypeResolver,
-
-	"uint32":  graphql.GqlUInt32TypeResolver,
-	"fixed32": graphql.GqlUInt32TypeResolver,
-
-	"uint64":  graphql.GqlUInt64TypeResolver,
-	"fixed64": graphql.GqlUInt64TypeResolver,
-}
 
 type parsedFile struct {
 	File          *parser.File

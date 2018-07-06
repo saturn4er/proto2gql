@@ -3,25 +3,26 @@ package swagger2gql
 import (
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-func (g *Plugin) inputMessageGraphQLName(file *parsedFile, message *parser.Type) string {
-	return file.Config.GetGQLMessagePrefix() + strings.Join(message.Route, "__") + "Input"
+func (g *Plugin) inputObjectGQLName(file *parsedFile, obj parser.Object) string {
+	return file.Config.GetGQLMessagePrefix() + strings.Join(obj.Route, "__") + "Input"
 }
-func (g *Plugin) inputMessageVariable(msgFile *parsedFile, message *parser.Type) string {
-	return msgFile.Config.GetGQLMessagePrefix() + strings.Join(message.Route, "") + "Input"
+func (g *Plugin) inputObjectVariable(msgFile *parsedFile, obj parser.Object) string {
+	return msgFile.Config.GetGQLMessagePrefix() + strings.Join(obj.Route, "") + "Input"
 }
 
 //
-func (g *Plugin) inputMessageTypeResolver(msgFile *parsedFile, typ *parser.Type) graphql.TypeResolver {
-	if len(typ.Object.Properties) == 0 {
+func (g *Plugin) inputObjectTypeResolver(msgFile *parsedFile, obj parser.Object) graphql.TypeResolver {
+	if len(obj.Properties) == 0 {
 		return graphql.GqlNoDataTypeResolver
 	}
 
 	return func(ctx graphql.BodyContext) string {
-		return ctx.Importer.Prefix(msgFile.OutputPkg) + g.inputMessageVariable(msgFile, typ)
+		return ctx.Importer.Prefix(msgFile.OutputPkg) + g.inputObjectVariable(msgFile, obj)
 	}
 }
 
@@ -49,47 +50,26 @@ func (g *Plugin) inputMessageTypeResolver(msgFile *parsedFile, typ *parser.Type)
 // 	}
 // 	return graphql.GqlListTypeResolver(graphql.GqlNonNullTypeResolver(res)), nil
 // }
-func (g *Plugin) graphqlInputTypeResolver(typeFile *parsedFile, typ *parser.Type) graphql.TypeResolver {
-	if typ == nil {
-		return graphql.GqlNoDataTypeResolver
-	}
-	switch typ.Type {
-	case parser.TypeObject:
-		return g.inputMessageTypeResolver(typeFile, typ)
-	case parser.TypeArray:
-		return graphql.GqlListTypeResolver(g.graphqlInputTypeResolver(typeFile, typ.ElemType))
-	case parser.TypeBoolean:
-		return graphql.GqlBoolTypeResolver
-	case parser.TypeFloat64:
-		return graphql.GqlFloat64TypeResolver
-	case parser.TypeFloat32:
-		return graphql.GqlFloat32TypeResolver
-	case parser.TypeInt64:
-		return graphql.GqlInt64TypeResolver
-	case parser.TypeInt32:
-		return graphql.GqlInt32TypeResolver
-	case parser.TypeString:
-		return graphql.GqlStringTypeResolver
-		// TODO: map
-	}
-	return func(ctx graphql.BodyContext) string {
-		return "NOT IMPLEMENTED"
-	}
-}
+
 func (g *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, error) {
 	var res []graphql.InputObject
 	var handledObjects = map[string]struct{}{}
-	var handleType func(typ *parser.Type)
-	handleType = func(typ *parser.Type) {
-		switch typ.Type {
-		case parser.TypeObject:
-			if _, handled := handledObjects[camelCaseSlice(typ.Route)]; handled {
-				return
+	var handleType func(typ parser.Type) error
+	handleType = func(typ parser.Type) error {
+		switch t := typ.(type) {
+		case parser.Object:
+			if _, handled := handledObjects[camelCaseSlice(t.Route)]; handled {
+				return nil
 			}
 			var fields []graphql.ObjectField
-			for _, property := range typ.Object.Properties {
-				handleType(property.Type)
-				typeResolver := g.graphqlInputTypeResolver(file, property.Type)
+			for _, property := range t.Properties {
+				if err := handleType(property.Type); err != nil {
+					return err
+				}
+				typeResolver, err := g.TypeInputTypeResolver(file, property.Type)
+				if err != nil {
+					return errors.Wrap(err, "failed to get input type resolver")
+				}
 				if property.Required {
 					typeResolver = graphql.GqlNonNullTypeResolver(typeResolver)
 				}
@@ -101,15 +81,16 @@ func (g *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, erro
 				})
 			}
 			res = append(res, graphql.InputObject{
-				VariableName: g.inputMessageVariable(file, typ),
-				GraphQLName:  g.inputMessageGraphQLName(file, typ),
+				VariableName: g.inputObjectVariable(file, t),
+				GraphQLName:  g.inputObjectGQLName(file, t),
 				Fields:       fields,
 			})
 
-			handledObjects[camelCaseSlice(typ.Route)] = struct{}{}
-		case parser.TypeArray:
-			handleType(typ.ElemType)
+			handledObjects[camelCaseSlice(t.Route)] = struct{}{}
+		case parser.Array:
+			return handleType(t.ElemType)
 		}
+		return nil
 	}
 	for _, tag := range file.File.Tags {
 		for _, method := range tag.Methods {

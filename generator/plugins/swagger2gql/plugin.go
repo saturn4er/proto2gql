@@ -3,7 +3,6 @@ package swagger2gql
 import (
 	"os"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator"
@@ -68,10 +67,10 @@ func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) 
 	// if err != nil {
 	// 	return nil, errors.Wrap(err, "failed to prepare file map resolvers")
 	// }
-	// outputMessages, err := p.fileOutputMessages(file)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed to prepare file output messages")
-	// }
+	outputMessages, err := p.fileOutputMessages(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to prepare file output messages")
+	}
 
 	// services, err := p.fileServices(file)
 	// if err != nil {
@@ -83,13 +82,13 @@ func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) 
 		// Enums:        enums,
 		// InputObjects: inputs,
 		InputObjectResolvers: inputsResolvers,
-		// OutputObjects:           outputMessages,
+		OutputObjects:        outputMessages,
 		// MapInputObjects:         mapInputs,
 		// MapInputObjectResolvers: mapResolvers,
 		// MapOutputObjects:        mapOutputs,
 		// Services:                services,
 	}
-	spew.Dump(res)
+	// spew.Dump(res)
 	return res, nil
 }
 func (p *Plugin) Prepare() error {

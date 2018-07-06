@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -50,6 +51,7 @@ func (p *Plugin) generateTypes() error{
 			return errors.Wrapf(err, "failed to open file %s for write", outputPath)
 		}
 		err = generateTypes(file, out)
+		fmt.Println(outputPath)
 		if err != nil {
 			if cerr := out.Close(); cerr != nil {
 				err = errors.Wrap(err, cerr.Error())

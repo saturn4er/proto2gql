@@ -12,52 +12,50 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-var goTypesScalars = map[string]graphql.GoType{
-	"double": {Scalar: true, Kind: reflect.Float64},
-	"float":  {Scalar: true, Kind: reflect.Float32},
-	"bool":   {Scalar: true, Kind: reflect.Bool},
-	"string": {Scalar: true, Kind: reflect.String},
-
-	"int64":    {Scalar: true, Kind: reflect.Int64},
-	"sfixed64": {Scalar: true, Kind: reflect.Int64},
-	"sint64":   {Scalar: true, Kind: reflect.Int64},
-
-	"int32":    {Scalar: true, Kind: reflect.Int32},
-	"sfixed32": {Scalar: true, Kind: reflect.Int32},
-	"sint32":   {Scalar: true, Kind: reflect.Int32},
-
-	"uint32":  {Scalar: true, Kind: reflect.Uint32},
-	"fixed32": {Scalar: true, Kind: reflect.Uint32},
-
-	"uint64":  {Scalar: true, Kind: reflect.Uint64},
-	"fixed64": {Scalar: true, Kind: reflect.Uint64},
+var scalarsGoTypesNames = map[parser.Kind]string{
+	parser.KindString:  "string",
+	parser.KindFloat32: "float32",
+	parser.KindFloat64: "float65",
+	parser.KindInt64:   "int64",
+	parser.KindInt32:   "int32",
+	parser.KindBoolean: "bool",
+}
+var scalarsGoTypes = map[parser.Kind]graphql.GoType{
+	parser.KindBoolean: {Scalar: true, Kind: reflect.Bool},
+	parser.KindFloat64: {Scalar: true, Kind: reflect.Float64},
+	parser.KindFloat32: {Scalar: true, Kind: reflect.Float32},
+	parser.KindInt64:   {Scalar: true, Kind: reflect.Int64},
+	parser.KindInt32:   {Scalar: true, Kind: reflect.Int32},
+	parser.KindString:  {Scalar: true, Kind: reflect.String},
 }
 
-func (g *Plugin) goTypeByParserType(typeFile *parsedFile, typ *parser.Type) (_ graphql.GoType, err error) {
-	switch typ.Type {
-	case parser.TypeObject:
+func (g *Plugin) goTypeByParserType(typeFile *parsedFile, typ parser.Type, ptrObj bool) (_ graphql.GoType, err error) {
+	if _, isScalar := typ.(parser.Scalar); isScalar {
+		goTyp, ok := scalarsGoTypes[typ.Kind()]
+		if !ok {
+			err = errors.Errorf("convertation of scalar %s to golang type is not implemented", typ.Kind())
+		}
+		return goTyp, nil
+	}
+	switch t := typ.(type) {
+	case parser.Object:
+		if ptrObj {
+			return graphql.GoType{
+				Kind: reflect.Ptr,
+				ElemType: &graphql.GoType{
+					Kind: reflect.Struct,
+					Name: pascalize(camelCaseSlice(t.Route)),
+					Pkg:  typeFile.Config.ModelsGoPath,
+				},
+			}, nil
+		}
 		return graphql.GoType{
-			Kind: reflect.Ptr,
-			ElemType: &graphql.GoType{
-				Kind: reflect.Struct,
-				Name: pascalize(camelCaseSlice(typ.Object.Route)),
-				Pkg:  typeFile.Config.ModelsGoPath,
-			},
+			Kind: reflect.Struct,
+			Name: pascalize(camelCaseSlice(t.Route)),
+			Pkg:  typeFile.Config.ModelsGoPath,
 		}, nil
-	case parser.TypeString:
-		return graphql.GoType{
-			Kind: reflect.String,
-		}, nil
-	case parser.TypeInt32:
-		return graphql.GoType{
-			Kind: reflect.Int32,
-		}, nil
-	case parser.TypeInt64:
-		return graphql.GoType{
-			Kind: reflect.Int64,
-		}, nil
-	case parser.TypeArray:
-		elemGoType, err := g.goTypeByParserType(typeFile, typ.ElemType)
+	case parser.Array:
+		elemGoType, err := g.goTypeByParserType(typeFile, t.ElemType, ptrObj)
 		if err != nil {
 			err = errors.Wrap(err, "failed to resolve array element go type")
 			return graphql.GoType{}, err

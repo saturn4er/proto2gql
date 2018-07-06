@@ -1,24 +1,23 @@
 package parser
 
-//go:generate stringer -type=Typ
 import (
 	"github.com/go-openapi/spec"
 )
 
-type Typ byte
+type Kind byte
 
 const (
-	TypeUnknown Typ = iota
-	TypeString
-	TypeInt32
-	TypeInt64
-	TypeFloat32
-	TypeFloat64
-	TypeBoolean
-	TypeArray
-	TypeObject
-	TypeMap
-	TypeNull
+	KindUnknown Kind = iota
+	KindString
+	KindInt32
+	KindInt64
+	KindFloat32
+	KindFloat64
+	KindBoolean
+	KindArray
+	KindObject
+	KindMap
+	KindNull
 )
 const (
 	ParameterPositionQuery byte = iota
@@ -31,27 +30,52 @@ var parameterPositions = map[string]byte{
 	"query": ParameterPositionQuery,
 	"body":  ParameterPositionBody,
 }
-// Parsed DTO's
-type Type struct {
-	Type     Typ
-	Enum     []string
-	Object   *Object
-	ElemType *Type
-	Route    []string
-}
-type ObjectProperty struct {
-	Name        string
-	Description string
-	Required    bool
-	Type        *Type
+
+type Type interface {
+	Kind() Kind
 }
 type Object struct {
 	Name       string
 	Route      []string
 	Properties []ObjectProperty
 }
+
+func (Object) Kind() Kind {
+	return KindObject
+}
+
+type Array struct {
+	ElemType Type
+}
+
+func (Array) Kind() Kind {
+	return KindArray
+}
+
+type Scalar struct {
+	kind Kind
+}
+
+func (s Scalar) Kind() Kind {
+	return s.kind
+}
+
+type Map struct {
+	ElemType Type
+}
+
+func (Map) Kind() Kind {
+	return KindMap
+}
+
+type ObjectProperty struct {
+	Name        string
+	Description string
+	Required    bool
+	Type        Type
+}
 type MethodParameter struct {
-	Type        *Type
+	Type        Type
 	Position    byte
 	Name        string
 	Description string
@@ -60,7 +84,7 @@ type MethodParameter struct {
 type MethodResponse struct {
 	StatusCode  int
 	Description string
-	ResultType  *Type
+	ResultType  Type
 }
 type Tag struct {
 	Name        string
