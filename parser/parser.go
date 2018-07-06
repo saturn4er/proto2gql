@@ -75,8 +75,9 @@ func (p *Parser) Parse(path string) (*File, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open file")
 	}
-
-	f, err := proto.NewParser(file).Parse()
+	protoParser := proto.NewParser(file)
+	protoParser.Filename(absPath)
+	f, err := protoParser.Parse()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse file")
 	}
