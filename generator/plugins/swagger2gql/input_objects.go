@@ -8,21 +8,21 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-func (g *Plugin) inputObjectGQLName(file *parsedFile, obj parser.Object) string {
-	return file.Config.GetGQLMessagePrefix() + strings.Join(obj.Route, "__") + "Input"
+func (p *Plugin) inputObjectGQLName(file *parsedFile, obj parser.Object) string {
+	return file.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, "__")) + "Input"
 }
-func (g *Plugin) inputObjectVariable(msgFile *parsedFile, obj parser.Object) string {
-	return msgFile.Config.GetGQLMessagePrefix() + strings.Join(obj.Route, "") + "Input"
+func (p *Plugin) inputObjectVariable(msgFile *parsedFile, obj parser.Object) string {
+	return msgFile.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, "")) + "Input"
 }
 
 //
-func (g *Plugin) inputObjectTypeResolver(msgFile *parsedFile, obj parser.Object) graphql.TypeResolver {
+func (p *Plugin) inputObjectTypeResolver(msgFile *parsedFile, obj parser.Object) graphql.TypeResolver {
 	if len(obj.Properties) == 0 {
 		return graphql.GqlNoDataTypeResolver
 	}
 
 	return func(ctx graphql.BodyContext) string {
-		return ctx.Importer.Prefix(msgFile.OutputPkg) + g.inputObjectVariable(msgFile, obj)
+		return ctx.Importer.Prefix(msgFile.OutputPkg) + p.inputObjectVariable(msgFile, obj)
 	}
 }
 
@@ -51,7 +51,7 @@ func (g *Plugin) inputObjectTypeResolver(msgFile *parsedFile, obj parser.Object)
 // 	return graphql.GqlListTypeResolver(graphql.GqlNonNullTypeResolver(res)), nil
 // }
 
-func (g *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, error) {
+func (p *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, error) {
 	var res []graphql.InputObject
 	var handledObjects = map[string]struct{}{}
 	var handleType func(typ parser.Type) error
@@ -66,7 +66,7 @@ func (g *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, erro
 				if err := handleType(property.Type); err != nil {
 					return err
 				}
-				typeResolver, err := g.TypeInputTypeResolver(file, property.Type)
+				typeResolver, err := p.TypeInputTypeResolver(file, property.Type)
 				if err != nil {
 					return errors.Wrap(err, "failed to get input type resolver")
 				}
@@ -81,8 +81,8 @@ func (g *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, erro
 				})
 			}
 			res = append(res, graphql.InputObject{
-				VariableName: g.inputObjectVariable(file, t),
-				GraphQLName:  g.inputObjectGQLName(file, t),
+				VariableName: p.inputObjectVariable(file, t),
+				GraphQLName:  p.inputObjectGQLName(file, t),
 				Fields:       fields,
 			})
 

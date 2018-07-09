@@ -77,6 +77,7 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 				return nil, errors.Wrap(err, "failed to resolve hashmap value type")
 			}
 			typ := Map{
+				Route:    route,
 				ElemType: elemType,
 			}
 			return typ, nil
@@ -145,7 +146,7 @@ func parseMethodParams(schema *spec.Swagger, method *spec.Operation) ([]MethodPa
 		}
 		pos, ok := parameterPositions[parameter.In]
 		if !ok {
-			return nil, errors.Wrapf(err, "unknown parameter position '%s'", parameter.In)
+			return nil, errors.Errorf("unknown parameter position '%s'", parameter.In)
 		}
 		res = append(res, MethodParameter{
 			Name:        parameter.Name,

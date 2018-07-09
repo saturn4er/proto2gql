@@ -20,15 +20,19 @@ const (
 	KindNull
 )
 const (
-	ParameterPositionQuery byte = iota
+	ParameterPositionQuery  byte = iota
 	ParameterPositionBody
 	ParameterPositionPath
+	ParameterPositionHeader
+	ParameterPositionFormData
 )
 
 var parameterPositions = map[string]byte{
-	"path":  ParameterPositionPath,
-	"query": ParameterPositionQuery,
-	"body":  ParameterPositionBody,
+	"path":     ParameterPositionPath,
+	"query":    ParameterPositionQuery,
+	"body":     ParameterPositionBody,
+	"header":   ParameterPositionHeader,
+	"formData": ParameterPositionFormData,
 }
 
 type Type interface {
@@ -61,6 +65,7 @@ func (s Scalar) Kind() Kind {
 }
 
 type Map struct {
+	Route    []string
 	ElemType Type
 }
 

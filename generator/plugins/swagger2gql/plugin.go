@@ -47,46 +47,45 @@ func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) 
 	// if err != nil {
 	// 	return nil, errors.Wrap(err, "failed to resolve file enums")
 	// }
-	// inputs, err := p.fileInputObjects(file)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed to prepare file input objects")
-	// }
+	inputs, err := p.fileInputObjects(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to prepare file input objects")
+	}
 	inputsResolvers, err := p.fileInputMessagesResolvers(file)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file messages resolvers")
 	}
-	// mapInputs, err := p.fileMapInputObjects(file)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed to prepare file map input objects")
-	// }
-	// mapOutputs, err := p.fileMapOutputObjects(file)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed to prepare file map output objects")
-	// }
-	// mapResolvers, err := p.fileInputMapResolvers(file)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed to prepare file map resolvers")
-	// }
+	mapInputs, err := p.fileMapInputMessages(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to prepare file map input objects")
+	}
+	mapOutputs, err := p.fileMapOutputMessages(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to prepare file map output objects")
+	}
+	mapResolvers, err := p.fileInputMapResolvers(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to prepare file map resolvers")
+	}
 	outputMessages, err := p.fileOutputMessages(file)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file output messages")
 	}
-
-	// services, err := p.fileServices(file)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed to prepare file services")
-	// }
+	services, err := p.fileServices(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to prepare file services")
+	}
 	res := &graphql.TypesFile{
 		PackageName: file.OutputPkgName,
 		Package:     file.OutputPkg,
 		// Enums:        enums,
-		// InputObjects: inputs,
-		InputObjectResolvers: inputsResolvers,
-		OutputObjects:        outputMessages,
-		// MapInputObjects:         mapInputs,
-		// MapInputObjectResolvers: mapResolvers,
-		// MapOutputObjects:        mapOutputs,
-		// Services:                services,
+		InputObjects:            inputs,
+		InputObjectResolvers:    inputsResolvers,
+		OutputObjects:           outputMessages,
+		MapInputObjects:         mapInputs,
+		MapInputObjectResolvers: mapResolvers,
+		MapOutputObjects:        mapOutputs,
+		Services:                services,
 	}
 	// spew.Dump(res)
 	return res, nil

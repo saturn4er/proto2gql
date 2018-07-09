@@ -17,14 +17,14 @@ type parsedFile struct {
 	OutputPkgName string
 }
 
-func (g *Plugin) fileOutputPath(cfg *SwaggerFileConfig) (string, error) {
+func (p *Plugin) fileOutputPath(cfg *SwaggerFileConfig) (string, error) {
 	if cfg.GetOutputPath() == "" {
 		absFilePath, err := filepath.Abs(cfg.Path)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to resolve file absolute path")
 		}
 		fileName := filepath.Base(cfg.Path)
-		pkg, err := GoPackageByPath(filepath.Dir(absFilePath), g.generateConfig.VendorPath)
+		pkg, err := GoPackageByPath(filepath.Dir(absFilePath), p.generateConfig.VendorPath)
 		var res string
 		if err != nil {
 			res, err = filepath.Abs(filepath.Join("./out/", "./"+filepath.Dir(absFilePath), strings.TrimSuffix(fileName, ".proto")+".go"))
@@ -39,12 +39,12 @@ func (g *Plugin) fileOutputPath(cfg *SwaggerFileConfig) (string, error) {
 	return filepath.Join(cfg.OutputPath, strings.TrimSuffix(filepath.Base(cfg.Path), ".proto")+".go"), nil
 }
 
-func (g *Plugin) fileOutputPackage(cfg *SwaggerFileConfig) (name, pkg string, err error) {
-	outPath, err := g.fileOutputPath(cfg)
+func (p *Plugin) fileOutputPackage(cfg *SwaggerFileConfig) (name, pkg string, err error) {
+	outPath, err := p.fileOutputPath(cfg)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve file output path")
 	}
-	pkg, err = GoPackageByPath(filepath.Dir(outPath), g.generateConfig.VendorPath)
+	pkg, err = GoPackageByPath(filepath.Dir(outPath), p.generateConfig.VendorPath)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to resolve file go package")
 	}

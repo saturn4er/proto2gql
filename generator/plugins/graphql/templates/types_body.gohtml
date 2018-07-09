@@ -315,9 +315,10 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
                                     if err != nil {
                                     	return nil, err
                                     }
-                                    return c.{{$method.CallMethod}}(p.Context, req)
+                                    return c.{{call $method.ClientMethodCaller "req" $}}
 								{{ else -}}
-                                	return c.{{$method.CallMethod}}(p.Context, new({{goTypeForNew $method.RequestType}}))
+									req := new({{goTypeForNew $method.RequestType}})
+                                	return c.{{call $method.ClientMethodCaller "req" $}}
 								{{ end -}}
 							}
 							ictx := &{{interceptorsPkg}}.Context{
@@ -341,7 +342,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 									return nil, {{errorsPkg}}.New({{fmtPkg}}.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: {{goType $method.RequestType}}", req))
 								}
 								{{if $method.PayloadErrorChecker -}}
-                                    res, err := c.{{$method.CallMethod}}(ictx.Params.Context, r)
+                                    res, err := c.{{call $method.ClientMethodCaller "r" $}}
                                     if err != nil {
                                         return nil, err
                                     }
@@ -354,7 +355,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 									}
 									return res, err
                                 {{else -}}
-                                    return c.{{$method.CallMethod}}(ictx.Params.Context, r)
+                                    return c.{{call $method.ClientMethodCaller "r" $}}
 								{{end -}}
 							})
 						},

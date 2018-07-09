@@ -33,7 +33,7 @@ func init() {
 	arrayValueTemplate = tpl
 }
 
-func (g *Plugin) renderArrayValueResolver(arg string, resultGoTyp graphql.GoType, ctx graphql.BodyContext, elemResolver graphql.ValueResolver, elemResolverWithErr bool) (string, error) {
+func (p *Plugin) renderArrayValueResolver(arg string, resultGoTyp graphql.GoType, ctx graphql.BodyContext, elemResolver graphql.ValueResolver, elemResolverWithErr bool) (string, error) {
 	res := new(bytes.Buffer)
 	err := arrayValueTemplate.Execute(res, map[string]interface{}{
 		"resultType": func() string {
@@ -49,7 +49,21 @@ func (g *Plugin) renderArrayValueResolver(arg string, resultGoTyp graphql.GoType
 	})
 	return res.String(), err
 }
-func (g *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputObjectResolver, error) {
+func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag string, method parser.Method) (graphql.InputObjectResolver, error) {
+	return graphql.InputObjectResolver{
+		FunctionName: "Resolve" + pascalize(method.OperationID) + "Params",
+		// Fields:       fields,
+		OutputGoType: graphql.GoType{
+			Kind: reflect.Ptr,
+			ElemType: &graphql.GoType{
+				Kind: reflect.Struct,
+				Name: pascalize(method.OperationID) + "Params",
+				Pkg:  file.Config.Tags[tag].ClientGoPackage,
+			},
+		},
+	}, nil
+}
+func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputObjectResolver, error) {
 	var res []graphql.InputObjectResolver
 	var handledObjects = map[string]struct{}{}
 	var handleType func(typ parser.Type) error
@@ -67,13 +81,13 @@ func (g *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 				if err != nil {
 					return errors.Wrapf(err, "failed to resolve property %s objects resolvers", property.Name)
 				}
-				valueResolver, withErr, err := g.TypeValueResolver(file, property.Type, property.Required, "")
+				valueResolver, withErr, err := p.TypeValueResolver(file, property.Type, property.Required, "")
 				if err != nil {
 					return errors.Wrap(err, "failed to get property value resolver")
 				}
 				fields = append(fields, graphql.InputObjectResolverField{
 					GraphQLInputFieldName: property.Name,
-					OutputFieldName:       pascalize(camelCase(property.Name)),
+					OutputFieldName:       pascalize(property.Name),
 					ValueResolver:         valueResolver,
 					ResolverWithError:     withErr,
 					GoType: graphql.GoType{
@@ -82,7 +96,7 @@ func (g *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 					},
 				})
 			}
-			resGoType, err := g.goTypeByParserType(file, t, true)
+			resGoType, err := p.goTypeByParserType(file, t, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to resolve object go type")
 			}
@@ -97,6 +111,11 @@ func (g *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 	}
 	for _, tag := range file.File.Tags {
 		for _, method := range tag.Methods {
+			paramsResolver, err := p.methodParametersInputObjectResolver(file, tag.Name, method)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get method partameters input object resolver")
+			}
+			res = append(res, paramsResolver)
 			for _, parameter := range method.Parameters {
 				err := handleType(parameter.Type)
 				if err != nil {

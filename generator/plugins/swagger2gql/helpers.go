@@ -29,7 +29,7 @@ var scalarsGoTypes = map[parser.Kind]graphql.GoType{
 	parser.KindString:  {Scalar: true, Kind: reflect.String},
 }
 
-func (g *Plugin) goTypeByParserType(typeFile *parsedFile, typ parser.Type, ptrObj bool) (_ graphql.GoType, err error) {
+func (p *Plugin) goTypeByParserType(typeFile *parsedFile, typ parser.Type, ptrObj bool) (_ graphql.GoType, err error) {
 	if _, isScalar := typ.(parser.Scalar); isScalar {
 		goTyp, ok := scalarsGoTypes[typ.Kind()]
 		if !ok {
@@ -55,7 +55,7 @@ func (g *Plugin) goTypeByParserType(typeFile *parsedFile, typ parser.Type, ptrOb
 			Pkg:  typeFile.Config.ModelsGoPath,
 		}, nil
 	case parser.Array:
-		elemGoType, err := g.goTypeByParserType(typeFile, t.ElemType, ptrObj)
+		elemGoType, err := p.goTypeByParserType(typeFile, t.ElemType, ptrObj)
 		if err != nil {
 			err = errors.Wrap(err, "failed to resolve array element go type")
 			return graphql.GoType{}, err
@@ -63,6 +63,18 @@ func (g *Plugin) goTypeByParserType(typeFile *parsedFile, typ parser.Type, ptrOb
 		return graphql.GoType{
 			Kind:     reflect.Slice,
 			ElemType: &elemGoType,
+		}, nil
+	case parser.Map:
+		valueType, err := p.goTypeByParserType(typeFile, t.ElemType, true)
+		if err != nil {
+			return graphql.GoType{}, errors.Wrap(err, "failed to resolve map output type")
+		}
+		return graphql.GoType{
+			Kind: reflect.Map,
+			ElemType: &graphql.GoType{
+				Kind: reflect.String,
+			},
+			Elem2Type: &valueType,
 		}, nil
 	}
 	err = errors.Errorf("unknown type %v", typ)
@@ -146,9 +158,9 @@ func camelCase(s string) string {
 
 // camelCaseSlice is like camelCase, but the argument is a slice of strings to
 // be joined with "_".
-func camelCaseSlice(elem []string) string      { return camelCase(strings.Join(elem, "")) }
-func snakeCamelCaseSlice(elem []string) string { return camelCase(strings.Join(elem, "_")) }
-func dotedTypeName(elems []string) string      { return camelCase(strings.Join(elems, ".")) }
+func camelCaseSlice(elem []string) string      { return pascalize(strings.Join(elem, "")) }
+func snakeCamelCaseSlice(elem []string) string { return pascalize(strings.Join(elem, "_")) }
+func dotedTypeName(elems []string) string      { return pascalize(strings.Join(elems, ".")) }
 func pascalize(arg string) string {
 	arg = strings.NewReplacer(">=", "Ge", "<=", "Le", ">", "Gt", "<", "Lt", "=", "Eq").Replace(arg)
 	if len(arg) == 0 || arg[0] > '9' {

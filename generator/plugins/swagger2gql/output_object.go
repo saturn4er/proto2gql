@@ -8,61 +8,61 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-func (g *Plugin) outputObjectGQLName(messageFile *parsedFile, obj parser.Object) string {
-	return messageFile.Config.GetGQLMessagePrefix() + strings.Join(obj.Route, "__")
+func (p *Plugin) outputObjectGQLName(messageFile *parsedFile, obj parser.Object) string {
+	return messageFile.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, "__"))
 }
-func (g *Plugin) outputObjectVariable(messageFile *parsedFile, obj parser.Object) string {
-	return messageFile.Config.GetGQLMessagePrefix() + strings.Join(obj.Route, "")
+func (p *Plugin) outputObjectVariable(messageFile *parsedFile, obj parser.Object) string {
+	return messageFile.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, ""))
 }
 
-func (g *Plugin) outputMessageTypeResolver(messageFile *parsedFile, obj parser.Object) (graphql.TypeResolver, error) {
+func (p *Plugin) outputMessageTypeResolver(messageFile *parsedFile, obj parser.Object) (graphql.TypeResolver, error) {
 	if len(obj.Properties) == 0 {
 		return graphql.GqlNoDataTypeResolver, nil
 	}
 	return func(ctx graphql.BodyContext) string {
-		return ctx.Importer.Prefix(messageFile.OutputPkg) + g.outputObjectVariable(messageFile, obj)
+		return ctx.Importer.Prefix(messageFile.OutputPkg) + p.outputObjectVariable(messageFile, obj)
 	}, nil
 }
 
-func (g *Plugin) outputMessageFields(file *parsedFile, obj parser.Object) ([]graphql.ObjectField, error) {
+func (p *Plugin) outputMessageFields(file *parsedFile, obj parser.Object) ([]graphql.ObjectField, error) {
 	var res []graphql.ObjectField
 	for _, field := range obj.Properties {
 		if _, ok := field.Type.(parser.Map); ok {
 			continue
 		}
-		typeResolver, err := g.TypeOutputTypeResolver(file, field.Type)
+		typeResolver, err := p.TypeOutputTypeResolver(file, field.Type, field.Required)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to prepare message %s field %s output type resolver", obj.Name, field.Name)
 		}
 		res = append(res, graphql.ObjectField{
 			Name:           field.Name,
 			Type:           typeResolver,
-			GoObjectGetter: camelCase(field.Name),
+			GoObjectGetter: pascalize(field.Name),
 		})
 	}
 	return res, nil
 }
 
-func (g *Plugin) outputMessageMapFields(file *parsedFile, msg parser.Object) ([]graphql.ObjectField, error) {
+func (p *Plugin) outputMessageMapFields(file *parsedFile, msg parser.Object) ([]graphql.ObjectField, error) {
 	var res []graphql.ObjectField
 	for _, property := range msg.Properties {
 		if _, ok := property.Type.(parser.Map); !ok {
 			continue
 		}
-		typeResolver, err := g.TypeOutputTypeResolver(file, property.Type)
+		typeResolver, err := p.TypeOutputTypeResolver(file, property.Type, property.Required)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to prepare message %s property %s output type resolver", msg.Name, property.Name)
 		}
 		res = append(res, graphql.ObjectField{
 			Name:           property.Name,
 			Type:           typeResolver,
-			GoObjectGetter: camelCase(property.Name),
+			GoObjectGetter: pascalize(property.Name),
 		})
 	}
 	return res, nil
 }
 
-func (g *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, error) {
+func (p *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, error) {
 	var res []graphql.OutputObject
 	handledObjects := map[string]struct{}{}
 	var handleType func(typ parser.Type) error
@@ -77,28 +77,36 @@ func (g *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, e
 					return errors.Wrapf(err, "failed to handle object property %s type", property.Name)
 				}
 			}
-			goTyp, err := g.goTypeByParserType(file, t, false)
+			goTyp, err := p.goTypeByParserType(file, t, false)
 			if err != nil {
 				return errors.Wrap(err, "failed to resolve object go type")
 			}
 			var fields []graphql.ObjectField
+			var mapFields []graphql.ObjectField
 			for _, prop := range t.Properties {
-				tr, err := g.TypeOutputTypeResolver(file, prop.Type)
+				tr, err := p.TypeOutputTypeResolver(file, prop.Type, prop.Required)
 				if err != nil {
 					return errors.Wrap(err, "failed to resolve property output type resolver")
 				}
-				fields = append(fields, graphql.ObjectField{
+				propObj := graphql.ObjectField{
 					Name:           prop.Name,
 					Type:           tr,
 					GoObjectGetter: pascalize(prop.Name),
 					NeedCast:       false,
-				})
+				}
+				if prop.Type.Kind() == parser.KindMap {
+					mapFields = append(mapFields, propObj)
+
+				} else {
+					fields = append(fields, propObj)
+				}
 			}
 			res = append(res, graphql.OutputObject{
-				VariableName: g.outputObjectVariable(file, t),
-				GraphQLName:  g.outputObjectGQLName(file, t),
+				VariableName: p.outputObjectVariable(file, t),
+				GraphQLName:  p.outputObjectGQLName(file, t),
 				GoType:       goTyp,
 				Fields:       fields,
+				MapFields:    mapFields,
 			})
 			handledObjects[snakeCamelCaseSlice(t.Route)] = struct{}{}
 		case parser.Array:

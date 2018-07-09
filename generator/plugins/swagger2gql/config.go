@@ -16,8 +16,9 @@ type MethodConfig struct {
 	RequestType string `mapstructure:"request_type"` // QUERY | MUTATION
 }
 type TagConfig struct {
-	Alias   string                  `mapstructure:"alias"`
-	Methods map[string]MethodConfig `mapstructure:"methods"`
+	ClientGoPackage string                  `mapstructure:"client_go_package"`
+	Alias           string                  `mapstructure:"alias"`
+	Methods         map[string]MethodConfig `mapstructure:"methods"`
 }
 type Config struct {
 	Files []*SwaggerFileConfig `mapstructure:"files"`

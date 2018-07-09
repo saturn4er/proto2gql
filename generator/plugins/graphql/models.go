@@ -12,6 +12,7 @@ type ValueResolver func(arg string, ctx BodyContext) string
 type AssigningWrapper func(arg string, ctx BodyContext) string
 type PayloadErrorChecker func(arg string) string
 type PayloadErrorAccessor func(arg string) string
+type ClientMethodCaller func(arg string, ctx BodyContext) string
 
 type GoType struct {
 	Scalar    bool
@@ -129,7 +130,7 @@ type Method struct {
 	Arguments              []MethodArgument
 	RequestResolver        ValueResolver
 	RequestResolverWithErr bool
-	CallMethod             string
+	ClientMethodCaller     ClientMethodCaller
 	RequestType            GoType
 	PayloadErrorChecker    PayloadErrorChecker
 	PayloadErrorAccessor   PayloadErrorAccessor

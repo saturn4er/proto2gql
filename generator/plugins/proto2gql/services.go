@@ -175,10 +175,12 @@ func (g Proto2GraphQL) serviceMethod(cfg MethodConfig, file *parsedFile, method 
 		return nil, errors.Wrap(err, "failed to resolve message value resolver")
 	}
 	return &graphql.Method{
-		Name:                   g.methodName(cfg, method),
-		GraphQLOutputType:      outType,
-		RequestType:            requestType,
-		CallMethod:             camelCase(method.Name),
+		Name:              g.methodName(cfg, method),
+		GraphQLOutputType: outType,
+		RequestType:       requestType,
+		ClientMethodCaller: func(arg string, ctx graphql.BodyContext) string {
+			return camelCase(method.Name) + "(ictx.Params.Context," + arg + ")"
+		},
 		RequestResolver:        valueResolver,
 		RequestResolverWithErr: valueResolverWithErr,
 		Arguments:              args,
