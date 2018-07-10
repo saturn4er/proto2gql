@@ -29,6 +29,9 @@ func GqlNonNullTypeResolver(r TypeResolver) TypeResolver {
 func GqlNoDataTypeResolver(ctx BodyContext) string {
 	return ctx.Importer.New(ScalarsPkgPath) + ".NoDataScalar"
 }
+func GqlFileTypeResolver(ctx BodyContext) string {
+	return ctx.Importer.New(ScalarsPkgPath) + ".File"
+}
 func GqlInt64TypeResolver(ctx BodyContext) string {
 	return ctx.Importer.New(ScalarsPkgPath) + ".GraphQLInt64Scalar"
 }

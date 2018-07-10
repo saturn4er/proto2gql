@@ -27,16 +27,16 @@ func (p *Plugin) fileOutputPath(cfg *SwaggerFileConfig) (string, error) {
 		pkg, err := GoPackageByPath(filepath.Dir(absFilePath), p.generateConfig.VendorPath)
 		var res string
 		if err != nil {
-			res, err = filepath.Abs(filepath.Join("./out/", "./"+filepath.Dir(absFilePath), strings.TrimSuffix(fileName, ".proto")+".go"))
+			res, err = filepath.Abs(filepath.Join("./out/", "./"+filepath.Dir(absFilePath), strings.TrimSuffix(fileName, ".json")+".go"))
 		} else {
-			res, err = filepath.Abs(filepath.Join("./out/", "./"+pkg, strings.TrimSuffix(fileName, ".proto")+".go"))
+			res, err = filepath.Abs(filepath.Join("./out/", "./"+pkg, strings.TrimSuffix(fileName, ".json")+".go"))
 		}
 		if err != nil {
 			return "", errors.Wrap(err, "failed to resolve absolute output path")
 		}
 		return res, nil
 	}
-	return filepath.Join(cfg.OutputPath, strings.TrimSuffix(filepath.Base(cfg.Path), ".proto")+".go"), nil
+	return filepath.Join(cfg.OutputPath, strings.TrimSuffix(filepath.Base(cfg.Path), ".json")+".go"), nil
 }
 
 func (p *Plugin) fileOutputPackage(cfg *SwaggerFileConfig) (name, pkg string, err error) {

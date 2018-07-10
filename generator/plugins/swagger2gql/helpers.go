@@ -19,6 +19,7 @@ var scalarsGoTypesNames = map[parser.Kind]string{
 	parser.KindInt64:   "int64",
 	parser.KindInt32:   "int32",
 	parser.KindBoolean: "bool",
+	parser.KindFile:    "File",
 }
 var scalarsGoTypes = map[parser.Kind]graphql.GoType{
 	parser.KindBoolean: {Scalar: true, Kind: reflect.Bool},

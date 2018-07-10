@@ -179,7 +179,7 @@ func (g Proto2GraphQL) serviceMethod(cfg MethodConfig, file *parsedFile, method 
 		GraphQLOutputType: outType,
 		RequestType:       requestType,
 		ClientMethodCaller: func(arg string, ctx graphql.BodyContext) string {
-			return camelCase(method.Name) + "(ictx.Params.Context," + arg + ")"
+			return camelCase(method.Name) + "(ctx," + arg + ")"
 		},
 		RequestResolver:        valueResolver,
 		RequestResolverWithErr: valueResolverWithErr,

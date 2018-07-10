@@ -13,6 +13,8 @@ var scalarsResolvers = map[parser.Kind]graphql.TypeResolver{
 	parser.KindInt64:   graphql.GqlInt64TypeResolver,
 	parser.KindInt32:   graphql.GqlInt32TypeResolver,
 	parser.KindString:  graphql.GqlStringTypeResolver,
+	parser.KindNull:    graphql.GqlNoDataTypeResolver,
+	parser.KindFile:    graphql.GqlFileTypeResolver,
 }
 
 func (p *Plugin) TypeOutputTypeResolver(typeFile *parsedFile, typ parser.Type, required bool) (graphql.TypeResolver, error) {
@@ -69,15 +71,29 @@ func (p *Plugin) TypeInputTypeResolver(typeFile *parsedFile, typ parser.Type) (g
 	return nil, errors.New("not implemented " + typ.Kind().String())
 }
 func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required bool, ctxKey string) (_ graphql.ValueResolver, withErr bool, err error) {
+	if ctxKey != "" {
+		goType, err := p.goTypeByParserType(file, typ, true)
+		if err != nil {
+			return nil, false, errors.Wrap(err, "failed to resolve go type")
+		}
+		return func(arg string, ctx graphql.BodyContext) string {
+			return `ctx.Value("` + ctxKey + `").(` + goType.String(ctx.Importer) + `)`
+		}, false, nil
+	}
 	goTyp, err := p.goTypeByParserType(file, typ, true)
 	if err != nil {
 		return nil, false, errors.Wrap(err, "failed to resolve go type by parser type")
 	}
 	switch t := typ.(type) {
 	case parser.Scalar:
+		if t.Kind() == parser.KindFile{
+			return func(arg string, ctx graphql.BodyContext) string {
+					return `ctx.Value("files")`
+			}, false, nil
+		}
 		goTyp, ok := scalarsGoTypesNames[typ.Kind()]
 		if !ok {
-			return nil, false, errors.Wrapf(err, "scalar %s is not implemented", typ.Kind())
+			return nil, false, errors.Errorf("scalar %s is not implemented", typ.Kind())
 		}
 		return func(arg string, ctx graphql.BodyContext) string {
 
@@ -90,12 +106,8 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 				"}(" + arg + ")"
 		}, false, nil
 	case parser.Object:
-		return func(arg string, ctx graphql.BodyContext) string {
-			if ctx.TracerEnabled {
-				return "Resolve" + snakeCamelCaseSlice(t.Route) + "(tr, tr.ContextWithSpan(ctx, span), " + arg + ")"
-			}
-			return "Resolve" + snakeCamelCaseSlice(t.Route) + "(ctx, " + arg + ")"
-		}, true, nil
+		return graphql.ResolverCall(file.OutputPkg, "Resolve"+snakeCamelCaseSlice(t.Route)), true, nil
+
 	case parser.Array:
 		elemResolver, elemResolverWithErr, err := p.TypeValueResolver(file, t.ElemType, false, "")
 		if err != nil {

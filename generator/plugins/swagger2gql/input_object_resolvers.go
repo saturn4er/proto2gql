@@ -33,6 +33,45 @@ func init() {
 	arrayValueTemplate = tpl
 }
 
+func (p *Plugin) inputObjectResolverFuncName(file *parsedFile, obj parser.Object) string {
+	return "Resolve" + snakeCamelCaseSlice(obj.Route)
+}
+func (p *Plugin) methodParametersInputObjectResolverFuncName(file *parsedFile, method parser.Method) string {
+	return "Resolve" + pascalize(method.OperationID) + "Params"
+}
+func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag string, method parser.Method) (*graphql.InputObjectResolver, error) {
+	var fields []graphql.InputObjectResolverField
+	for _, param := range method.Parameters {
+		goTyp, err := p.goTypeByParserType(file, param.Type, true)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to resolve parameter go type")
+		}
+		valueResolver, withErr, err := p.TypeValueResolver(file, param.Type, !param.Required, "")
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get parameter value resolver")
+		}
+		fields = append(fields, graphql.InputObjectResolverField{
+			OutputFieldName:       pascalize(param.Name),
+			GraphQLInputFieldName: param.Name,
+			GoType:                goTyp,
+			ValueResolver:         valueResolver,
+			ResolverWithError:     withErr,
+		})
+	}
+
+	return &graphql.InputObjectResolver{
+		FunctionName: p.methodParametersInputObjectResolverFuncName(file, method),
+		Fields:       fields,
+		OutputGoType: graphql.GoType{
+			Kind: reflect.Ptr,
+			ElemType: &graphql.GoType{
+				Kind: reflect.Struct,
+				Name: pascalize(method.OperationID) + "Params",
+				Pkg:  file.Config.Tags[tag].ClientGoPackage,
+			},
+		},
+	}, nil
+}
 func (p *Plugin) renderArrayValueResolver(arg string, resultGoTyp graphql.GoType, ctx graphql.BodyContext, elemResolver graphql.ValueResolver, elemResolverWithErr bool) (string, error) {
 	res := new(bytes.Buffer)
 	err := arrayValueTemplate.Execute(res, map[string]interface{}{
@@ -48,20 +87,6 @@ func (p *Plugin) renderArrayValueResolver(arg string, resultGoTyp graphql.GoType
 		},
 	})
 	return res.String(), err
-}
-func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag string, method parser.Method) (graphql.InputObjectResolver, error) {
-	return graphql.InputObjectResolver{
-		FunctionName: "Resolve" + pascalize(method.OperationID) + "Params",
-		// Fields:       fields,
-		OutputGoType: graphql.GoType{
-			Kind: reflect.Ptr,
-			ElemType: &graphql.GoType{
-				Kind: reflect.Struct,
-				Name: pascalize(method.OperationID) + "Params",
-				Pkg:  file.Config.Tags[tag].ClientGoPackage,
-			},
-		},
-	}, nil
 }
 func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputObjectResolver, error) {
 	var res []graphql.InputObjectResolver
@@ -101,7 +126,7 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 				return errors.Wrap(err, "failed to resolve object go type")
 			}
 			res = append(res, graphql.InputObjectResolver{
-				FunctionName: "Resolve" + snakeCamelCaseSlice(t.Route),
+				FunctionName: p.inputObjectResolverFuncName(file, t),
 				Fields:       fields,
 				OutputGoType: resGoType,
 			})
@@ -115,7 +140,7 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to get method partameters input object resolver")
 			}
-			res = append(res, paramsResolver)
+			res = append(res, *paramsResolver)
 			for _, parameter := range method.Parameters {
 				err := handleType(parameter.Type)
 				if err != nil {

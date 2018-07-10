@@ -12,7 +12,7 @@ func (p *Plugin) graphqlMethod(file *parsedFile, tag parser.Tag, method parser.M
 	return graphql.Method{
 		Name:              method.OperationID,
 		GraphQLOutputType: func(ctx graphql.BodyContext) string {
-			return pascalize(method.OperationID) + "ParamsInput"
+			return p.methodParamsInputObjectVariable(file, method)
 		},
 		Arguments:         nil,
 		RequestResolver: func(arg string, ctx graphql.BodyContext) string {

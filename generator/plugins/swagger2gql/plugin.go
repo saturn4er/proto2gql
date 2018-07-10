@@ -76,9 +76,9 @@ func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) 
 		return nil, errors.Wrap(err, "failed to prepare file services")
 	}
 	res := &graphql.TypesFile{
+
 		PackageName: file.OutputPkgName,
 		Package:     file.OutputPkg,
-		// Enums:        enums,
 		InputObjects:            inputs,
 		InputObjectResolvers:    inputsResolvers,
 		OutputObjects:           outputMessages,
@@ -87,7 +87,6 @@ func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) 
 		MapOutputObjects:        mapOutputs,
 		Services:                services,
 	}
-	// spew.Dump(res)
 	return res, nil
 }
 func (p *Plugin) Prepare() error {
@@ -125,7 +124,7 @@ func (p *Plugin) Prepare() error {
 		if err != nil {
 			return errors.Wrap(err, "failed to prepare types cfg")
 		}
-		p.graphql.AddTypesFile("./hello.go", gqlFile)
+		p.graphql.AddTypesFile(outPath, gqlFile)
 	}
 
 	return nil

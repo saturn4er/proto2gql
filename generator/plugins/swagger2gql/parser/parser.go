@@ -42,6 +42,40 @@ func (p *Parser) Parse(loc string, r io.Reader) (*File, error) {
 	return res, nil
 }
 
+func resolveScalarType(typ string, format string, enum []interface{}) (Type, error) {
+	switch typ {
+	case "number":
+		switch format {
+		case "float":
+			return Scalar{kind: KindFloat32}, nil
+		default:
+			return Scalar{kind: KindFloat64}, nil
+		}
+
+	case "integer":
+		switch format {
+		case "int32":
+			return Scalar{kind: KindInt32}, nil
+		default:
+			return Scalar{kind: KindInt64}, nil
+		}
+	case "boolean":
+		return Scalar{kind: KindBoolean}, nil
+	case "string": // TODO: handle file properly
+		if len(enum) > 0 {
+			var values = make([]string, len(enum))
+			for i, enum := range enum {
+				values[i] = enum.(string)
+			}
+			return Scalar{kind: KindString}, nil
+		} else {
+			return Scalar{kind: KindString}, nil
+		}
+	case "file":
+		return Scalar{kind: KindFile}, nil
+	}
+	return nil, errors.Errorf("scalar type %s is not implemented", typ)
+}
 func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) (Type, error) {
 	if schema == nil {
 		return Scalar{kind: KindNull}, nil
@@ -105,42 +139,19 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 			})
 		}
 		return typ, nil
-	case "number":
-		switch schema.Format {
-		case "float":
-			return Scalar{kind: KindFloat32}, nil
-		default:
-			return Scalar{kind: KindFloat64}, nil
-		}
-
-	case "integer":
-		switch schema.Format {
-		case "int32":
-			return Scalar{kind: KindInt32}, nil
-		default:
-			return Scalar{kind: KindInt64}, nil
-		}
-	case "boolean":
-		return Scalar{kind: KindBoolean}, nil
-	case "string":
-		if len(schema.Enum) > 0 {
-			var values = make([]string, len(schema.Enum))
-			for i, enum := range schema.Enum {
-				values[i] = enum.(string)
-			}
-			return Scalar{kind: KindString}, nil
-		} else {
-			return Scalar{kind: KindString}, nil
-		}
-	default:
-		return nil, errors.Errorf("type %s is not implemented", schema.Type[0])
-
 	}
+	return resolveScalarType(schema.Type[0], schema.Format, schema.Enum)
+}
+func parameterType(schema *spec.Swagger, method *spec.Operation, parameter spec.Parameter) (Type, error) {
+	if parameter.Ref.String() != "" || parameter.Schema != nil {
+		return resolveSchemaType([]string{method.ID}, schema, parameter.Schema)
+	}
+	return resolveScalarType(parameter.Type, parameter.Format, parameter.Enum)
 }
 func parseMethodParams(schema *spec.Swagger, method *spec.Operation) ([]MethodParameter, error) {
 	var res []MethodParameter
 	for _, parameter := range method.Parameters {
-		typ, err := resolveSchemaType([]string{method.ID}, schema, parameter.Schema)
+		typ, err := parameterType(schema, method, parameter)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to resolve %s parameter type", parameter.Name)
 		}

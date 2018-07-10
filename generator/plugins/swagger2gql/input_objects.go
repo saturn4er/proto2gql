@@ -14,6 +14,12 @@ func (p *Plugin) inputObjectGQLName(file *parsedFile, obj parser.Object) string 
 func (p *Plugin) inputObjectVariable(msgFile *parsedFile, obj parser.Object) string {
 	return msgFile.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, "")) + "Input"
 }
+func (p *Plugin) methodParamsInputObjectVariable(file *parsedFile, method parser.Method) string {
+	return file.Config.GetGQLMessagePrefix() + pascalize(method.OperationID+"Params") + "Input"
+}
+func (p *Plugin) methodParamsInputObjectGQLName(file *parsedFile, method parser.Method) string {
+	return file.Config.GetGQLMessagePrefix() + pascalize(method.OperationID+"Params") + "Input"
+}
 
 //
 func (p *Plugin) inputObjectTypeResolver(msgFile *parsedFile, obj parser.Object) graphql.TypeResolver {
@@ -50,6 +56,27 @@ func (p *Plugin) inputObjectTypeResolver(msgFile *parsedFile, obj parser.Object)
 // 	}
 // 	return graphql.GqlListTypeResolver(graphql.GqlNonNullTypeResolver(res)), nil
 // }
+
+func (p *Plugin) methodParametersInputObject(file *parsedFile, tag string, method parser.Method) graphql.InputObject {
+	var fields []graphql.ObjectField
+	for _, parameter := range method.Parameters {
+		typResovler, err := p.TypeInputTypeResolver(file, parameter.Type)
+		if err != nil {
+			panic("can't resolve parameter type" + err.Error())
+		}
+		fields = append(fields, graphql.ObjectField{
+			Name:           parameter.Name,
+			Type:           typResovler,
+			GoObjectGetter: pascalize(parameter.Name),
+			NeedCast:       false,
+		})
+	}
+	return graphql.InputObject{
+		VariableName: p.methodParamsInputObjectVariable(file, method),
+		GraphQLName:  p.methodParamsInputObjectGQLName(file, method),
+		Fields:       fields,
+	}
+}
 
 func (p *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, error) {
 	var res []graphql.InputObject
@@ -94,6 +121,7 @@ func (p *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, erro
 	}
 	for _, tag := range file.File.Tags {
 		for _, method := range tag.Methods {
+			res = append(res, p.methodParametersInputObject(file, tag.Name, method))
 			for _, parameter := range method.Parameters {
 				handleType(parameter.Type)
 			}

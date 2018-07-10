@@ -1,6 +1,9 @@
 package proto2gql
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator"
@@ -35,15 +38,43 @@ func (p *Plugin) Init(config *generator.GenerateConfig, plugins []generator.Plug
 	}
 	p.generateConfig = config
 	p.config = cfg
+	err = p.normalizeGenerateConfigPaths()
+	if err != nil {
+		return errors.Wrap(err, "failed to normalize config paths")
+	}
 	return nil
 }
-
+func (p *Plugin) normalizeGenerateConfigPaths() error {
+	for i, path := range p.config.Paths {
+		normalizedPath := os.ExpandEnv(path)
+		normalizedPath, err := filepath.Abs(normalizedPath)
+		if err != nil {
+			return errors.Wrapf(err, "failed to make normalized path '%s' absolute", normalizedPath)
+		}
+		p.config.Paths[i] = normalizedPath
+	}
+	return nil
+}
+func (p *Plugin) prepareFileConfig(fileCfg *ProtoFileConfig) error {
+	fileCfg.Paths = append(fileCfg.Paths, p.config.Paths...)
+	for _, aliases := range p.config.ImportsAliases {
+		fileCfg.ImportsAliases = append(fileCfg.ImportsAliases, aliases)
+	}
+	return nil
+}
 func (p *Plugin) Prepare() error {
 	pr := new(Proto2GraphQL)
 	pr.VendorPath = p.generateConfig.VendorPath
 	pr.GenerateTracers = p.generateConfig.GenerateTraces
 	for _, file := range p.config.Files {
-		pr.AddSourceByConfig(file)
+		err := p.prepareFileConfig(file)
+		if err != nil {
+			return errors.Wrapf(err, "failed to prepare file %s config", file.ProtoPath)
+		}
+		err = pr.AddSourceByConfig(file)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse file "+file.ProtoPath)
+		}
 	}
 	for _, file := range pr.parser.ParsedFiles() {
 		pf, err := pr.parsedFile(file)
@@ -55,7 +86,6 @@ func (p *Plugin) Prepare() error {
 		if err != nil {
 			return errors.Wrap(err, "failed to prepare file for generation")
 		}
-
 		p.graphql.AddTypesFile(pf.OutputPath, commonFile)
 	}
 	return nil

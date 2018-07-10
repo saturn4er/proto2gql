@@ -27,3 +27,12 @@ func typeIsScalar(p GoType) bool {
 	}
 	return false
 }
+
+func ResolverCall(resolverPkg, resolverFuncName string) ValueResolver {
+	return func(arg string, ctx BodyContext) string {
+		if ctx.TracerEnabled {
+			return ctx.Importer.Prefix(resolverPkg) + resolverFuncName + "(tr, tr.ContextWithSpan(ctx, span), " + arg + ")"
+		}
+		return ctx.Importer.Prefix(resolverPkg) + resolverFuncName + "(ctx, " + arg + ")"
+	}
+}

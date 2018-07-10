@@ -1,7 +1,6 @@
 package graphql
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -42,16 +41,15 @@ func (p Plugin) Name() string {
 }
 func (p *Plugin) generateTypes() error{
 	for outputPath, file := range p.files {
-		err := os.MkdirAll(filepath.Dir(outputPath), 0666)
+		err := os.MkdirAll(filepath.Dir(outputPath), 0777)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create directories for output types file %s", outputPath)
 		}
-		out, err := os.OpenFile(outputPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
+		out, err := os.OpenFile(outputPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 		if err != nil {
 			return errors.Wrapf(err, "failed to open file %s for write", outputPath)
 		}
 		err = generateTypes(file, out)
-		fmt.Println(outputPath)
 		if err != nil {
 			if cerr := out.Close(); cerr != nil {
 				err = errors.Wrap(err, cerr.Error())

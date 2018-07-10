@@ -1,5 +1,5 @@
 package parser
-
+//go:generate stringer -type=Kind
 import (
 	"github.com/go-openapi/spec"
 )
@@ -17,6 +17,7 @@ const (
 	KindArray
 	KindObject
 	KindMap
+	KindFile
 	KindNull
 )
 const (

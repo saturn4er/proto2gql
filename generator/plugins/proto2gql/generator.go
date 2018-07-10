@@ -51,6 +51,11 @@ func (g *Proto2GraphQL) parsedFile(file *parser.File) (*parsedFile, error) {
 			return f, nil
 		}
 	}
+	for _, f := range g.ParsedFiles {
+		if f.File.FilePath == file.FilePath {
+			return f, nil
+		}
+	}
 	outPath, err := g.fileOutputPath(nil, file)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to resolve file '%s' output path", file.FilePath)
