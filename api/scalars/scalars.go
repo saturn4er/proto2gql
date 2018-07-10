@@ -6,6 +6,7 @@ import (
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
+	"github.com/saturn4er/proto2gql/api/multipart_file"
 )
 
 var GraphQLInt64Scalar = graphql.NewScalar(graphql.ScalarConfig{
@@ -271,6 +272,33 @@ var NoDataScalar = graphql.NewScalar(graphql.ScalarConfig{
 	},
 	ParseValue: func(value interface{}) interface{} {
 		return 0
+	},
+	ParseLiteral: func(valueAST ast.Value) interface{} {
+		return 0
+	},
+})
+
+
+var MultipartFile = graphql.NewScalar(graphql.ScalarConfig{
+	Name:        "Upload",
+	Description: "The `Upload` scalar type represents no data.",
+	Serialize: func(value interface{}) interface{} {
+		switch t := value.(type) {
+		case multipart_file.MultipartFile:
+			return t.Header.Filename
+		case *multipart_file.MultipartFile:
+			return t.Header.Filename
+		}
+		return nil
+	},
+	ParseValue: func(value interface{}) interface{} {
+		switch t := value.(type) {
+		case multipart_file.MultipartFile:
+			return &t
+		case *multipart_file.MultipartFile:
+			return t
+		}
+		return nil
 	},
 	ParseLiteral: func(valueAST ast.Value) interface{} {
 		return 0
