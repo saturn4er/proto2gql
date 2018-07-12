@@ -72,7 +72,7 @@ func resolveScalarType(typ string, format string, enum []interface{}) (Type, err
 		return scalarBoolean, nil
 	case "string":
 		if format == "date-time" {
-			return objDateTime, nil
+			return ObjDateTime, nil
 		}
 		if len(enum) > 0 {
 			var values = make([]string, len(enum))

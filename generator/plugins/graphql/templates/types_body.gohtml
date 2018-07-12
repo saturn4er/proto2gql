@@ -139,16 +139,17 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 							if src == nil {
 								return nil, nil
 							}
+							s := *src
 							{{if $field.NeedCast -}}
-								return {{$field.CastTo}}(src.{{$field.GoObjectGetter}}), nil
+								return {{$field.CastTo}}({{call $field.Value "s" $}}), nil
 							{{else -}}
-								return src.{{$field.GoObjectGetter}}, nil
+								return {{call $field.Value "s" $}}, nil
 							{{ end -}}
 						case {{goType $object.GoType}}:
 							{{if $field.NeedCast -}}
-								return {{$field.CastTo}}(src.{{$field.GoObjectGetter}}), nil
+								return {{$field.CastTo}}({{call $field.Value "src" $}}), nil
 							{{else -}}
-								return src.{{$field.GoObjectGetter}}, nil
+								return {{call $field.Value "src" $}}, nil
 							{{end -}}
 					}
 					return nil, {{errorsPkg}}.New("source of unknown type")
@@ -165,8 +166,9 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 							if src == nil {
 								return nil, nil
 							}
+                            s := *src
 							var res []map[string]interface{}
-							for key, value := range src.{{$field.GoObjectGetter}} {
+							for key, value := range {{call $field.Value "s" $}} {
 								res = append(res, map[string]interface{}{
 									"key":   key,
 									"value": value,
@@ -175,7 +177,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 							return res, nil
 						case {{goType $object.GoType}}:
 							var res []map[string]interface{}
-							for key, value := range src.{{$field.GoObjectGetter}} {
+							for key, value := range {{call $field.Value "src" $}} {
 								res = append(res, map[string]interface{}{
 									"key":   key,
 									"value": value,

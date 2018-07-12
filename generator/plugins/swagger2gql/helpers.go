@@ -12,6 +12,11 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
+const (
+	strFmtPkg = "github.com/go-openapi/strfmt"
+	timePkg   = "time"
+)
+
 var scalarsGoTypesNames = map[parser.Kind]string{
 	parser.KindString:  "string",
 	parser.KindFloat32: "float32",
@@ -57,6 +62,21 @@ func GoPackageByPath(path, vendorPath string) (string, error) {
 	return "", errors.Errorf("path '%s' is outside GOPATH or Vendor folder", path)
 }
 func (p *Plugin) goTypeByParserType(typeFile *parsedFile, typ parser.Type, ptrObj bool) (_ graphql.GoType, err error) {
+	if typ == parser.ObjDateTime {
+		t := graphql.GoType{
+			Kind: reflect.Struct,
+			Name: "DateTime",
+			Pkg:  strFmtPkg,
+		}
+		if ptrObj {
+			tcp := t
+			t = graphql.GoType{
+				Kind:     reflect.Ptr,
+				ElemType: &tcp,
+			}
+		}
+		return t, nil
+	}
 	switch t := typ.(type) {
 	case *parser.Scalar:
 		goTyp, ok := scalarsGoTypes[t.Kind()]

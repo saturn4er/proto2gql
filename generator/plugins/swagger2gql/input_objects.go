@@ -41,10 +41,10 @@ func (p *Plugin) methodParametersInputObject(file *parsedFile, tag string, metho
 			return graphql.InputObject{}, errors.Wrapf(err, "failed to resolve parameter %s type resolver", parameter.Name)
 		}
 		fields = append(fields, graphql.ObjectField{
-			Name:           pascalize(parameter.Name),
-			Type:           typResovler,
-			GoObjectGetter: pascalize(parameter.Name),
-			NeedCast:       false,
+			Name:     pascalize(parameter.Name),
+			Type:     typResovler,
+			Value:    graphql.IdentAccessValueResolver(camelCase(pascalize(parameter.Name))),
+			NeedCast: false,
 		})
 	}
 	sort.Slice(fields, func(i, j int) bool {
@@ -81,10 +81,9 @@ func (p *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, erro
 					typeResolver = graphql.GqlNonNullTypeResolver(typeResolver)
 				}
 				fields = append(fields, graphql.ObjectField{
-					Name:           pascalize(property.Name),
-					Type:           typeResolver,
-					GoObjectGetter: "",
-					NeedCast:       false,
+					Name:     pascalize(property.Name),
+					Type:     typeResolver,
+					NeedCast: false,
 				})
 			}
 			sort.Slice(fields, func(i, j int) bool {

@@ -81,7 +81,7 @@ type InputObject struct {
 type ObjectField struct {
 	Name           string
 	Type           TypeResolver
-	GoObjectGetter string
+	Value          ValueResolver
 	NeedCast       bool
 	CastTo         GoType
 }

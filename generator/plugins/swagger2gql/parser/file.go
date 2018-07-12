@@ -39,22 +39,28 @@ var parameterPositions = map[string]byte{
 }
 
 var (
-	scalarFloat32  = &Scalar{kind: KindFloat32}
-	scalarFloat64  = &Scalar{kind: KindFloat64}
-	scalarInt32    = &Scalar{kind: KindInt32}
-	scalarInt64    = &Scalar{kind: KindInt64}
-	scalarBoolean  = &Scalar{kind: KindBoolean}
-	scalarString   = &Scalar{kind: KindString}
-	scalarFile     = &Scalar{kind: KindFile}
+	scalarFloat32 = &Scalar{kind: KindFloat32}
+	scalarFloat64 = &Scalar{kind: KindFloat64}
+	scalarInt32   = &Scalar{kind: KindInt32}
+	scalarInt64   = &Scalar{kind: KindInt64}
+	scalarBoolean = &Scalar{kind: KindBoolean}
+	scalarString  = &Scalar{kind: KindString}
+	scalarFile    = &Scalar{kind: KindFile}
 
-	objDateTime = &Object{
-		Name: "Timestamp",
+	ObjDateTime = &Object{
+		Name:  "Timestamp",
 		Route: []string{"Timestamp"},
 		Properties: []ObjectProperty{
-			Name: "seconds"
-			Description
-			Required
-			Type
+			{
+				Name:     "seconds",
+				Required: true,
+				Type:     scalarInt64,
+			},
+			{
+				Name:     "nanos",
+				Required: true,
+				Type:     scalarInt32,
+			},
 		},
 	}
 )

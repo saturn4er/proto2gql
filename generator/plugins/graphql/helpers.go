@@ -67,3 +67,9 @@ func GoPackageByPath(path, vendorPath string) (string, error) {
 	}
 	return "", errors.Errorf("path '%s' is outside GOPATH or Vendor folder", path)
 }
+
+func IdentAccessValueResolver(ident string) ValueResolver {
+	return func(arg string, ctx BodyContext) string {
+		return arg + "." + ident
+	}
+}

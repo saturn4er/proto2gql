@@ -37,9 +37,9 @@ func (g *Proto2GraphQL) outputMessageFields(file *parsedFile, msg *parser.Messag
 			return nil, errors.Wrapf(err, "failed to prepare message %s field %s output type resolver", msg.Name, field.Name)
 		}
 		res = append(res, graphql.ObjectField{
-			Name:           field.Name,
-			Type:           typeResolver,
-			GoObjectGetter: camelCase(field.Name),
+			Name:  field.Name,
+			Type:  typeResolver,
+			Value: graphql.IdentAccessValueResolver(camelCase(field.Name)),
 		})
 	}
 	for _, of := range msg.OneOffs {
@@ -53,9 +53,9 @@ func (g *Proto2GraphQL) outputMessageFields(file *parsedFile, msg *parser.Messag
 				return nil, errors.Wrapf(err, "failed to prepare message %s field %s output type resolver", msg.Name, field.Name)
 			}
 			res = append(res, graphql.ObjectField{
-				Name:           field.Name,
-				Type:           typeResolver,
-				GoObjectGetter: "Get" + camelCase(field.Name) + "()",
+				Name:  field.Name,
+				Type:  typeResolver,
+				Value: graphql.IdentAccessValueResolver("Get" + camelCase(field.Name) + "()"),
 			})
 		}
 	}
@@ -72,7 +72,7 @@ func (g *Proto2GraphQL) outputMessageMapFields(file *parsedFile, msg *parser.Mes
 		res = append(res, graphql.ObjectField{
 			Name:           field.Name,
 			Type:           typeResolver,
-			GoObjectGetter: camelCase(field.Name),
+			Value: graphql.IdentAccessValueResolver(camelCase(field.Name)),
 		})
 	}
 	return res, nil

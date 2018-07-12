@@ -112,6 +112,40 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 				"}(" + arg + ")"
 		}, false, nil
 	case *parser.Object:
+		if t == parser.ObjDateTime {
+			return func(arg string, ctx graphql.BodyContext) string {
+				if required {
+					return "func(arg interface{}) (*" + ctx.Importer.Prefix(strFmtPkg) + "DateTime, error) {" +
+						"\n if arg == nil {" +
+						"\n		return nil, nil" +
+						"\n }" +
+						"\n a := arg.(map[string]interface{})" +
+						"\n if a[\"seconds\"] == nil || a[\"nanos\"] == nil {" +
+						"\n 	return nil, " + ctx.Importer.Prefix(graphql.ErrorsPkgPath) + "New(\"not all datetime parameters passed\")" +
+						"\n }" +
+						"\n secs := a[\"seconds\"].(int64)" +
+						"\n nanos := a[\"nanos\"].(int32)" +
+						"\n t := " + ctx.Importer.Prefix(timePkg) + "Unix(secs, int64(nanos))" +
+						"\n return (*" + ctx.Importer.Prefix(strFmtPkg) + "DateTime)(&t), nil" +
+						"\n}(" + arg + ")"
+				} else {
+					return "func(arg interface{}) (_ " + ctx.Importer.Prefix(strFmtPkg) + "DateTime, err error) {" +
+						"\n if arg == nil {" +
+						"\n		return" +
+						"\n }" +
+						"\n a := arg.(map[string]interface{})" +
+						"\n if a[\"seconds\"] == nil || a[\"nanos\"] == nil {" +
+						"\n 	err = " + ctx.Importer.Prefix(graphql.ErrorsPkgPath) + "New(\"not all datetime parameters passed\")" +
+						"\n		return" +
+						"\n }" +
+						"\n secs := a[\"seconds\"].(int64)" +
+						"\n nanos := a[\"nanos\"].(int32)" +
+						"\n t := " + ctx.Importer.Prefix(timePkg) + "Unix(secs, int64(nanos))" +
+						"\n return (" + ctx.Importer.Prefix(strFmtPkg) + "DateTime)(t), nil" +
+						"\n}(" + arg + ")"
+				}
+			}, true, nil
+		}
 		return graphql.ResolverCall(file.OutputPkg, "Resolve"+snakeCamelCaseSlice(t.Route)), true, nil
 
 	case *parser.Array:

@@ -2,7 +2,6 @@ package swagger2gql
 
 import (
 	"bytes"
-	"fmt"
 	"reflect"
 	"text/template"
 
@@ -98,9 +97,8 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 		case *parser.Array:
 			return handleType(t.ElemType)
 		case *parser.Object:
-			fmt.Println(1, t.Name)
-			if t.Name == "Trigger" {
-				fmt.Println("Here")
+			if t == parser.ObjDateTime {
+				return nil
 			}
 			var fields []graphql.InputObjectResolverField
 			if _, handled := handledObjects[t]; handled {

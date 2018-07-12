@@ -35,9 +35,9 @@ func (p *Plugin) outputMessageFields(file *parsedFile, obj *parser.Object) ([]gr
 			return nil, errors.Wrapf(err, "failed to prepare message %s field %s output type resolver", obj.Name, field.Name)
 		}
 		res = append(res, graphql.ObjectField{
-			Name:           field.Name,
-			Type:           typeResolver,
-			GoObjectGetter: pascalize(field.Name),
+			Name:  field.Name,
+			Type:  typeResolver,
+			Value: graphql.IdentAccessValueResolver(pascalize(field.Name)),
 		})
 	}
 	return res, nil
@@ -54,9 +54,9 @@ func (p *Plugin) outputMessageMapFields(file *parsedFile, msg *parser.Object) ([
 			return nil, errors.Wrapf(err, "failed to prepare message %s property %s output type resolver", msg.Name, property.Name)
 		}
 		res = append(res, graphql.ObjectField{
-			Name:           property.Name,
-			Type:           typeResolver,
-			GoObjectGetter: pascalize(property.Name),
+			Name:  property.Name,
+			Type:  typeResolver,
+			Value: graphql.IdentAccessValueResolver(pascalize(property.Name)),
 		})
 	}
 	return res, nil
@@ -89,11 +89,25 @@ func (p *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, e
 				if err != nil {
 					return errors.Wrap(err, "failed to resolve property output type resolver")
 				}
+				valueResolver := graphql.IdentAccessValueResolver(pascalize(prop.Name))
+				if typ == parser.ObjDateTime {
+					switch  prop.Name {
+					case "seconds":
+						valueResolver = func(arg string, ctx graphql.BodyContext) string {
+							return `(time.Time)(` + arg + `).Unix()`
+						}
+					case "nanos":
+						valueResolver = func(arg string, ctx graphql.BodyContext) string {
+							return `int32((time.Time)(` + arg + `).Nanosecond())`
+						}
+					}
+
+				}
 				propObj := graphql.ObjectField{
-					Name:           prop.Name,
-					Type:           tr,
-					GoObjectGetter: pascalize(prop.Name),
-					NeedCast:       false,
+					Name:     prop.Name,
+					Type:     tr,
+					Value:    valueResolver,
+					NeedCast: false,
 				}
 				if prop.Type.Kind() == parser.KindMap {
 					mapFields = append(mapFields, propObj)
