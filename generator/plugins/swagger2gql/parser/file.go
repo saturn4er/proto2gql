@@ -1,4 +1,5 @@
 package parser
+
 //go:generate stringer -type=Kind
 import (
 	"github.com/go-openapi/spec"
@@ -7,7 +8,7 @@ import (
 type Kind byte
 
 const (
-	KindUnknown Kind = iota
+	KindUnknown  Kind = iota
 	KindString
 	KindInt32
 	KindInt64
@@ -18,10 +19,11 @@ const (
 	KindObject
 	KindMap
 	KindFile
+	KindDateTime
 	KindNull
 )
 const (
-	ParameterPositionQuery  byte = iota
+	ParameterPositionQuery    byte = iota
 	ParameterPositionBody
 	ParameterPositionPath
 	ParameterPositionHeader
@@ -35,6 +37,27 @@ var parameterPositions = map[string]byte{
 	"header":   ParameterPositionHeader,
 	"formData": ParameterPositionFormData,
 }
+
+var (
+	scalarFloat32  = &Scalar{kind: KindFloat32}
+	scalarFloat64  = &Scalar{kind: KindFloat64}
+	scalarInt32    = &Scalar{kind: KindInt32}
+	scalarInt64    = &Scalar{kind: KindInt64}
+	scalarBoolean  = &Scalar{kind: KindBoolean}
+	scalarString   = &Scalar{kind: KindString}
+	scalarFile     = &Scalar{kind: KindFile}
+
+	objDateTime = &Object{
+		Name: "Timestamp",
+		Route: []string{"Timestamp"},
+		Properties: []ObjectProperty{
+			Name: "seconds"
+			Description
+			Required
+			Type
+		},
+	}
+)
 
 type Type interface {
 	Kind() Kind

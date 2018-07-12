@@ -30,57 +30,6 @@ var scalarsGoTypes = map[parser.Kind]graphql.GoType{
 	parser.KindString:  {Scalar: true, Kind: reflect.String},
 }
 
-func (p *Plugin) goTypeByParserType(typeFile *parsedFile, typ parser.Type, ptrObj bool) (_ graphql.GoType, err error) {
-	if _, isScalar := typ.(parser.Scalar); isScalar {
-		goTyp, ok := scalarsGoTypes[typ.Kind()]
-		if !ok {
-			err = errors.Errorf("convertation of scalar %s to golang type is not implemented", typ.Kind())
-		}
-		return goTyp, nil
-	}
-	switch t := typ.(type) {
-	case parser.Object:
-		if ptrObj {
-			return graphql.GoType{
-				Kind: reflect.Ptr,
-				ElemType: &graphql.GoType{
-					Kind: reflect.Struct,
-					Name: pascalize(camelCaseSlice(t.Route)),
-					Pkg:  typeFile.Config.ModelsGoPath,
-				},
-			}, nil
-		}
-		return graphql.GoType{
-			Kind: reflect.Struct,
-			Name: pascalize(camelCaseSlice(t.Route)),
-			Pkg:  typeFile.Config.ModelsGoPath,
-		}, nil
-	case parser.Array:
-		elemGoType, err := p.goTypeByParserType(typeFile, t.ElemType, ptrObj)
-		if err != nil {
-			err = errors.Wrap(err, "failed to resolve array element go type")
-			return graphql.GoType{}, err
-		}
-		return graphql.GoType{
-			Kind:     reflect.Slice,
-			ElemType: &elemGoType,
-		}, nil
-	case parser.Map:
-		valueType, err := p.goTypeByParserType(typeFile, t.ElemType, true)
-		if err != nil {
-			return graphql.GoType{}, errors.Wrap(err, "failed to resolve map output type")
-		}
-		return graphql.GoType{
-			Kind: reflect.Map,
-			ElemType: &graphql.GoType{
-				Kind: reflect.String,
-			},
-			Elem2Type: &valueType,
-		}, nil
-	}
-	err = errors.Errorf("unknown type %v", typ)
-	return
-}
 func GoPackageByPath(path, vendorPath string) (string, error) {
 	path, err := filepath.Abs(path)
 	if err != nil {
@@ -106,6 +55,56 @@ func GoPackageByPath(path, vendorPath string) (string, error) {
 		}
 	}
 	return "", errors.Errorf("path '%s' is outside GOPATH or Vendor folder", path)
+}
+func (p *Plugin) goTypeByParserType(typeFile *parsedFile, typ parser.Type, ptrObj bool) (_ graphql.GoType, err error) {
+	switch t := typ.(type) {
+	case *parser.Scalar:
+		goTyp, ok := scalarsGoTypes[t.Kind()]
+		if !ok {
+			err = errors.Errorf("convertation of scalar %s to golang type is not implemented", typ.Kind())
+		}
+		return goTyp, nil
+	case *parser.Object:
+		if ptrObj {
+			return graphql.GoType{
+				Kind: reflect.Ptr,
+				ElemType: &graphql.GoType{
+					Kind: reflect.Struct,
+					Name: pascalize(camelCaseSlice(t.Route)),
+					Pkg:  typeFile.Config.ModelsGoPath,
+				},
+			}, nil
+		}
+		return graphql.GoType{
+			Kind: reflect.Struct,
+			Name: pascalize(camelCaseSlice(t.Route)),
+			Pkg:  typeFile.Config.ModelsGoPath,
+		}, nil
+	case *parser.Array:
+		elemGoType, err := p.goTypeByParserType(typeFile, t.ElemType, ptrObj)
+		if err != nil {
+			err = errors.Wrap(err, "failed to resolve array element go type")
+			return graphql.GoType{}, err
+		}
+		return graphql.GoType{
+			Kind:     reflect.Slice,
+			ElemType: &elemGoType,
+		}, nil
+	case *parser.Map:
+		valueType, err := p.goTypeByParserType(typeFile, t.ElemType, true)
+		if err != nil {
+			return graphql.GoType{}, errors.Wrap(err, "failed to resolve map output type")
+		}
+		return graphql.GoType{
+			Kind: reflect.Map,
+			ElemType: &graphql.GoType{
+				Kind: reflect.String,
+			},
+			Elem2Type: &valueType,
+		}, nil
+	}
+	err = errors.Errorf("unknown type %v", typ.Kind().String())
+	return
 }
 
 // Is c an ASCII lower-case letter?

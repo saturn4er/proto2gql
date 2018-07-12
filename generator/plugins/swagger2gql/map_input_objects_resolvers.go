@@ -10,11 +10,11 @@ import (
 
 func (p *Plugin) fileInputMapResolvers(file *parsedFile) ([]graphql.MapInputObjectResolver, error) {
 	var res []graphql.MapInputObjectResolver
-	handledObjects := map[string]struct{}{}
+	handledObjects := map[parser.Type]struct{}{}
 	var handleType func(typ parser.Type) error
 	handleType = func(typ parser.Type) error {
 		switch t := typ.(type) {
-		case parser.Map:
+		case *parser.Map:
 			valueGoType, err := p.goTypeByParserType(file, t.ElemType, false)
 			if err != nil {
 				return errors.Wrap(err, "failed to resolve map value go type")
@@ -33,17 +33,17 @@ func (p *Plugin) fileInputMapResolvers(file *parsedFile) ([]graphql.MapInputObje
 				ValueResolver:          valueResolver,
 				ValueResolverWithError: valueWithErr,
 			})
-		case parser.Object:
-			if _, handled := handledObjects[snakeCamelCaseSlice(t.Route)]; handled {
+		case *parser.Object:
+			if _, handled := handledObjects[t]; handled {
 				return nil
 			}
+			handledObjects[t] = struct{}{}
 			for _, property := range t.Properties {
 				if err := handleType(property.Type); err != nil {
 					return errors.Wrapf(err, "failed to handle object property %s type", property.Name)
 				}
 			}
-			handledObjects[snakeCamelCaseSlice(t.Route)] = struct{}{}
-		case parser.Array:
+		case *parser.Array:
 			return handleType(t.ElemType)
 		}
 		return nil

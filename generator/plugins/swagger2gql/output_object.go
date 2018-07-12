@@ -8,14 +8,14 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-func (p *Plugin) outputObjectGQLName(messageFile *parsedFile, obj parser.Object) string {
+func (p *Plugin) outputObjectGQLName(messageFile *parsedFile, obj *parser.Object) string {
 	return messageFile.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, "__"))
 }
-func (p *Plugin) outputObjectVariable(messageFile *parsedFile, obj parser.Object) string {
+func (p *Plugin) outputObjectVariable(messageFile *parsedFile, obj *parser.Object) string {
 	return messageFile.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, ""))
 }
 
-func (p *Plugin) outputMessageTypeResolver(messageFile *parsedFile, obj parser.Object) (graphql.TypeResolver, error) {
+func (p *Plugin) outputMessageTypeResolver(messageFile *parsedFile, obj *parser.Object) (graphql.TypeResolver, error) {
 	if len(obj.Properties) == 0 {
 		return graphql.GqlNoDataTypeResolver, nil
 	}
@@ -24,7 +24,7 @@ func (p *Plugin) outputMessageTypeResolver(messageFile *parsedFile, obj parser.O
 	}, nil
 }
 
-func (p *Plugin) outputMessageFields(file *parsedFile, obj parser.Object) ([]graphql.ObjectField, error) {
+func (p *Plugin) outputMessageFields(file *parsedFile, obj *parser.Object) ([]graphql.ObjectField, error) {
 	var res []graphql.ObjectField
 	for _, field := range obj.Properties {
 		if _, ok := field.Type.(parser.Map); ok {
@@ -43,7 +43,7 @@ func (p *Plugin) outputMessageFields(file *parsedFile, obj parser.Object) ([]gra
 	return res, nil
 }
 
-func (p *Plugin) outputMessageMapFields(file *parsedFile, msg parser.Object) ([]graphql.ObjectField, error) {
+func (p *Plugin) outputMessageMapFields(file *parsedFile, msg *parser.Object) ([]graphql.ObjectField, error) {
 	var res []graphql.ObjectField
 	for _, property := range msg.Properties {
 		if _, ok := property.Type.(parser.Map); !ok {
@@ -64,14 +64,15 @@ func (p *Plugin) outputMessageMapFields(file *parsedFile, msg parser.Object) ([]
 
 func (p *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, error) {
 	var res []graphql.OutputObject
-	handledObjects := map[string]struct{}{}
+	handledObjects := map[parser.Type]struct{}{}
 	var handleType func(typ parser.Type) error
 	handleType = func(typ parser.Type) error {
 		switch t := typ.(type) {
-		case parser.Object:
-			if _, handled := handledObjects[snakeCamelCaseSlice(t.Route)]; handled {
+		case *parser.Object:
+			if _, handled := handledObjects[t]; handled {
 				return nil
 			}
+			handledObjects[t] = struct{}{}
 			for _, property := range t.Properties {
 				if err := handleType(property.Type); err != nil {
 					return errors.Wrapf(err, "failed to handle object property %s type", property.Name)
@@ -108,8 +109,7 @@ func (p *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, e
 				Fields:       fields,
 				MapFields:    mapFields,
 			})
-			handledObjects[snakeCamelCaseSlice(t.Route)] = struct{}{}
-		case parser.Array:
+		case *parser.Array:
 			return handleType(t.ElemType)
 		}
 		return nil

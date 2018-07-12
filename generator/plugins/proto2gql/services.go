@@ -204,13 +204,19 @@ func (g Proto2GraphQL) serviceQueryMethods(sc ServiceConfig, file *parsedFile, s
 	return res, nil
 }
 func (g Proto2GraphQL) methodIsQuery(cfg MethodConfig, method *parser.Method) bool {
-	return !strings.HasPrefix(strings.ToLower(method.Name), "get")
+	switch cfg.RequestType{
+	case RequestTypeQuery:
+		return true
+	case RequestTypeMutation:
+		return false
+	}
+	return strings.HasPrefix(strings.ToLower(method.Name), "get")
 }
 func (g Proto2GraphQL) serviceMutationsMethods(cfg ServiceConfig, file *parsedFile, service *parser.Service) ([]graphql.Method, error) {
 	var res []graphql.Method
 	for _, method := range service.Methods {
 		mc := cfg.Methods[method.Name]
-		if !g.methodIsMutation(mc, method) {
+		if g.methodIsQuery(mc, method) {
 			continue
 		}
 		met, err := g.serviceMethod(mc, file, method)
@@ -221,9 +227,6 @@ func (g Proto2GraphQL) serviceMutationsMethods(cfg ServiceConfig, file *parsedFi
 		res = append(res, *met)
 	}
 	return res, nil
-}
-func (g Proto2GraphQL) methodIsMutation(cfg MethodConfig, method *parser.Method) bool {
-	return strings.HasPrefix(strings.ToLower(method.Name), "get")
 }
 func (g Proto2GraphQL) serviceQueryName(sc ServiceConfig, service *parser.Service) string {
 	if sc.Alias != "" {

@@ -8,25 +8,25 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-func (p *Plugin) mapInputObjectGQLName(messageFile *parsedFile, obj parser.Map) string {
+func (p *Plugin) mapInputObjectGQLName(messageFile *parsedFile, obj *parser.Map) string {
 	return messageFile.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, "__")) + "Input"
 }
-func (p *Plugin) mapInputObjectVariable(messageFile *parsedFile, obj parser.Map) string {
+func (p *Plugin) mapInputObjectVariable(messageFile *parsedFile, obj *parser.Map) string {
 	return messageFile.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, "")) + "Input"
 }
 
-func (p *Plugin) mapInputMessageTypeResolver(messageFile *parsedFile, obj parser.Map) (graphql.TypeResolver, error) {
+func (p *Plugin) mapInputMessageTypeResolver(messageFile *parsedFile, obj *parser.Map) (graphql.TypeResolver, error) {
 	return func(ctx graphql.BodyContext) string {
 		return ctx.Importer.Prefix(messageFile.OutputPkg) + p.mapInputObjectVariable(messageFile, obj)
 	}, nil
 }
 func (p *Plugin) fileMapInputMessages(file *parsedFile) ([]graphql.MapInputObject, error) {
 	var res []graphql.MapInputObject
-	handledObjects := map[string]struct{}{}
+	handledObjects := map[parser.Type]struct{}{}
 	var handleType func(typ parser.Type) error
 	handleType = func(typ parser.Type) error {
 		switch t := typ.(type) {
-		case parser.Map:
+		case *parser.Map:
 			valueType, err := p.TypeInputTypeResolver(file, t.ElemType)
 			if err != nil {
 				return errors.Wrap(err, "failed to resolve map key type")
@@ -38,17 +38,17 @@ func (p *Plugin) fileMapInputMessages(file *parsedFile) ([]graphql.MapInputObjec
 				KeyObjectType:   graphql.GqlNonNullTypeResolver(graphql.GqlStringTypeResolver),
 				ValueObjectType: valueType,
 			})
-		case parser.Object:
-			if _, handled := handledObjects[snakeCamelCaseSlice(t.Route)]; handled {
+		case *parser.Object:
+			if _, handled := handledObjects[t]; handled {
 				return nil
 			}
+			handledObjects[t] = struct{}{}
 			for _, property := range t.Properties {
 				if err := handleType(property.Type); err != nil {
 					return errors.Wrapf(err, "failed to handle object property %s type", property.Name)
 				}
 			}
-			handledObjects[snakeCamelCaseSlice(t.Route)] = struct{}{}
-		case parser.Array:
+		case *parser.Array:
 			return handleType(t.ElemType)
 		}
 		return nil

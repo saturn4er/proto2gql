@@ -7,38 +7,39 @@ import (
 )
 
 var scalarsResolvers = map[parser.Kind]graphql.TypeResolver{
-	parser.KindBoolean: graphql.GqlBoolTypeResolver,
-	parser.KindFloat64: graphql.GqlFloat64TypeResolver,
-	parser.KindFloat32: graphql.GqlFloat32TypeResolver,
-	parser.KindInt64:   graphql.GqlInt64TypeResolver,
-	parser.KindInt32:   graphql.GqlInt32TypeResolver,
-	parser.KindString:  graphql.GqlStringTypeResolver,
-	parser.KindNull:    graphql.GqlNoDataTypeResolver,
-	parser.KindFile:    graphql.GqlFileTypeResolver,
+	parser.KindBoolean:  graphql.GqlBoolTypeResolver,
+	parser.KindFloat64:  graphql.GqlFloat64TypeResolver,
+	parser.KindFloat32:  graphql.GqlFloat32TypeResolver,
+	parser.KindInt64:    graphql.GqlInt64TypeResolver,
+	parser.KindInt32:    graphql.GqlInt32TypeResolver,
+	parser.KindString:   graphql.GqlStringTypeResolver,
+	parser.KindNull:     graphql.GqlNoDataTypeResolver,
+	parser.KindFile:     graphql.GqlMultipartFileTypeResolver,
+	parser.KindDateTime: graphql.GqlStringTypeResolver,
 }
 
 func (p *Plugin) TypeOutputTypeResolver(typeFile *parsedFile, typ parser.Type, required bool) (graphql.TypeResolver, error) {
 	var res graphql.TypeResolver
 	switch t := typ.(type) {
-	case parser.Scalar:
+	case *parser.Scalar:
 		resolver, ok := scalarsResolvers[typ.Kind()]
 		if !ok {
 			return nil, errors.Errorf(": %s", typ.Kind())
 		}
 		res = resolver
-	case parser.Object:
+	case *parser.Object:
 		msgResolver, err := p.outputMessageTypeResolver(typeFile, t)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get message type resolver")
 		}
 		res = msgResolver
-	case parser.Array:
+	case *parser.Array:
 		elemResolver, err := p.TypeOutputTypeResolver(typeFile, t.ElemType, true)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get array element type resolver")
 		}
 		res = graphql.GqlListTypeResolver(elemResolver)
-	case parser.Map:
+	case *parser.Map:
 		res = func(ctx graphql.BodyContext) string {
 			return p.mapOutputObjectVariable(typeFile, t)
 		}
@@ -53,20 +54,25 @@ func (p *Plugin) TypeOutputTypeResolver(typeFile *parsedFile, typ parser.Type, r
 }
 func (p *Plugin) TypeInputTypeResolver(typeFile *parsedFile, typ parser.Type) (graphql.TypeResolver, error) {
 	switch t := typ.(type) {
-	case parser.Scalar:
+	case *parser.Scalar:
 		resolver, ok := scalarsResolvers[t.Kind()]
 		if !ok {
 			return nil, errors.Errorf("unimplemented scalar type: %s", t.Kind())
 		}
 		return resolver, nil
-	case parser.Object:
+	case *parser.Object:
 		return p.inputObjectTypeResolver(typeFile, t), nil
-	case parser.Array:
-		elemResolver, err := p.TypeOutputTypeResolver(typeFile, t.ElemType, true)
+	case *parser.Array:
+		elemResolver, err := p.TypeInputTypeResolver(typeFile, t.ElemType)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get array element type resolver")
 		}
 		return graphql.GqlListTypeResolver(elemResolver), nil
+	case *parser.Map:
+		res := func(ctx graphql.BodyContext) string {
+			return p.mapInputObjectVariable(typeFile, t)
+		}
+		return graphql.GqlListTypeResolver(graphql.GqlNonNullTypeResolver(res)), nil
 	}
 	return nil, errors.New("not implemented " + typ.Kind().String())
 }
@@ -85,10 +91,10 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 		return nil, false, errors.Wrap(err, "failed to resolve go type by parser type")
 	}
 	switch t := typ.(type) {
-	case parser.Scalar:
-		if t.Kind() == parser.KindFile{
+	case *parser.Scalar:
+		if t.Kind() == parser.KindFile {
 			return func(arg string, ctx graphql.BodyContext) string {
-					return `ctx.Value("files")`
+				return "(" + arg + ").(*" + ctx.Importer.Prefix(graphql.MultipartFilePkgPath) + "MultipartFile)"
 			}, false, nil
 		}
 		goTyp, ok := scalarsGoTypesNames[typ.Kind()]
@@ -105,10 +111,10 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 				"return &val\n" +
 				"}(" + arg + ")"
 		}, false, nil
-	case parser.Object:
+	case *parser.Object:
 		return graphql.ResolverCall(file.OutputPkg, "Resolve"+snakeCamelCaseSlice(t.Route)), true, nil
 
-	case parser.Array:
+	case *parser.Array:
 		elemResolver, elemResolverWithErr, err := p.TypeValueResolver(file, t.ElemType, false, "")
 		if err != nil {
 			return nil, false, errors.Wrap(err, "failed to get array element type value resolver")
@@ -121,7 +127,7 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 			}
 			return res
 		}, true, nil
-	case parser.Map:
+	case *parser.Map:
 		return func(arg string, ctx graphql.BodyContext) string {
 			if ctx.TracerEnabled {
 				return "Resolve" + p.mapInputObjectVariable(file, t) + "(tr, tr.ContextWithSpan(ctx, span), " + arg + ")"

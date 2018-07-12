@@ -10,15 +10,15 @@ import (
 )
 
 const (
-	PluginName      = "graphql_types"
-	PluginConfigKey = "graphql_schemas"
+	PluginName        = "graphql"
+	SchemasConfigsKey = "graphql_schemas"
 )
 
 type Plugin struct {
 	files         map[string]*TypesFile
 	schemaConfigs []SchemaConfig
+	generateCfg   *generator.GenerateConfig
 }
-
 
 func (p *Plugin) Prepare() error {
 	return nil
@@ -26,11 +26,12 @@ func (p *Plugin) Prepare() error {
 func (p *Plugin) Init(config *generator.GenerateConfig, plugins []generator.Plugin) error {
 	var cfgs []SchemaConfig
 	p.files = make(map[string]*TypesFile)
-	err := mapstructure.Decode(config.PluginsConfigs[PluginConfigKey], &cfgs)
+	err := mapstructure.Decode(config.PluginsConfigs[SchemasConfigsKey], &cfgs)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode config")
 	}
 	p.schemaConfigs = cfgs
+	p.generateCfg = config
 	return nil
 }
 func (p *Plugin) AddTypesFile(outputPath string, file *TypesFile) {
@@ -39,7 +40,7 @@ func (p *Plugin) AddTypesFile(outputPath string, file *TypesFile) {
 func (p Plugin) Name() string {
 	return PluginName
 }
-func (p *Plugin) generateTypes() error{
+func (p *Plugin) generateTypes() error {
 	for outputPath, file := range p.files {
 		err := os.MkdirAll(filepath.Dir(outputPath), 0777)
 		if err != nil {
@@ -57,15 +58,20 @@ func (p *Plugin) generateTypes() error{
 			return errors.Wrapf(err, "failed to generate types file %s", outputPath)
 		}
 		if err = out.Close(); err != nil {
-			return errors.Wrapf(err, "failed tp close generated types file %s", outputPath)
+			return errors.Wrapf(err, "failed to close generated types file %s", outputPath)
 		}
 	}
 	return nil
 }
+
 func (p *Plugin) Generate() error {
 	err := p.generateTypes()
 	if err != nil {
 		return errors.Wrap(err, "failed to generate types files")
+	}
+	err = p.generateSchemas()
+	if err != nil {
+		return errors.Wrap(err, "failed to generate schema files")
 	}
 	return nil
 }

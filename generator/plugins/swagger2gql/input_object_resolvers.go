@@ -2,6 +2,7 @@ package swagger2gql
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"text/template"
 
@@ -33,7 +34,7 @@ func init() {
 	arrayValueTemplate = tpl
 }
 
-func (p *Plugin) inputObjectResolverFuncName(file *parsedFile, obj parser.Object) string {
+func (p *Plugin) inputObjectResolverFuncName(file *parsedFile, obj *parser.Object) string {
 	return "Resolve" + snakeCamelCaseSlice(obj.Route)
 }
 func (p *Plugin) methodParametersInputObjectResolverFuncName(file *parsedFile, method parser.Method) string {
@@ -52,7 +53,7 @@ func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag strin
 		}
 		fields = append(fields, graphql.InputObjectResolverField{
 			OutputFieldName:       pascalize(param.Name),
-			GraphQLInputFieldName: param.Name,
+			GraphQLInputFieldName: pascalize(param.Name),
 			GoType:                goTyp,
 			ValueResolver:         valueResolver,
 			ResolverWithError:     withErr,
@@ -90,17 +91,22 @@ func (p *Plugin) renderArrayValueResolver(arg string, resultGoTyp graphql.GoType
 }
 func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputObjectResolver, error) {
 	var res []graphql.InputObjectResolver
-	var handledObjects = map[string]struct{}{}
+	var handledObjects = map[parser.Type]struct{}{}
 	var handleType func(typ parser.Type) error
 	handleType = func(typ parser.Type) error {
 		switch t := typ.(type) {
-		case parser.Array:
+		case *parser.Array:
 			return handleType(t.ElemType)
-		case parser.Object:
+		case *parser.Object:
+			fmt.Println(1, t.Name)
+			if t.Name == "Trigger" {
+				fmt.Println("Here")
+			}
 			var fields []graphql.InputObjectResolverField
-			if _, handled := handledObjects[snakeCamelCaseSlice(t.Route)]; handled {
+			if _, handled := handledObjects[t]; handled {
 				return nil
 			}
+			handledObjects[t] = struct{}{}
 			for _, property := range t.Properties {
 				err := handleType(property.Type)
 				if err != nil {
@@ -111,7 +117,7 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 					return errors.Wrap(err, "failed to get property value resolver")
 				}
 				fields = append(fields, graphql.InputObjectResolverField{
-					GraphQLInputFieldName: property.Name,
+					GraphQLInputFieldName: pascalize(property.Name),
 					OutputFieldName:       pascalize(property.Name),
 					ValueResolver:         valueResolver,
 					ResolverWithError:     withErr,
@@ -130,7 +136,7 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 				Fields:       fields,
 				OutputGoType: resGoType,
 			})
-			handledObjects[snakeCamelCaseSlice(t.Route)] = struct{}{}
+
 		}
 		return nil
 	}

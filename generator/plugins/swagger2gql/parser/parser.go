@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+type handledRefs map[string]Type
 type Parser struct {
 	parsedFiles []*File
 }
@@ -28,18 +29,26 @@ func (p *Parser) Parse(loc string, r io.Reader) (*File, error) {
 		return nil, errors.Wrap(err, "failed to unmarshal File")
 	}
 
-	var res = &File{
-		file:     schema,
-		BasePath: schema.BasePath,
-		Location: loc,
+	fp := fileParser{
+		schema:      schema,
+		handledRefs: make(map[string]Type),
+		result: File{
+			file:     schema,
+			BasePath: schema.BasePath,
+			Location: loc,
+		},
 	}
-	tags, err := parseFileTags(schema, res)
+	err = fp.parseTags()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to resolve file tags")
+		return nil, errors.Wrap(err, "failed to parse file tags")
 	}
-	res.Tags = tags
-	res.file = nil
-	return res, nil
+	return &fp.result, nil
+}
+
+type fileParser struct {
+	schema      *spec.Swagger
+	handledRefs handledRefs
+	result      File
 }
 
 func resolveScalarType(typ string, format string, enum []interface{}) (Type, error) {
@@ -47,42 +56,52 @@ func resolveScalarType(typ string, format string, enum []interface{}) (Type, err
 	case "number":
 		switch format {
 		case "float":
-			return Scalar{kind: KindFloat32}, nil
+			return scalarFloat32, nil
 		default:
-			return Scalar{kind: KindFloat64}, nil
+			return scalarFloat64, nil
 		}
 
 	case "integer":
 		switch format {
 		case "int32":
-			return Scalar{kind: KindInt32}, nil
+			return scalarInt32, nil
 		default:
-			return Scalar{kind: KindInt64}, nil
+			return scalarInt64, nil
 		}
 	case "boolean":
-		return Scalar{kind: KindBoolean}, nil
-	case "string": // TODO: handle file properly
+		return scalarBoolean, nil
+	case "string":
+		if format == "date-time" {
+			return objDateTime, nil
+		}
 		if len(enum) > 0 {
 			var values = make([]string, len(enum))
 			for i, enum := range enum {
 				values[i] = enum.(string)
 			}
-			return Scalar{kind: KindString}, nil
+			return scalarString, nil
 		} else {
-			return Scalar{kind: KindString}, nil
+			return scalarString, nil
 		}
 	case "file":
-		return Scalar{kind: KindFile}, nil
+		return scalarFile, nil
 	}
 	return nil, errors.Errorf("scalar type %s is not implemented", typ)
 }
-func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) (Type, error) {
+func (p *fileParser) resolveSchemaType(route []string, schema *spec.Schema) (Type, error) {
 	if schema == nil {
-		return Scalar{kind: KindNull}, nil
+		return &Scalar{kind: KindNull}, nil
 	}
-	if schema.Ref.String() != "" {
+	if p.handledRefs == nil {
+		p.handledRefs = make(map[string]Type)
+	}
+	schemaRef := schema.Ref.String()
+	if schemaRef != "" {
+		if handledType, ok := p.handledRefs[schemaRef]; ok {
+			return handledType, nil
+		}
 		var err error
-		schema, err = spec.ResolveRef(root, &schema.Ref)
+		schema, err = spec.ResolveRef(p.schema, &schema.Ref)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve $ref")
 		}
@@ -93,11 +112,11 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 	switch schema.Type[0] {
 	case "array":
 		itemSchema := schema.Items.Schema
-		itemType, err := resolveSchemaType(route, root, itemSchema)
+		itemType, err := p.resolveSchemaType(route, itemSchema)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve array items types")
 		}
-		return Array{
+		return &Array{
 			ElemType: itemType,
 		}, nil
 
@@ -106,28 +125,34 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 			route = []string{schema.Title}
 		}
 		if schema.AdditionalProperties != nil && schema.AdditionalProperties.Schema != nil {
-			elemType, err := resolveSchemaType(route, root, schema.AdditionalProperties.Schema)
+			res := &Map{
+				Route: route,
+			}
+			if schemaRef != "" {
+				p.handledRefs[schemaRef] = res
+			}
+			elemType, err := p.resolveSchemaType(route, schema.AdditionalProperties.Schema)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve hashmap value type")
 			}
-			typ := Map{
-				Route:    route,
-				ElemType: elemType,
-			}
-			return typ, nil
+			res.ElemType = elemType
+
+			return res, nil
 		}
-		typ := Object{
+		typ := &Object{
 			Route: route,
 			Name:  schema.Title,
 		}
-
+		if schemaRef != "" {
+			p.handledRefs[schemaRef] = typ
+		}
 		requiredFields := map[string]struct{}{}
 		for _, requiredField := range schema.Required {
 			requiredFields[requiredField] = struct{}{}
 		}
 		for name, prop := range schema.Properties {
 			_, required := requiredFields[name]
-			ptyp, err := resolveSchemaType(append(route, name), root, &prop)
+			ptyp, err := p.resolveSchemaType(append(route, name), &prop)
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to resolve prop '%s' type", name)
 			}
@@ -142,16 +167,16 @@ func resolveSchemaType(route []string, root *spec.Swagger, schema *spec.Schema) 
 	}
 	return resolveScalarType(schema.Type[0], schema.Format, schema.Enum)
 }
-func parameterType(schema *spec.Swagger, method *spec.Operation, parameter spec.Parameter) (Type, error) {
+func (p *fileParser) parameterType(method *spec.Operation, parameter spec.Parameter) (Type, error) {
 	if parameter.Ref.String() != "" || parameter.Schema != nil {
-		return resolveSchemaType([]string{method.ID}, schema, parameter.Schema)
+		return p.resolveSchemaType([]string{method.ID}, parameter.Schema)
 	}
 	return resolveScalarType(parameter.Type, parameter.Format, parameter.Enum)
 }
-func parseMethodParams(schema *spec.Swagger, method *spec.Operation) ([]MethodParameter, error) {
+func (p *fileParser) parseMethodParams(method *spec.Operation) ([]MethodParameter, error) {
 	var res []MethodParameter
 	for _, parameter := range method.Parameters {
-		typ, err := parameterType(schema, method, parameter)
+		typ, err := p.parameterType(method, parameter)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to resolve %s parameter type", parameter.Name)
 		}
@@ -169,10 +194,10 @@ func parseMethodParams(schema *spec.Swagger, method *spec.Operation) ([]MethodPa
 	}
 	return res, nil
 }
-func parseMethodResponses(schema *spec.Swagger, method *spec.Operation) ([]MethodResponse, error) {
+func (p *fileParser) parseMethodResponses(method *spec.Operation) ([]MethodResponse, error) {
 	var res []MethodResponse
 	for statusCode, response := range method.Responses.StatusCodeResponses {
-		typ, err := resolveSchemaType([]string{method.ID}, schema, response.Schema)
+		typ, err := p.resolveSchemaType([]string{method.ID}, response.Schema)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve schema type")
 		}
@@ -184,16 +209,16 @@ func parseMethodResponses(schema *spec.Swagger, method *spec.Operation) ([]Metho
 	}
 	return res, nil
 }
-func parseFileTags(schema *spec.Swagger, file *File) ([]Tag, error) {
+func (p *fileParser) parseTags() error {
 	var tagsByName = make(map[string]*Tag)
-	for _, tag := range schema.Tags {
+	for _, tag := range p.schema.Tags {
 		tagsByName[tag.Name] = &Tag{
 			Name:        tag.Name,
 			Description: tag.Description,
 		}
 	}
-	if schema.Paths != nil {
-		for path, pathItems := range schema.Paths.Paths {
+	if p.schema.Paths != nil {
+		for path, pathItems := range p.schema.Paths.Paths {
 			methods := map[string]*spec.Operation{
 				"GET":     pathItems.Get,
 				"PUT":     pathItems.Put,
@@ -212,13 +237,13 @@ func parseFileTags(schema *spec.Swagger, file *File) ([]Tag, error) {
 					methodTags = []string{"operations"}
 				}
 
-				params, err := parseMethodParams(schema, method)
+				params, err := p.parseMethodParams(method)
 				if err != nil {
-					return nil, errors.Wrap(err, "failed to parse method params")
+					return errors.Wrap(err, "failed to parse method params")
 				}
-				resps, err := parseMethodResponses(schema, method)
+				resps, err := p.parseMethodResponses(method)
 				if err != nil {
-					return nil, errors.Wrap(err, "failed to resolve method responses")
+					return errors.Wrap(err, "failed to resolve method responses")
 				}
 				m := Method{
 					OperationID: method.ID,
@@ -245,5 +270,6 @@ func parseFileTags(schema *spec.Swagger, file *File) ([]Tag, error) {
 	for _, tag := range tagsByName {
 		res = append(res, *tag)
 	}
-	return res, nil
+	p.result.Tags = res
+	return nil
 }

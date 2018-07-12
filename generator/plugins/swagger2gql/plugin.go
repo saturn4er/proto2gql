@@ -76,7 +76,6 @@ func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) 
 		return nil, errors.Wrap(err, "failed to prepare file services")
 	}
 	res := &graphql.TypesFile{
-
 		PackageName: file.OutputPkgName,
 		Package:     file.OutputPkg,
 		InputObjects:            inputs,

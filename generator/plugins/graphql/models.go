@@ -7,6 +7,11 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql/lib/importer"
 )
 
+const (
+	SchemaNodeTypeObject  = "OBJECT"
+	SchemaNodeTypeService = "SERVICE"
+)
+
 type TypeResolver func(ctx BodyContext) string
 type ValueResolver func(arg string, ctx BodyContext) string
 type AssigningWrapper func(arg string, ctx BodyContext) string
@@ -156,4 +161,35 @@ type BodyContext struct {
 	File          *TypesFile
 	Importer      *importer.Importer
 	TracerEnabled bool
+}
+type SchemaBodyContext struct {
+	File           SchemaConfig
+	Importer       *importer.Importer
+	SchemaName     string
+	Services       []SchemaService
+	QueryObject    string
+	MutationObject string
+	Objects        []*gqlObject
+	TracerEnabled  bool
+}
+
+type SchemaService struct {
+	Name            string
+	ConstructorName string
+	Fields          []string
+	Pkg             string
+	ClientGoType    GoType
+}
+
+type fieldConfig struct {
+	QuotedComment string
+	Name          string
+	Service       *SchemaService
+	Object        *gqlObject
+}
+type gqlObject struct {
+	QueryObject   bool
+	Name          string
+	QuotedComment string
+	Fields        []fieldConfig
 }

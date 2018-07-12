@@ -5,7 +5,10 @@ import (
 
 	"github.com/pkg/errors"
 )
-
+const (
+	RequestTypeQuery = "QUERY"
+	RequestTypeMutation = "MUTATION"
+)
 type FieldsConfig struct {
 	ContextKey string `mapstructure:"context_key"`
 }

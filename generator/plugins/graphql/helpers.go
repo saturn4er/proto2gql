@@ -1,7 +1,12 @@
 package graphql
 
 import (
+	"go/build"
+	"path/filepath"
 	"reflect"
+	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func typeIsScalar(p GoType) bool {
@@ -35,4 +40,30 @@ func ResolverCall(resolverPkg, resolverFuncName string) ValueResolver {
 		}
 		return ctx.Importer.Prefix(resolverPkg) + resolverFuncName + "(ctx, " + arg + ")"
 	}
+}
+func GoPackageByPath(path, vendorPath string) (string, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to resolve absolute filepath")
+	}
+	var prefixes []string
+	if vendorPath != "" {
+		absVendorPath, err := filepath.Abs(vendorPath)
+		if err != nil {
+			return "", errors.Wrap(err, "failed to resolve absolute vendor path")
+		}
+		prefixes = append(prefixes, absVendorPath)
+	}
+	absGoPath, err := filepath.Abs(build.Default.GOPATH)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to resolve absolute gopath")
+	}
+	prefixes = append(prefixes, filepath.Join(absGoPath, "src"))
+
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(path, prefix) {
+			return strings.TrimLeft(strings.TrimPrefix(path, prefix), " "+string(filepath.Separator)), nil
+		}
+	}
+	return "", errors.Errorf("path '%s' is outside GOPATH or Vendor folder", path)
 }

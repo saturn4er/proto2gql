@@ -1,6 +1,7 @@
 package swagger2gql
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -8,10 +9,10 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-func (p *Plugin) inputObjectGQLName(file *parsedFile, obj parser.Object) string {
+func (p *Plugin) inputObjectGQLName(file *parsedFile, obj *parser.Object) string {
 	return file.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, "__")) + "Input"
 }
-func (p *Plugin) inputObjectVariable(msgFile *parsedFile, obj parser.Object) string {
+func (p *Plugin) inputObjectVariable(msgFile *parsedFile, obj *parser.Object) string {
 	return msgFile.Config.GetGQLMessagePrefix() + pascalize(strings.Join(obj.Route, "")) + "Input"
 }
 func (p *Plugin) methodParamsInputObjectVariable(file *parsedFile, method parser.Method) string {
@@ -22,7 +23,7 @@ func (p *Plugin) methodParamsInputObjectGQLName(file *parsedFile, method parser.
 }
 
 //
-func (p *Plugin) inputObjectTypeResolver(msgFile *parsedFile, obj parser.Object) graphql.TypeResolver {
+func (p *Plugin) inputObjectTypeResolver(msgFile *parsedFile, obj *parser.Object) graphql.TypeResolver {
 	if len(obj.Properties) == 0 {
 		return graphql.GqlNoDataTypeResolver
 	}
@@ -32,62 +33,41 @@ func (p *Plugin) inputObjectTypeResolver(msgFile *parsedFile, obj parser.Object)
 	}
 }
 
-//
-// func (g *Plugin) inputMessageFieldTypeResolver(file *parsedFile, field *parser.Field) (graphql.TypeResolver, error) {
-// 	resolver, err := g.TypeOutputTypeResolver(file, field.Type)
-// 	if err != nil {
-// 		return nil, errors.Wrap(err, "failed to get input type resolver")
-// 	}
-// 	if field.Repeated {
-// 		resolver = graphql.GqlListTypeResolver(graphql.GqlNonNullTypeResolver(resolver))
-// 	}
-// 	return resolver, nil
-// }
-//
-// func (g *Plugin) outputObjectMapFieldTypeResolver(mapFile *parsedFile, mp *parser.Map) (graphql.TypeResolver, error) {
-// 	res := func(ctx graphql.BodyContext) string {
-// 		return ctx.Importer.Prefix(mapFile.OutputPkg) + g.outputMapVariable(mapFile, mp)
-// 	}
-// 	return graphql.GqlListTypeResolver(graphql.GqlNonNullTypeResolver(res)), nil
-// }
-// func (g *Plugin) inputObjectMapFieldTypeResolver(mapFile *parsedFile, mp *parser.Map) (graphql.TypeResolver, error) {
-// 	res := func(ctx graphql.BodyContext) string {
-// 		return ctx.Importer.Prefix(mapFile.OutputPkg) + g.inputMapVariable(mapFile, mp)
-// 	}
-// 	return graphql.GqlListTypeResolver(graphql.GqlNonNullTypeResolver(res)), nil
-// }
-
-func (p *Plugin) methodParametersInputObject(file *parsedFile, tag string, method parser.Method) graphql.InputObject {
+func (p *Plugin) methodParametersInputObject(file *parsedFile, tag string, method parser.Method) (graphql.InputObject, error) {
 	var fields []graphql.ObjectField
 	for _, parameter := range method.Parameters {
 		typResovler, err := p.TypeInputTypeResolver(file, parameter.Type)
 		if err != nil {
-			panic("can't resolve parameter type" + err.Error())
+			return graphql.InputObject{}, errors.Wrapf(err, "failed to resolve parameter %s type resolver", parameter.Name)
 		}
 		fields = append(fields, graphql.ObjectField{
-			Name:           parameter.Name,
+			Name:           pascalize(parameter.Name),
 			Type:           typResovler,
 			GoObjectGetter: pascalize(parameter.Name),
 			NeedCast:       false,
 		})
 	}
+	sort.Slice(fields, func(i, j int) bool {
+		return fields[i].Name > fields[j].Name
+	})
 	return graphql.InputObject{
 		VariableName: p.methodParamsInputObjectVariable(file, method),
 		GraphQLName:  p.methodParamsInputObjectGQLName(file, method),
 		Fields:       fields,
-	}
+	}, nil
 }
 
 func (p *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, error) {
 	var res []graphql.InputObject
-	var handledObjects = map[string]struct{}{}
+	var handledObjects = map[parser.Type]struct{}{}
 	var handleType func(typ parser.Type) error
 	handleType = func(typ parser.Type) error {
 		switch t := typ.(type) {
-		case parser.Object:
-			if _, handled := handledObjects[camelCaseSlice(t.Route)]; handled {
+		case *parser.Object:
+			if _, handled := handledObjects[typ]; handled {
 				return nil
 			}
+			handledObjects[typ] = struct{}{}
 			var fields []graphql.ObjectField
 			for _, property := range t.Properties {
 				if err := handleType(property.Type); err != nil {
@@ -101,31 +81,43 @@ func (p *Plugin) fileInputObjects(file *parsedFile) ([]graphql.InputObject, erro
 					typeResolver = graphql.GqlNonNullTypeResolver(typeResolver)
 				}
 				fields = append(fields, graphql.ObjectField{
-					Name:           property.Name,
+					Name:           pascalize(property.Name),
 					Type:           typeResolver,
 					GoObjectGetter: "",
 					NeedCast:       false,
 				})
 			}
+			sort.Slice(fields, func(i, j int) bool {
+				return fields[i].Name > fields[j].Name
+			})
 			res = append(res, graphql.InputObject{
 				VariableName: p.inputObjectVariable(file, t),
 				GraphQLName:  p.inputObjectGQLName(file, t),
 				Fields:       fields,
 			})
 
-			handledObjects[camelCaseSlice(t.Route)] = struct{}{}
-		case parser.Array:
+		case *parser.Array:
 			return handleType(t.ElemType)
 		}
 		return nil
 	}
 	for _, tag := range file.File.Tags {
 		for _, method := range tag.Methods {
-			res = append(res, p.methodParametersInputObject(file, tag.Name, method))
+			parametersObj, err := p.methodParametersInputObject(file, tag.Name, method)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to prepare method parameters input object")
+			}
+			res = append(res, parametersObj)
 			for _, parameter := range method.Parameters {
-				handleType(parameter.Type)
+				err := handleType(parameter.Type)
+				if err != nil {
+					return nil, errors.Wrapf(err, "failed to handle method %s parameter %s", method.OperationID, parameter.Name)
+				}
 			}
 		}
 	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].VariableName > res[j].VariableName
+	})
 	return res, nil
 }

@@ -16,9 +16,9 @@ type MethodConfig struct {
 	RequestType string `mapstructure:"request_type"` // QUERY | MUTATION
 }
 type TagConfig struct {
-	ClientGoPackage string                  `mapstructure:"client_go_package"`
-	Alias           string                  `mapstructure:"alias"`
-	Methods         map[string]MethodConfig `mapstructure:"methods"`
+	ClientGoPackage string                             `mapstructure:"client_go_package"`
+	ServiceName     string                             `mapstructure:"alias"`
+	Methods         map[string]map[string]MethodConfig `mapstructure:"methods"`
 }
 type Config struct {
 	Files []*SwaggerFileConfig `mapstructure:"files"`
@@ -40,8 +40,7 @@ type SwaggerFileConfig struct {
 
 	TagsClientsGoPackages map[string]string `mapstructure:"swagger_go_package"` // go package of protoc generated code
 
-	GQLEnumsPrefix   string `mapstructure:"gql_enums_prefix"`
-	GQLMessagePrefix string `mapstructure:"gql_messages_prefix"`
+	GQLObjectsPrefix string `mapstructure:"gql_objects_prefix"`
 
 	Tags    map[string]TagConfig      `mapstructure:"tags"`
 	Objects []map[string]ObjectConfig `mapstructure:"messages"`
@@ -82,17 +81,11 @@ func (pc *SwaggerFileConfig) GetOutputPath() string {
 	}
 	return pc.OutputPath
 }
-func (pc *SwaggerFileConfig) GetGQLEnumsPrefix() string {
-	if pc == nil {
-		return ""
-	}
-	return pc.GQLEnumsPrefix
-}
 func (pc *SwaggerFileConfig) GetGQLMessagePrefix() string {
 	if pc == nil {
 		return ""
 	}
-	return pc.GQLMessagePrefix
+	return pc.GQLObjectsPrefix
 }
 func (pc *SwaggerFileConfig) GetTags() map[string]TagConfig {
 	if pc == nil {

@@ -278,7 +278,6 @@ var NoDataScalar = graphql.NewScalar(graphql.ScalarConfig{
 	},
 })
 
-
 var MultipartFile = graphql.NewScalar(graphql.ScalarConfig{
 	Name:        "Upload",
 	Description: "The `Upload` scalar type represents no data.",

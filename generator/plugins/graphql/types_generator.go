@@ -15,12 +15,13 @@ import (
 )
 
 const (
-	ScalarsPkgPath      = "github.com/saturn4er/proto2gql/api/scalars"
-	InterceptorsPkgPath = "github.com/saturn4er/proto2gql/api/interceptors"
-	GraphqlPkgPath      = "github.com/graphql-go/graphql"
-	OpentracingPkgPath  = "github.com/opentracing/opentracing-go"
-	TracerPkgPath       = "github.com/saturn4er/proto2gql/api/tracer"
-	ErrorsPkgPath       = "github.com/pkg/errors"
+	ScalarsPkgPath       = "github.com/saturn4er/proto2gql/api/scalars"
+	MultipartFilePkgPath = "github.com/saturn4er/proto2gql/api/multipart_file"
+	InterceptorsPkgPath  = "github.com/saturn4er/proto2gql/api/interceptors"
+	GraphqlPkgPath       = "github.com/graphql-go/graphql"
+	OpentracingPkgPath   = "github.com/opentracing/opentracing-go"
+	TracerPkgPath        = "github.com/saturn4er/proto2gql/api/tracer"
+	ErrorsPkgPath        = "github.com/pkg/errors"
 )
 
 type typesGenerator struct {
