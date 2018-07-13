@@ -6,7 +6,7 @@ import (
 	fmt "fmt"
 	debug "runtime/debug"
 
-	graphql "github.com/graphql-go/graphql"
+	graphql "github.com/saturn4er/graphql"
 	errors "github.com/pkg/errors"
 	interceptors "github.com/saturn4er/proto2gql/api/interceptors"
 	scalars "github.com/saturn4er/proto2gql/api/scalars"

@@ -1,6 +1,7 @@
 package swagger2gql
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -13,6 +14,9 @@ func (p *Plugin) graphqlMethod(methodCfg MethodConfig, file *parsedFile, tag par
 	name := method.OperationID
 	if methodCfg.Alias != "" {
 		name = methodCfg.Alias
+	}
+	if name == "launchedEvents"{
+		fmt.Println(1)
 	}
 	var successResponse parser.MethodResponse
 	var successResponseFound bool

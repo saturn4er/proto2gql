@@ -1,8 +1,8 @@
 package scalars
 
 import (
-	"github.com/graphql-go/graphql/language/ast"
-	"github.com/graphql-go/graphql/language/kinds"
+	"github.com/saturn4er/graphql/language/ast"
+	"github.com/saturn4er/graphql/language/kinds"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )

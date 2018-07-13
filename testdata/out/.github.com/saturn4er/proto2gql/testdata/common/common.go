@@ -5,7 +5,7 @@ import (
 	context "context"
 	debug "runtime/debug"
 
-	graphql "github.com/graphql-go/graphql"
+	graphql "github.com/saturn4er/graphql"
 	errors "github.com/pkg/errors"
 	scalars "github.com/saturn4er/proto2gql/api/scalars"
 	tracer "github.com/saturn4er/proto2gql/api/tracer"

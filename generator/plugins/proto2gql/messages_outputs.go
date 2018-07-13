@@ -36,10 +36,17 @@ func (g *Proto2GraphQL) outputMessageFields(file *parsedFile, msg *parser.Messag
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to prepare message %s field %s output type resolver", msg.Name, field.Name)
 		}
+		if field.Repeated  {
+			typeResolver = graphql.GqlListTypeResolver(graphql.GqlNonNullTypeResolver(typeResolver))
+		}
+		valueResolver, err := g.FieldOutputValueResolver(fieldTypeFile, field.Name, field.Repeated, field.Type)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to prepare message %s field %s output value resolver", msg.Name, field.Name)
+		}
 		res = append(res, graphql.ObjectField{
 			Name:  field.Name,
 			Type:  typeResolver,
-			Value: graphql.IdentAccessValueResolver(camelCase(field.Name)),
+			Value: valueResolver,
 		})
 	}
 	for _, of := range msg.OneOffs {

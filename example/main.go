@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/graphql-go/graphql"
+	"github.com/saturn4er/graphql"
 	"github.com/saturn4er/proto2gql/example/out/example"
 	proto "github.com/saturn4er/proto2gql/example/proto"
 	"golang.org/x/net/context"

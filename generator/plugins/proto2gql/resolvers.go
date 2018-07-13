@@ -111,3 +111,52 @@ func (g *Proto2GraphQL) TypeValueResolver(typeFile *parsedFile, typ *parser.Type
 	}, false, nil
 
 }
+
+func (g *Proto2GraphQL) FieldOutputValueResolver(fieldFile *parsedFile, fieldName string, fieldRepeated bool, fieldType *parser.Type) (_ graphql.ValueResolver, err error) {
+	switch {
+	case fieldType.IsScalar(), fieldType.IsMessage():
+		return graphql.IdentAccessValueResolver(camelCase(fieldName)), nil
+	case fieldType.IsMap():
+		goKeyTyp, err := g.goTypeByParserType(fieldType.Map.KeyType)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to resolve field key go type")
+		}
+		goValueTyp, err := g.goTypeByParserType(fieldType.Map.ValueType)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to resolve field value go type")
+		}
+		return func(arg string, ctx graphql.BodyContext) string {
+			return "func(arg map[" + goKeyTyp.String(ctx.Importer) + "]" + goValueTyp.String(ctx.Importer) + ") []map[string]interface{} {" +
+				"\n  	res := make([]int, len(arg))" +
+				"\n 	for i, val := range arg {" +
+				"\n 		res[i] = int(val)" +
+				"\n		}" +
+				"\n 	return res" +
+				"\n	}(" + arg + ".Get" + camelCase(fieldName) + "())"
+		}, nil
+	case fieldType.IsEnum():
+		if fieldRepeated {
+			goTyp, err := g.goTypeByParserType(fieldType)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to resolve field go type")
+			}
+			return func(arg string, ctx graphql.BodyContext) string {
+
+				return "func(arg []" + goTyp.String(ctx.Importer) + ") []int {" +
+					"\n  	res := make([]int, len(arg))" +
+					"\n 	for i, val := range arg {" +
+					"\n 		res[i] = int(val)" +
+					"\n		}" +
+					"\n 	return res" +
+					"\n	}(" + arg + ".Get" + camelCase(fieldName) + "())"
+			}, nil
+		} else {
+			return func(arg string, ctx graphql.BodyContext) string {
+				return "int(" + arg + ".Get" + camelCase(fieldName) + "())"
+			}, nil
+		}
+	}
+	return func(arg string, ctx graphql.BodyContext) string {
+		return arg + "// not implemented"
+	}, nil
+}

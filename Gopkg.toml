@@ -29,8 +29,8 @@
   version = "1.0.0"
 
 [[constraint]]
-  name = "github.com/graphql-go/graphql"
-  version = "0.7.5"
+  name = "github.com/saturn4er/graphql"
+  version = "0.7.6"
 
 [[constraint]]
   name = "github.com/opentracing/opentracing-go"

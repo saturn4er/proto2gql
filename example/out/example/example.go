@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/graphql-go/graphql"
+	"github.com/saturn4er/graphql"
 	opentracing_go "github.com/opentracing/opentracing-go"
 	"github.com/saturn4er/proto2gql/api/interceptors"
 	"github.com/saturn4er/proto2gql/api/scalars"

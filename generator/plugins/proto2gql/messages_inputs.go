@@ -26,7 +26,7 @@ func (g *Proto2GraphQL) inputMessageTypeResolver(msgFile *parsedFile, message *p
 }
 
 func (g *Proto2GraphQL) inputMessageFieldTypeResolver(file *parsedFile, field *parser.Field) (graphql.TypeResolver, error) {
-	resolver, err := g.TypeOutputTypeResolver(file, field.Type)
+	resolver, err := g.TypeInputTypeResolver(file, field.Type)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get input type resolver")
 	}
