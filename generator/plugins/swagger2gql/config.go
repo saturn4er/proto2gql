@@ -17,7 +17,7 @@ type MethodConfig struct {
 }
 type TagConfig struct {
 	ClientGoPackage string                             `mapstructure:"client_go_package"`
-	ServiceName     string                             `mapstructure:"alias"`
+	ServiceName     string                             `mapstructure:"service_name"`
 	Methods         map[string]map[string]MethodConfig `mapstructure:"methods"`
 }
 type Config struct {

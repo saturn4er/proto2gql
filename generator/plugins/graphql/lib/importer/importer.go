@@ -75,7 +75,7 @@ func (i *Importer) New(path string) string {
 	return alias
 }
 func (i *Importer) Prefix(path string) string {
-	if i.CurrentPackage == path {
+	if i.CurrentPackage == path || path == "" {
 		return ""
 	}
 	return i.New(path) + "."
