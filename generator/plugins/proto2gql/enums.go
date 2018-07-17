@@ -12,11 +12,11 @@ func (g *Proto2GraphQL) enumTypeResolver(enumFile *parsedFile, enum *parser.Enum
 }
 
 func (g *Proto2GraphQL) enumGraphQLName(enumFile *parsedFile, enum *parser.Enum) string {
-	return enumFile.Config.GetGQLEnumsPrefix() + snakeCamelCaseSlice(enum.TypeName)
+	return enumFile.Config.GetGQLEnumsPrefix() + camelCaseSlice(enum.TypeName)
 }
 
 func (g *Proto2GraphQL) enumVariable(enumFile *parsedFile, enum *parser.Enum) string {
-	return enumFile.Config.GetGQLEnumsPrefix() + snakeCamelCaseSlice(enum.TypeName)
+	return enumFile.Config.GetGQLEnumsPrefix() + camelCaseSlice(enum.TypeName)
 }
 
 func (g *Proto2GraphQL) prepareFileEnums(file *parsedFile) ([]graphql.Enum, error) {

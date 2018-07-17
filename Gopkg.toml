@@ -30,7 +30,7 @@
 
 [[constraint]]
   name = "github.com/saturn4er/graphql"
-  version = "0.7.6"
+  version = "0.7.7"
 
 [[constraint]]
   name = "github.com/opentracing/opentracing-go"

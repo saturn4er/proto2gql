@@ -15,9 +15,6 @@ func (p *Plugin) graphqlMethod(methodCfg MethodConfig, file *parsedFile, tag par
 	if methodCfg.Alias != "" {
 		name = methodCfg.Alias
 	}
-	if name == "launchedEvents"{
-		fmt.Println(1)
-	}
 	var successResponse parser.MethodResponse
 	var successResponseFound bool
 	for _, resp := range method.Responses {
@@ -34,16 +31,38 @@ func (p *Plugin) graphqlMethod(methodCfg MethodConfig, file *parsedFile, tag par
 	if err != nil {
 		return graphql.Method{}, errors.Wrap(err, "can't get response output type resolver")
 	}
+	gqlInputObjName := p.methodParamsInputObjectGQLName(file, method)
+	cfg, err := file.Config.ObjectConfig(gqlInputObjName)
+	if err != nil {
+		return graphql.Method{}, errors.Wrap(err, "failed to resolve object config")
+	}
 	var args []graphql.MethodArgument
 	for _, param := range method.Parameters {
+		gqlName := pascalize(param.Name)
+		paramCfg := cfg.Fields[gqlName]
+		if paramCfg.ContextKey != ""{
+			continue
+		}
 		paramType, err := p.TypeInputTypeResolver(file, param.Type)
 		if err != nil {
 			return graphql.Method{}, errors.Wrapf(err, "failed to resolve parameter '%s' type resolver", param.Name)
 		}
 		args = append(args, graphql.MethodArgument{
-			Name: pascalize(param.Name),
+			Name: gqlName,
 			Type: paramType,
 		})
+	}
+	reqType := graphql.GoType{
+		Kind: reflect.Ptr,
+		ElemType: &graphql.GoType{
+			Kind: reflect.Interface,
+			Pkg:  file.Config.Tags[tag.Name].ClientGoPackage,
+			Name: pascalize(method.OperationID) + "Params",
+		},
+	}
+	respType, err := p.goTypeByParserType(file, successResponse.ResultType, true)
+	if err != nil {
+		return graphql.Method{}, errors.Wrap(err, "failed to resolve result go type")
 	}
 	return graphql.Method{
 		Name:              name,
@@ -56,17 +75,27 @@ func (p *Plugin) graphqlMethod(methodCfg MethodConfig, file *parsedFile, tag par
 			return "Resolve" + pascalize(method.OperationID) + "Params(ctx, " + arg + ")"
 		},
 		RequestResolverWithErr: true,
-		ClientMethodCaller: func(arg string, ctx graphql.BodyContext) string {
-			return pascalize(method.OperationID) + "(" + arg + ")"
+		ClientMethodCaller: func(client, req string, ctx graphql.BodyContext) string {
+			if successResponse.ResultType.Kind() == parser.KindNull {
+				return "func(req " + reqType.String(ctx.Importer) + ") (interface{}, error) {" +
+					"\n _, err := " + client + "." + pascalize(method.OperationID) + "(req)" +
+					"\n if err != nil {" +
+					"\n		return nil, err" +
+					"\n	}" +
+					"\n return nil, nil" +
+					"\n }(" + req + ")"
+			} else {
+				return "func(req " + reqType.String(ctx.Importer) + ") (_ " + respType.String(ctx.Importer) + ", rerr error) {" +
+					"\n res, err := " + client + "." + pascalize(method.OperationID) + "(req)" +
+					"\n if err != nil {" +
+					"\n		rerr = err" +
+					"\n		return" +
+					"\n	}" +
+					"\n return res.Payload, nil" +
+					"\n }(" + req + ")"
+			}
 		},
-		RequestType: graphql.GoType{
-			Kind: reflect.Ptr,
-			ElemType: &graphql.GoType{
-				Kind: reflect.Interface,
-				Pkg:  file.Config.Tags[tag.Name].ClientGoPackage,
-				Name: pascalize(method.OperationID) + "Params",
-			},
-		},
+		RequestType:          reqType,
 		PayloadErrorChecker:  nil,
 		PayloadErrorAccessor: nil,
 	}, nil
@@ -118,6 +147,9 @@ func (p *Plugin) fileServices(file *parsedFile) ([]graphql.Service, error) {
 		name := pascalize(tag.Name)
 		if tagCfg.ServiceName != "" {
 			name = tagCfg.ServiceName
+		}
+		if name == "CRMTTriggersTriggers" {
+			fmt.Println(123)
 		}
 		res = append(res, graphql.Service{
 			Name:    name,

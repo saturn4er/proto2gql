@@ -1,8 +1,6 @@
 package generator
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 )
 
@@ -32,7 +30,6 @@ func (g *Generator) RegisterPlugin(p Plugin) error {
 }
 
 func (g *Generator) Generate() error {
-	fmt.Println(g.Config.PluginsConfigs)
 	for _, plugin := range g.Plugins {
 		err := plugin.Init(g.Config, g.Plugins)
 		if err != nil {

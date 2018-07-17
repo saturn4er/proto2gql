@@ -3,7 +3,6 @@ package graphql
 import (
 	"reflect"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql/lib/importer"
 )
 
@@ -17,7 +16,7 @@ type ValueResolver func(arg string, ctx BodyContext) string
 type AssigningWrapper func(arg string, ctx BodyContext) string
 type PayloadErrorChecker func(arg string) string
 type PayloadErrorAccessor func(arg string) string
-type ClientMethodCaller func(arg string, ctx BodyContext) string
+type ClientMethodCaller func(client string, req string, ctx BodyContext) string
 
 type GoType struct {
 	Scalar    bool
@@ -45,7 +44,6 @@ func (g GoType) String(i *importer.Importer) string {
 	if g.Name != "" {
 		return i.Prefix(g.Pkg) + g.Name
 	}
-	spew.Dump(g)
 	panic("type " + g.Kind.String() + " is not supported")
 }
 
@@ -79,11 +77,11 @@ type InputObject struct {
 	Fields       []ObjectField
 }
 type ObjectField struct {
-	Name           string
-	Type           TypeResolver
-	Value          ValueResolver
-	NeedCast       bool
-	CastTo         GoType
+	Name     string
+	Type     TypeResolver
+	Value    ValueResolver
+	NeedCast bool
+	CastTo   GoType
 }
 type OutputObject struct {
 	VariableName string

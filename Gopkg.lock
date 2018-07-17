@@ -119,8 +119,8 @@
     "language/typeInfo",
     "language/visitor"
   ]
-  revision = "6f5c466708d3d7a307f2fb79b65f23d747aa7e8c"
-  version = "0.7.6"
+  revision = "330d754c1ec153ed6eff37b73d78e101b2eae15d"
+  version = "0.7.7"
 
 [[projects]]
   name = "github.com/smartystreets/assertions"
@@ -241,6 +241,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6ea092d93fa3fc111260e48e052f670d98feeaa33c03a7e292b3c9ed7846f8b8"
+  inputs-digest = "dd72128084c9e79b9d10f5590cdeb5371a070f51d3d4470836b1aa10353b6012"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -41,18 +41,25 @@ func (p *Plugin) methodParametersInputObjectResolverFuncName(file *parsedFile, m
 }
 func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag string, method parser.Method) (*graphql.InputObjectResolver, error) {
 	var fields []graphql.InputObjectResolverField
+	gqlName := p.methodParamsInputObjectGQLName(file, method)
+	cfg, err := file.Config.ObjectConfig(gqlName)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to resolve property config")
+	}
 	for _, param := range method.Parameters {
 		goTyp, err := p.goTypeByParserType(file, param.Type, true)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve parameter go type")
 		}
-		valueResolver, withErr, err := p.TypeValueResolver(file, param.Type, !param.Required, "")
+		paramGqlName := pascalize(param.Name)
+		paramCfg, _ := cfg.Fields[paramGqlName]
+		valueResolver, withErr, err := p.TypeValueResolver(file, param.Type, !param.Required, paramCfg.ContextKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get parameter value resolver")
 		}
 		fields = append(fields, graphql.InputObjectResolverField{
 			OutputFieldName:       pascalize(param.Name),
-			GraphQLInputFieldName: pascalize(param.Name),
+			GraphQLInputFieldName: paramGqlName,
 			GoType:                goTyp,
 			ValueResolver:         valueResolver,
 			ResolverWithError:     withErr,
@@ -104,18 +111,31 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 			if _, handled := handledObjects[t]; handled {
 				return nil
 			}
+			gqlObjName := p.inputObjectGQLName(file, t)
+			objCfg, err := file.Config.ObjectConfig(gqlObjName)
+			if err != nil {
+				return errors.Wrap(err, "failed to resolve object config")
+			}
 			handledObjects[t] = struct{}{}
 			for _, property := range t.Properties {
+				gqlName := pascalize(property.Name)
+				paramCfg := FieldConfig{}
+				for fieldCfgName, cfg := range objCfg.Fields {
+					if fieldCfgName == gqlName {
+						paramCfg = cfg
+						break
+					}
+				}
 				err := handleType(property.Type)
 				if err != nil {
 					return errors.Wrapf(err, "failed to resolve property %s objects resolvers", property.Name)
 				}
-				valueResolver, withErr, err := p.TypeValueResolver(file, property.Type, property.Required, "")
+				valueResolver, withErr, err := p.TypeValueResolver(file, property.Type, property.Required, paramCfg.ContextKey)
 				if err != nil {
 					return errors.Wrap(err, "failed to get property value resolver")
 				}
 				fields = append(fields, graphql.InputObjectResolverField{
-					GraphQLInputFieldName: pascalize(property.Name),
+					GraphQLInputFieldName: gqlName,
 					OutputFieldName:       pascalize(property.Name),
 					ValueResolver:         valueResolver,
 					ResolverWithError:     withErr,

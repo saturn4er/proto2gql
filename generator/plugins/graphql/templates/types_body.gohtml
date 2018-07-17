@@ -23,14 +23,13 @@
 {{ range $object := .File.InputObjects -}}
 	var {{$object.VariableName}} = {{gqlPkg}}.NewInputObject({{gqlPkg}}.InputObjectConfig{
         Name: "{{$object.GraphQLName}}",
-        Fields: {{gqlPkg}}.InputObjectConfigFieldMapThunk(func() {{gqlPkg}}.InputObjectConfigFieldMap {
-            return {{gqlPkg}}.InputObjectConfigFieldMap{
-                {{range $field := $object.Fields -}}
-                    "{{$field.Name}}": &{{gqlPkg}}.InputObjectFieldConfig{Type: {{call $field.Type $}}},
-                {{end -}}
-            }
-        }),
+        Fields: {{gqlPkg}}.InputObjectConfigFieldMap{},
     })
+	func init(){
+		{{range $field := $object.Fields -}}
+			{{$object.VariableName}}.Fields()["{{$field.Name}}"] = &{{gqlPkg}}.InputObjectField{PrivateName: "{{$field.Name}}", Type: {{call $field.Type $}}}
+		{{end -}}
+	}
 {{ end -}}
 
 // Input objects resolvers
@@ -317,10 +316,10 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
                                     if err != nil {
                                     	return nil, err
                                     }
-                                    return c.{{call $method.ClientMethodCaller "req" $}}
+                                    return {{call $method.ClientMethodCaller "c" "req" $}}
 								{{ else -}}
 									req := new({{goTypeForNew $method.RequestType}})
-                                	return c.{{call $method.ClientMethodCaller "req" $}}
+                                	return {{call $method.ClientMethodCaller "c" "req" $}}
 								{{ end -}}
 							}
 							ictx := &{{interceptorsPkg}}.Context{
@@ -344,7 +343,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 									return nil, {{errorsPkg}}.New({{fmtPkg}}.Sprintf("Resolve args interceptor returns bad request type(%T). Should be: {{goType $method.RequestType}}", req))
 								}
 								{{if $method.PayloadErrorChecker -}}
-                                    res, err := c.{{call $method.ClientMethodCaller "r" $}}
+                                    res, err := {{call $method.ClientMethodCaller "c" "r" $}}
                                     if err != nil {
                                         return nil, err
                                     }
@@ -357,7 +356,7 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 									}
 									return res, err
                                 {{else -}}
-                                    return c.{{call $method.ClientMethodCaller "r" $}}
+                                    return {{call $method.ClientMethodCaller "c" "r" $}}
 								{{end -}}
 							})
 						},

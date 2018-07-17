@@ -4,9 +4,9 @@ package parser
 
 import "strconv"
 
-const _Kind_name = "KindUnknownKindStringKindInt32KindInt64KindFloat32KindFloat64KindBooleanKindArrayKindObjectKindMapKindFileKindNull"
+const _Kind_name = "KindUnknownKindStringKindInt32KindInt64KindFloat32KindFloat64KindBooleanKindArrayKindObjectKindMapKindFileKindDateTimeKindNull"
 
-var _Kind_index = [...]uint8{0, 11, 21, 30, 39, 50, 61, 72, 81, 91, 98, 106, 114}
+var _Kind_index = [...]uint8{0, 11, 21, 30, 39, 50, 61, 72, 81, 91, 98, 106, 118, 126}
 
 func (i Kind) String() string {
 	if i >= Kind(len(_Kind_index)-1) {

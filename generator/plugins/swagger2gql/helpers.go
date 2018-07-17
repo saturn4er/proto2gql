@@ -82,6 +82,7 @@ func (p *Plugin) goTypeByParserType(typeFile *parsedFile, typ parser.Type, ptrOb
 		goTyp, ok := scalarsGoTypes[t.Kind()]
 		if !ok {
 			err = errors.Errorf("convertation of scalar %s to golang type is not implemented", typ.Kind())
+			// return
 		}
 		return goTyp, nil
 	case *parser.Object:

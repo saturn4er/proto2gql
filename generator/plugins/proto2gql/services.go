@@ -58,6 +58,9 @@ func (g Proto2GraphQL) serviceMethodArguments(cfg MethodConfig, method *parser.M
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to prepare input type resolver")
 		}
+		if field.Repeated {
+			typResolver = graphql.GqlListTypeResolver(graphql.GqlNonNullTypeResolver(typResolver))
+		}
 		args = append(args, graphql.MethodArgument{
 			Name: field.Name,
 			Type: typResolver,
@@ -178,8 +181,8 @@ func (g Proto2GraphQL) serviceMethod(cfg MethodConfig, file *parsedFile, method 
 		Name:              g.methodName(cfg, method),
 		GraphQLOutputType: outType,
 		RequestType:       requestType,
-		ClientMethodCaller: func(arg string, ctx graphql.BodyContext) string {
-			return camelCase(method.Name) + "(ctx," + arg + ")"
+		ClientMethodCaller: func(client, arg string, ctx graphql.BodyContext) string {
+			return client + "." + camelCase(method.Name) + "(ctx," + arg + ")"
 		},
 		RequestResolver:        valueResolver,
 		RequestResolverWithErr: valueResolverWithErr,
@@ -204,7 +207,7 @@ func (g Proto2GraphQL) serviceQueryMethods(sc ServiceConfig, file *parsedFile, s
 	return res, nil
 }
 func (g Proto2GraphQL) methodIsQuery(cfg MethodConfig, method *parser.Method) bool {
-	switch cfg.RequestType{
+	switch cfg.RequestType {
 	case RequestTypeQuery:
 		return true
 	case RequestTypeMutation:

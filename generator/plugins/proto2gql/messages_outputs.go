@@ -1,19 +1,20 @@
 package proto2gql
 
 import (
-	"reflect"
-	"strings"
+"reflect"
 
-	"github.com/pkg/errors"
-	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
-	"github.com/saturn4er/proto2gql/generator/plugins/proto2gql/parser"
+
+"github.com/pkg/errors"
+"github.com/saturn4er/proto2gql/generator/plugins/graphql"
+"github.com/saturn4er/proto2gql/generator/plugins/proto2gql/parser"
+
 )
 
 func (g *Proto2GraphQL) outputMessageGraphQLName(messageFile *parsedFile, message *parser.Message) string {
-	return messageFile.Config.GetGQLMessagePrefix() + strings.Join(message.TypeName, "__")
+	return messageFile.Config.GetGQLMessagePrefix() + camelCaseSlice(message.TypeName)
 }
 func (g *Proto2GraphQL) outputMessageVariable(messageFile *parsedFile, message *parser.Message) string {
-	return messageFile.Config.GetGQLMessagePrefix() + strings.Join(message.TypeName, "")
+	return messageFile.Config.GetGQLMessagePrefix() + snakeCamelCaseSlice(message.TypeName)
 }
 
 func (g *Proto2GraphQL) outputMessageTypeResolver(messageFile *parsedFile, message *parser.Message) (graphql.TypeResolver, error) {

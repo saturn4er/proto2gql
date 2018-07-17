@@ -23,26 +23,6 @@ func (p *Plugin) outputMessageTypeResolver(messageFile *parsedFile, obj *parser.
 		return ctx.Importer.Prefix(messageFile.OutputPkg) + p.outputObjectVariable(messageFile, obj)
 	}, nil
 }
-
-func (p *Plugin) outputMessageFields(file *parsedFile, obj *parser.Object) ([]graphql.ObjectField, error) {
-	var res []graphql.ObjectField
-	for _, field := range obj.Properties {
-		if _, ok := field.Type.(parser.Map); ok {
-			continue
-		}
-		typeResolver, err := p.TypeOutputTypeResolver(file, field.Type, field.Required)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to prepare message %s field %s output type resolver", obj.Name, field.Name)
-		}
-		res = append(res, graphql.ObjectField{
-			Name:  field.Name,
-			Type:  typeResolver,
-			Value: graphql.IdentAccessValueResolver(pascalize(field.Name)),
-		})
-	}
-	return res, nil
-}
-
 func (p *Plugin) outputMessageMapFields(file *parsedFile, msg *parser.Object) ([]graphql.ObjectField, error) {
 	var res []graphql.ObjectField
 	for _, property := range msg.Properties {
@@ -85,7 +65,7 @@ func (p *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, e
 			var fields []graphql.ObjectField
 			var mapFields []graphql.ObjectField
 			for _, prop := range t.Properties {
-				tr, err := p.TypeOutputTypeResolver(file, prop.Type, prop.Required)
+				tr, err := p.TypeOutputTypeResolver(file, prop.Type, false)
 				if err != nil {
 					return errors.Wrap(err, "failed to resolve property output type resolver")
 				}

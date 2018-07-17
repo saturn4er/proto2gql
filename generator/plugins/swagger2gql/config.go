@@ -1,16 +1,19 @@
 package swagger2gql
 
 import (
+	"regexp"
+
 	"github.com/pkg/errors"
 )
 
-type FieldsConfig struct {
+type FieldConfig struct {
 	ContextKey string `mapstructure:"context_key"`
 }
 type ObjectConfig struct {
-	ErrorField string                  `mapstructure:"error_field"`
-	Fields     map[string]FieldsConfig `mapstructure:"fields"`
+	ErrorField string                 `mapstructure:"error_field"`
+	Fields     map[string]FieldConfig `mapstructure:"fields"`
 }
+
 type MethodConfig struct {
 	Alias       string `mapstructure:"alias"`
 	RequestType string `mapstructure:"request_type"` // QUERY | MUTATION
@@ -43,9 +46,26 @@ type SwaggerFileConfig struct {
 	GQLObjectsPrefix string `mapstructure:"gql_objects_prefix"`
 
 	Tags    map[string]TagConfig      `mapstructure:"tags"`
-	Objects []map[string]ObjectConfig `mapstructure:"messages"`
+	Objects []map[string]ObjectConfig `mapstructure:"objects"`
 }
 
+func (pc *SwaggerFileConfig) ObjectConfig(objName string) (ObjectConfig, error) {
+	if pc == nil {
+		return ObjectConfig{}, nil
+	}
+	for _, cfgs := range pc.Objects {
+		for msgNameRegex, cfg := range cfgs {
+			r, err := regexp.Compile(msgNameRegex)
+			if err != nil {
+				return ObjectConfig{}, errors.Wrapf(err, "failed to compile object name regex '%s'", msgNameRegex)
+			}
+			if r.MatchString(objName) {
+				return cfg, nil
+			}
+		}
+	}
+	return ObjectConfig{}, nil
+}
 func (pc *SwaggerFileConfig) GetName() string {
 	if pc == nil {
 		return ""
