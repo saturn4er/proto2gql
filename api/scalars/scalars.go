@@ -17,10 +17,25 @@ var GraphQLInt64Scalar = graphql.NewScalar(graphql.ScalarConfig{
 		switch val := value.(type) {
 		case int64:
 			return val
+		case *int64:
+			if val == nil {
+				return nil
+			}
+			return int64(*val)
 		case int32:
 			return int64(val)
+		case *int32:
+			if val == nil {
+				return nil
+			}
+			return int64(*val)
 		case int:
 			return int64(val)
+		case *int:
+			if val == nil {
+				return nil
+			}
+			return int64(*val)
 		}
 		return nil
 	},
@@ -64,8 +79,18 @@ var GraphQLInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 		switch val := value.(type) {
 		case int32:
 			return val
+		case *int32:
+			if val == nil {
+				return nil
+			}
+			return int32(*val)
 		case int:
 			return int32(val)
+		case *int:
+			if val == nil {
+				return nil
+			}
+			return int32(*val)
 		}
 		return nil
 	},
@@ -79,8 +104,18 @@ var GraphQLInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 			return int32(value)
 		case int32:
 			return value
+		case *int32:
+			if val == nil {
+				return nil
+			}
+			return int32(*val)
 		case int64:
 			return int32(val)
+		case *int64:
+			if val == nil {
+				return nil
+			}
+			return int32(*val)
 		case float32:
 			return int32(val)
 		case float64:
@@ -109,10 +144,25 @@ var GraphQLUInt64Scalar = graphql.NewScalar(graphql.ScalarConfig{
 		switch val := value.(type) {
 		case uint64:
 			return val
+		case *uint64:
+			if val == nil {
+				return nil
+			}
+			return uint64(*val)
 		case uint32:
 			return uint64(val)
+		case *uint32:
+			if val == nil {
+				return nil
+			}
+			return uint64(*val)
 		case uint:
 			return uint64(val)
+		case *uint:
+			if val == nil {
+				return nil
+			}
+			return uint64(*val)
 		}
 		return nil
 	},
@@ -156,8 +206,18 @@ var GraphQLUInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 		switch val := value.(type) {
 		case uint32:
 			return val
+		case *uint32:
+			if val == nil {
+				return nil
+			}
+			return uint32(*val)
 		case uint:
 			return uint32(val)
+		case *uint:
+			if val == nil {
+				return nil
+			}
+			return uint(*val)
 		}
 		return nil
 	},
@@ -194,9 +254,19 @@ var GraphQLUInt32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 var GraphQLFloat32Scalar = graphql.NewScalar(graphql.ScalarConfig{
 	Name: "Float32",
 	Serialize: func(value interface{}) interface{} {
+		switch v := value.(type) {
+		case float32:
+			return v
+		case *float32:
+			if v == nil {
+				return nil
+			}
+			return *v
+		}
 		if val, ok := value.(float32); ok {
 			return val
 		}
+
 		return nil
 	},
 	ParseValue: func(value interface{}) interface{} {
@@ -244,10 +314,30 @@ var GraphQLFloat64Scalar = graphql.NewScalar(graphql.ScalarConfig{
 				return nil
 			}
 			return float64(value)
+		case *string:
+			if val == nil {
+				return nil
+			}
+			value, err := strconv.ParseFloat(*val, 64)
+			if err != nil {
+				return nil
+			}
+			return float64(value)
 		case float32:
 			return float64(val)
+		case *float32:
+			if val == nil {
+				return nil
+			}
+			return float64(*val)
 		case float64:
 			return val
+		case *float64:
+			if val == nil {
+				return nil
+			}
+			return *val
+
 		}
 		return nil
 	},
