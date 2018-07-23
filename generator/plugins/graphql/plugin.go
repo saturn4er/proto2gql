@@ -36,6 +36,11 @@ func (p *Plugin) Init(config *generator.GenerateConfig, plugins []generator.Plug
 	p.generateCfg = config
 	return nil
 }
+
+// Types returns info about all parsed types
+func (p *Plugin) Types() map[string]*TypesFile {
+	return p.files
+}
 func (p *Plugin) AddTypesFile(outputPath string, file *TypesFile) {
 	p.files[outputPath] = file
 }
