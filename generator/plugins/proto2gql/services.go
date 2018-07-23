@@ -118,11 +118,11 @@ func (g Proto2GraphQL) serviceMethod(cfg MethodConfig, file *parsedFile, method 
 	}
 	outType, err := g.TypeOutputTypeResolver(outputMsgTypeFile, method.OutputMessage.Type)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get output type resolver for method: ", method.Name)
+		return nil, errors.Wrapf(err, "failed to get output type resolver for method: %s", method.Name)
 	}
 	requestType, err := g.goTypeByParserType(method.InputMessage.Type)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get request go type for method: ", method.Name)
+		return nil, errors.Wrapf(err, "failed to get request go type for method: %s", method.Name)
 	}
 	args, err := g.serviceMethodArguments(cfg, method)
 	if err != nil {
