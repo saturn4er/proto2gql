@@ -3,10 +3,12 @@ package swagger2gql
 import (
 	"bytes"
 	"reflect"
+	"sort"
 	"text/template"
 
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
+	"github.com/saturn4er/proto2gql/generator/plugins/graphql/lib/names"
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
@@ -51,9 +53,9 @@ func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag strin
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve parameter go type")
 		}
-		paramGqlName := pascalize(param.Name)
+		paramGqlName := names.FilterNotSupportedFieldNameCharacters(param.Name)
 		paramCfg, _ := cfg.Fields[paramGqlName]
-		valueResolver, withErr, err := p.TypeValueResolver(file, param.Type, !param.Required, paramCfg.ContextKey)
+		valueResolver, withErr, fromArgs, err := p.TypeValueResolver(file, param.Type, !param.Required, paramCfg.ContextKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get parameter value resolver")
 		}
@@ -63,6 +65,7 @@ func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag strin
 			GoType:                goTyp,
 			ValueResolver:         valueResolver,
 			ResolverWithError:     withErr,
+			IsFromArgs:            fromArgs,
 		})
 	}
 
@@ -118,7 +121,7 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 			}
 			handledObjects[t] = struct{}{}
 			for _, property := range t.Properties {
-				gqlName := pascalize(property.Name)
+				gqlName := names.FilterNotSupportedFieldNameCharacters(property.Name)
 				paramCfg := FieldConfig{}
 				for fieldCfgName, cfg := range objCfg.Fields {
 					if fieldCfgName == gqlName {
@@ -130,7 +133,7 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 				if err != nil {
 					return errors.Wrapf(err, "failed to resolve property %s objects resolvers", property.Name)
 				}
-				valueResolver, withErr, err := p.TypeValueResolver(file, property.Type, property.Required, paramCfg.ContextKey)
+				valueResolver, withErr, fromArgs, err := p.TypeValueResolver(file, property.Type, property.Required, paramCfg.ContextKey)
 				if err != nil {
 					return errors.Wrap(err, "failed to get property value resolver")
 				}
@@ -143,12 +146,16 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 						Kind:   reflect.Uint,
 						Scalar: true,
 					},
+					IsFromArgs: fromArgs,
 				})
 			}
 			resGoType, err := p.goTypeByParserType(file, t, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to resolve object go type")
 			}
+			sort.Slice(fields, func(i, j int) bool {
+				return fields[i].GraphQLInputFieldName > fields[j].GraphQLInputFieldName
+			})
 			res = append(res, graphql.InputObjectResolver{
 				FunctionName: p.inputObjectResolverFuncName(file, t),
 				Fields:       fields,
@@ -173,5 +180,8 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 			}
 		}
 	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].FunctionName > res[j].FunctionName
+	})
 	return res, nil
 }

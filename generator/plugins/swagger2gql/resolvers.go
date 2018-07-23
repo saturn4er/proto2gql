@@ -76,30 +76,30 @@ func (p *Plugin) TypeInputTypeResolver(typeFile *parsedFile, typ parser.Type) (g
 	}
 	return nil, errors.New("not implemented " + typ.Kind().String())
 }
-func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required bool, ctxKey string) (_ graphql.ValueResolver, withErr bool, err error) {
+func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required bool, ctxKey string) (_ graphql.ValueResolver, withErr, fromArgs bool, err error) {
 	if ctxKey != "" {
 		goType, err := p.goTypeByParserType(file, typ, true)
 		if err != nil {
-			return nil, false, errors.Wrap(err, "failed to resolve go type")
+			return nil, false, false, errors.Wrap(err, "failed to resolve go type")
 		}
 		return func(arg string, ctx graphql.BodyContext) string {
 			return `ctx.Value("` + ctxKey + `").(` + goType.String(ctx.Importer) + `)`
-		}, false, nil
+		}, false, false, nil
 	}
 	goTyp, err := p.goTypeByParserType(file, typ, true)
 	if err != nil {
-		return nil, false, errors.Wrap(err, "failed to resolve go type by parser type")
+		return nil, false, false, errors.Wrap(err, "failed to resolve go type by parser type")
 	}
 	switch t := typ.(type) {
 	case *parser.Scalar:
 		if t.Kind() == parser.KindFile {
 			return func(arg string, ctx graphql.BodyContext) string {
 				return "(" + arg + ").(*" + ctx.Importer.Prefix(graphql.MultipartFilePkgPath) + "MultipartFile)"
-			}, false, nil
+			}, false, true, nil
 		}
 		goTyp, ok := scalarsGoTypesNames[typ.Kind()]
 		if !ok {
-			return nil, false, errors.Errorf("scalar %s is not implemented", typ.Kind())
+			return nil, false, false, errors.Errorf("scalar %s is not implemented", typ.Kind())
 		}
 		return func(arg string, ctx graphql.BodyContext) string {
 
@@ -110,7 +110,7 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 				"val := arg.(" + goTyp + ")\n" +
 				"return &val\n" +
 				"}(" + arg + ")"
-		}, false, nil
+		}, false, true, nil
 	case *parser.Object:
 		if t == parser.ObjDateTime {
 			return func(arg string, ctx graphql.BodyContext) string {
@@ -144,14 +144,14 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 						"\n return (" + ctx.Importer.Prefix(strFmtPkg) + "DateTime)(t), nil" +
 						"\n}(" + arg + ")"
 				}
-			}, true, nil
+			}, true, true, nil
 		}
-		return graphql.ResolverCall(file.OutputPkg, "Resolve"+snakeCamelCaseSlice(t.Route)), true, nil
+		return graphql.ResolverCall(file.OutputPkg, "Resolve"+snakeCamelCaseSlice(t.Route)), true, true, nil
 
 	case *parser.Array:
-		elemResolver, elemResolverWithErr, err := p.TypeValueResolver(file, t.ElemType, false, "")
+		elemResolver, elemResolverWithErr, _, err := p.TypeValueResolver(file, t.ElemType, false, "")
 		if err != nil {
-			return nil, false, errors.Wrap(err, "failed to get array element type value resolver")
+			return nil, false, false, errors.Wrap(err, "failed to get array element type value resolver")
 		}
 
 		return func(arg string, ctx graphql.BodyContext) string {
@@ -160,15 +160,15 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 				panic(err)
 			}
 			return res
-		}, true, nil
+		}, true, true, nil
 	case *parser.Map:
 		return func(arg string, ctx graphql.BodyContext) string {
 			if ctx.TracerEnabled {
 				return "Resolve" + p.mapInputObjectVariable(file, t) + "(tr, tr.ContextWithSpan(ctx, span), " + arg + ")"
 			}
 			return "Resolve" + p.mapInputObjectVariable(file, t) + "(ctx, " + arg + ")"
-		}, true, nil
+		}, true, true,nil
 	}
-	return nil, false, errors.Errorf("unknown type: %v", typ.Kind().String())
+	return nil, false, true, errors.Errorf("unknown type: %v", typ.Kind().String())
 
 }

@@ -69,6 +69,7 @@ type InputObjectResolverField struct {
 	GoType                GoType
 	ValueResolver         ValueResolver
 	ResolverWithError     bool
+	IsFromArgs bool
 }
 
 type InputObject struct {
@@ -77,11 +78,11 @@ type InputObject struct {
 	Fields       []ObjectField
 }
 type ObjectField struct {
-	Name     string
-	Type     TypeResolver
-	Value    ValueResolver
-	NeedCast bool
-	CastTo   GoType
+	Name       string
+	Type       TypeResolver
+	Value      ValueResolver
+	NeedCast   bool
+	CastTo     GoType
 }
 type OutputObject struct {
 	VariableName string

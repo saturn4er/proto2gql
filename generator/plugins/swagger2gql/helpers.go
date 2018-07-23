@@ -1,15 +1,20 @@
 package swagger2gql
 
 import (
-	"go/build"
-	"path/filepath"
-	"reflect"
-	"strings"
+"go/build"
+"path/filepath"
+"reflect"
+"strings"
 
-	"github.com/go-openapi/swag"
-	"github.com/pkg/errors"
-	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
-	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
+
+
+
+
+"github.com/go-openapi/swag"
+"github.com/pkg/errors"
+"github.com/saturn4er/proto2gql/generator/plugins/graphql"
+"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
+
 )
 
 const (
@@ -175,6 +180,20 @@ func camelCase(s string) string {
 		}
 	}
 	return string(t)
+}
+func pascalizeWithFirstLower(str string) string {
+	str = strings.NewReplacer(">=", "Ge", "<=", "Le", ">", "Gt", "<", "Lt", "=", "Eq").Replace(str)
+	if len(str) == 0 || str[0] > '9' {
+		return swag.ToVarName(str)
+	}
+	if str[0] == '+' {
+		return swag.ToGoName("Plus " + str[1:])
+	}
+	if str[0] == '-' {
+		return swag.ToGoName("Minus " + str[1:])
+	}
+
+	return swag.ToGoName("Nr " + str)
 }
 
 // camelCaseSlice is like camelCase, but the argument is a slice of strings to

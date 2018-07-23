@@ -173,7 +173,7 @@ func (g Proto2GraphQL) serviceMethod(cfg MethodConfig, file *parsedFile, method 
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to resolve message '%s' parsed file", dotedTypeName(method.InputMessage.TypeName))
 	}
-	valueResolver, valueResolverWithErr, err := g.TypeValueResolver(inputMessageFile, method.InputMessage.Type, "")
+	valueResolver, valueResolverWithErr, _, err := g.TypeValueResolver(inputMessageFile, method.InputMessage.Type, "")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve message value resolver")
 	}

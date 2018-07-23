@@ -1,12 +1,13 @@
 package swagger2gql
 
 import (
-	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
+	"github.com/saturn4er/proto2gql/generator/plugins/graphql/lib/names"
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
@@ -38,9 +39,9 @@ func (p *Plugin) graphqlMethod(methodCfg MethodConfig, file *parsedFile, tag par
 	}
 	var args []graphql.MethodArgument
 	for _, param := range method.Parameters {
-		gqlName := pascalize(param.Name)
+		gqlName := names.FilterNotSupportedFieldNameCharacters(param.Name)
 		paramCfg := cfg.Fields[gqlName]
-		if paramCfg.ContextKey != ""{
+		if paramCfg.ContextKey != "" {
 			continue
 		}
 		paramType, err := p.TypeInputTypeResolver(file, param.Type)
@@ -116,6 +117,9 @@ func (p *Plugin) tagQueriesMethods(tagCfg TagConfig, file *parsedFile, tag parse
 		}
 		res = append(res, meth)
 	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Name > res[j].Name
+	})
 	return res, nil
 }
 func (p *Plugin) tagMutationsMethods(tagCfg TagConfig, file *parsedFile, tag parser.Tag) ([]graphql.Method, error) {
@@ -134,6 +138,9 @@ func (p *Plugin) tagMutationsMethods(tagCfg TagConfig, file *parsedFile, tag par
 		}
 		res = append(res, meth)
 	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Name > res[j].Name
+	})
 	return res, nil
 }
 func (p *Plugin) fileServices(file *parsedFile) ([]graphql.Service, error) {
@@ -147,9 +154,6 @@ func (p *Plugin) fileServices(file *parsedFile) ([]graphql.Service, error) {
 		name := pascalize(tag.Name)
 		if tagCfg.ServiceName != "" {
 			name = tagCfg.ServiceName
-		}
-		if name == "CRMTTriggersTriggers" {
-			fmt.Println(123)
 		}
 		res = append(res, graphql.Service{
 			Name:    name,
@@ -180,5 +184,8 @@ func (p *Plugin) fileServices(file *parsedFile) ([]graphql.Service, error) {
 			},
 		})
 	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Name > res[j].Name
+	})
 	return res, nil
 }

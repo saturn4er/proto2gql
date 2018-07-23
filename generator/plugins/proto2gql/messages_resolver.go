@@ -33,8 +33,7 @@ func (g *Proto2GraphQL) fileInputMessagesResolvers(file *parsedFile) ([]graphql.
 				if err != nil {
 					return nil, errors.Wrapf(err, "failed to resolve message '%s' field '%s' type parsed file", dotedTypeName(msg.TypeName), fld)
 				}
-				fldCfg := msgCfg.Fields[fld.Name]
-				resolver, withErr, err := g.TypeValueResolver(fldTypeFile, fld.Type, fldCfg.ContextKey)
+				resolver, withErr, _, err := g.TypeValueResolver(fldTypeFile, fld.Type, "")
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to get type value resolver")
 				}
@@ -57,7 +56,7 @@ func (g *Proto2GraphQL) fileInputMessagesResolvers(file *parsedFile) ([]graphql.
 				return nil, errors.Wrapf(err, "failed to resolve message '%s' field '%s' type parsed file", dotedTypeName(msg.TypeName), fld)
 			}
 			fldCfg := msgCfg.Fields[fld.Name]
-			resolver, withErr, err := g.TypeValueResolver(fldTypeFile, fld.Type, fldCfg.ContextKey)
+			resolver, withErr, fromArgs, err := g.TypeValueResolver(fldTypeFile, fld.Type, fldCfg.ContextKey)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to get type value resolver")
 			}
@@ -78,6 +77,7 @@ func (g *Proto2GraphQL) fileInputMessagesResolvers(file *parsedFile) ([]graphql.
 				ValueResolver:         resolver,
 				ResolverWithError:     withErr,
 				GoType:                goType,
+				IsFromArgs:            fromArgs,
 			})
 		}
 		for _, fld := range msg.MapFields {
@@ -86,7 +86,7 @@ func (g *Proto2GraphQL) fileInputMessagesResolvers(file *parsedFile) ([]graphql.
 				return nil, errors.Wrapf(err, "failed to resolve message '%s' parsed file", dotedTypeName(msg.TypeName))
 			}
 			fldCfg := msgCfg.Fields[fld.Name]
-			valueResolver, withErr, err := g.TypeValueResolver(valueTypeParsedFile, fld.Type, fldCfg.ContextKey)
+			valueResolver, withErr, fromArgs, err := g.TypeValueResolver(valueTypeParsedFile, fld.Type, fldCfg.ContextKey)
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to get message '%s' map field '%s' value resolver", msg.Name, fld.Name)
 			}
@@ -95,6 +95,7 @@ func (g *Proto2GraphQL) fileInputMessagesResolvers(file *parsedFile) ([]graphql.
 				OutputFieldName:       camelCase(fld.Name),
 				ValueResolver:         valueResolver,
 				ResolverWithError:     withErr,
+				IsFromArgs:            fromArgs,
 			})
 		}
 		msgGoType, err := g.goTypeByParserType(msg.Type)
