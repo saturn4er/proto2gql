@@ -1,5 +1,20 @@
 package parser
 
+type Kind byte
+
+const (
+	TypeUndefined Kind = iota
+	TypeScalar
+	TypeMessage
+	TypeEnum
+	TypeMap
+)
+
+type TypeInterface interface {
+	Kind() Kind
+	String() string
+}
+
 type Type struct {
 	File    *File
 	Message *Message
@@ -21,6 +36,21 @@ func (p *Type) IsEnum() bool {
 
 func (p *Type) IsMap() bool {
 	return p.Map != nil
+}
+
+func (p *Type) Kind() Kind {
+	switch {
+	case p.IsMessage():
+		return TypeMessage
+	case p.IsMap():
+		return TypeMap
+	case p.IsEnum():
+		return TypeEnum
+	case p.IsScalar():
+		return TypeScalar
+	default:
+		return TypeUndefined
+	}
 }
 
 func (p *Type) String() string {

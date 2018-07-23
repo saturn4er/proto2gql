@@ -83,7 +83,7 @@ func templatesArray_value_resolverGohtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/array_value_resolver.gohtml", size: 609, mode: os.FileMode(420), modTime: time.Unix(1530883563, 0)}
+	info := bindataFileInfo{name: "templates/array_value_resolver.gohtml", size: 609, mode: os.FileMode(420), modTime: time.Unix(1531298973, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

@@ -24,7 +24,7 @@ type Message struct {
 	Fields        []*Field
 	MapFields     []*MapField
 	OneOffs       []*OneOf
-	Type          *Type
+	Type          TypeInterface
 	Descriptor    *proto.Message
 	TypeName      TypeName
 	File          *File
@@ -68,7 +68,7 @@ type Field struct {
 	QuotedComment string
 	Repeated      bool
 	descriptor    *proto.Field
-	Type          *Type
+	Type          TypeInterface
 }
 
 type MapField struct {
@@ -85,10 +85,10 @@ type OneOf struct {
 }
 
 type Map struct {
-	Type      *Type
+	Type      TypeInterface
 	Message   *Message
-	KeyType   *Type
-	ValueType *Type
+	KeyType   TypeInterface
+	ValueType TypeInterface
 	Field     *proto.MapField
 	File      *File
 }

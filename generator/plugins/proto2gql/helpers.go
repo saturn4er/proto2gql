@@ -32,7 +32,7 @@ var goTypesScalars = map[string]graphql.GoType{
 	"fixed64": {Scalar: true, Kind: reflect.Uint64},
 }
 
-func (g *Proto2GraphQL) goTypeByParserType(typ *parser.Type) (_ graphql.GoType, err error) {
+func (g *Proto2GraphQL) goTypeByParserType(typ *parser.TypeInterface) (_ graphql.GoType, err error) {
 	if typ.IsScalar() {
 		res, ok := goTypesScalars[typ.Scalar]
 		if !ok {

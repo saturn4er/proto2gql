@@ -6,7 +6,7 @@ type Enum struct {
 	Name          string
 	QuotedComment string
 	Values        []*EnumValue
-	Type          *Type
+	Type          TypeInterface
 	File          *File
 	TypeName      TypeName
 	Descriptor    *proto.Enum
@@ -27,7 +27,7 @@ func newEnum(file *File, enum *proto.Enum, typeName []string) *Enum {
 		TypeName:      typeName,
 		File:          file,
 	}
-	m.Type.Enum = m
+	m.Type.(*Type).Enum = m
 	for _, v := range enum.Elements {
 		value, ok := v.(*proto.EnumField)
 		if !ok {

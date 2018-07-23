@@ -3,7 +3,7 @@ package parser
 import (
 	"strconv"
 	"strings"
-
+	
 	"github.com/emicklei/proto"
 )
 
@@ -41,6 +41,6 @@ func message(file *File, msg *proto.Message, typeName []string, parent *Message)
 		File:          file,
 		parentMsg:     parent,
 	}
-	m.Type.Message = m
+	m.Type.(*Type).Message = m
 	return m
 }

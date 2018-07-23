@@ -47,7 +47,7 @@ func (f *File) enumByTypeName(typeName TypeName) (*Enum, bool) {
 	}
 	return nil, false
 }
-func (f *File) findTypeInMessage(msg *Message, typ string) (*Type, bool) {
+func (f *File) findTypeInMessage(msg *Message, typ string) (TypeInterface, bool) {
 	if typeIsScalar(typ) {
 		return &Type{Scalar: typ, File: f}, true
 	}
@@ -66,7 +66,7 @@ func (f *File) findTypeInMessage(msg *Message, typ string) (*Type, bool) {
 	return f.findType(typ)
 }
 
-func (f *File) findType(typ string) (*Type, bool) {
+func (f *File) findType(typ string) (TypeInterface, bool) {
 	if typeIsScalar(typ) {
 		return &Type{Scalar: typ, File: f}, true
 	}
@@ -127,8 +127,8 @@ func (f *File) parseServices() error {
 			mtd := &Method{
 				Name:          method.Name,
 				QuotedComment: quoteComment(method.Comment),
-				InputMessage:  reqTyp.Message,
-				OutputMessage: retTyp.Message,
+				InputMessage:  reqTyp.(*Type).Message,
+				OutputMessage: retTyp.(*Type).Message,
 				Service:       srv,
 			}
 			srv.Methods = append(srv.Methods, mtd)
