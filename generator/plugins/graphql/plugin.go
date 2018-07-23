@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -40,6 +41,23 @@ func (p *Plugin) AddTypesFile(outputPath string, file *TypesFile) {
 }
 func (p Plugin) Name() string {
 	return PluginName
+}
+func (p *Plugin) PrintInfo(infos generator.Infos) {
+	if infos.Contains("gql-services") {
+		for path, file := range p.files {
+			if len(file.Services) > 0 {
+				fmt.Println(path)
+				for _, service := range file.Services {
+					fmt.Println("\t Service " + service.Name)
+				}
+			}
+		}
+	}
+}
+func (p *Plugin) Infos() map[string]string {
+	return map[string]string{
+		"gql-services": "Info about all parsed GraphQL services",
+	}
 }
 func (p *Plugin) generateTypes() error {
 	for outputPath, file := range p.files {

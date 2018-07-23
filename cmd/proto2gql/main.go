@@ -1,26 +1,27 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator"
-	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
-	"github.com/saturn4er/proto2gql/generator/plugins/proto2gql"
-	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 )
 
+var appFlags = []cli.Flag{
+	cli.StringFlag{
+		Name:  "config, c",
+		Value: "generate.yml",
+	},
+}
+
 func main() {
 	app := cli.App{
-		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  "config, c",
-				Value: "generate.yml",
-			},
-		},
-		Action: func(c *cli.Context) {
+		Flags: appFlags,
+		Before: func(c *cli.Context) error {
 			cfgFile, err := os.Open(c.String("config"))
 			if err != nil {
 				panic(err)
@@ -37,20 +38,61 @@ func main() {
 			g := &generator.Generator{
 				Config: gc,
 			}
-			plugins := []generator.Plugin{
-				new(graphql.Plugin),
-				new(swagger2gql.Plugin),
-				new(proto2gql.Plugin),
-			}
-			for _, plugin := range plugins {
+
+			for _, plugin := range Plugins(c) {
 				err := g.RegisterPlugin(plugin)
 				if err != nil {
 					panic(err.Error())
 				}
 			}
-			err = g.Generate()
+			err = g.Init()
 			if err != nil {
-				panic(err)
+				panic(errors.Wrap(err, "failed to initialize generator"))
+			}
+			err = g.Prepare()
+			if err != nil {
+				panic(errors.Wrap(err, "failed to prepare generator"))
+			}
+			c.App.Metadata["generator"] = g
+			return nil
+		},
+		Commands: []cli.Command{
+			{
+				Name:    "info-keys",
+				Aliases: []string{"ik"},
+				Usage:   "Print all possible info keys",
+				Action: func(c *cli.Context) {
+					g := c.App.Metadata["generator"].(*generator.Generator)
+					for plugin, keys := range g.GetPluginsInfosKeys() {
+						if len(keys) > 0 {
+							fmt.Println(plugin)
+							for key, description := range keys {
+								fmt.Println("\t- "+key, "\t\t"+description)
+							}
+						}
+					}
+				},
+			},
+			{
+				Name:    "info",
+				Aliases: []string{"i"},
+				Usage:   "Print info",
+				Flags: []cli.Flag{
+					cli.StringSliceFlag{
+						Name: "infos",
+					},
+				},
+				Action: func(c *cli.Context) {
+					g := c.App.Metadata["generator"].(*generator.Generator)
+					g.PrintInfos(c.StringSlice("infos"))
+				},
+			},
+		},
+		Action: func(c *cli.Context) {
+			g := c.App.Metadata["generator"].(*generator.Generator)
+			err := g.Generate()
+			if err != nil {
+				panic(errors.Wrap(err, "failed to generate"))
 			}
 		},
 	}

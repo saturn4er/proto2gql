@@ -42,6 +42,11 @@ func (p *Plugin) Init(config *generator.GenerateConfig, plugins []generator.Plug
 	p.config = cfg
 	return nil
 }
+func (p *Plugin) PrintInfo(info generator.Infos) {
+}
+func (p *Plugin) Infos() map[string]string {
+	return nil
+}
 func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) {
 	inputs, err := p.fileInputObjects(file)
 	if err != nil {
@@ -72,8 +77,8 @@ func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) 
 		return nil, errors.Wrap(err, "failed to prepare file services")
 	}
 	res := &graphql.TypesFile{
-		PackageName: file.OutputPkgName,
-		Package:     file.OutputPkg,
+		PackageName:             file.OutputPkgName,
+		Package:                 file.OutputPkg,
 		InputObjects:            inputs,
 		InputObjectResolvers:    inputsResolvers,
 		OutputObjects:           outputMessages,

@@ -53,6 +53,15 @@ func (p *Plugin) normalizeGenerateConfigPaths() error {
 		}
 		p.config.Paths[i] = normalizedPath
 	}
+	for i, file := range p.config.Files {
+		normalizedPath := os.ExpandEnv(file.ProtoPath)
+		normalizedPath, err := filepath.Abs(normalizedPath)
+		if err != nil {
+			return errors.Wrapf(err, "failed to make normalized path '%s' absolute", normalizedPath)
+		}
+		p.config.Files[i].ProtoPath = normalizedPath
+
+	}
 	return nil
 }
 func (p *Plugin) prepareFileConfig(fileCfg *ProtoFileConfig) error {
@@ -60,6 +69,11 @@ func (p *Plugin) prepareFileConfig(fileCfg *ProtoFileConfig) error {
 	for _, aliases := range p.config.ImportsAliases {
 		fileCfg.ImportsAliases = append(fileCfg.ImportsAliases, aliases)
 	}
+	return nil
+}
+func (p *Plugin) PrintInfo(info generator.Infos) {
+}
+func (p *Plugin) Infos() map[string]string {
 	return nil
 }
 func (p *Plugin) Prepare() error {
