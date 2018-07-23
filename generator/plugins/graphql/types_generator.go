@@ -25,9 +25,9 @@ const (
 )
 
 type typesGenerator struct {
-	File *TypesFile
-
-	imports *importer.Importer
+	File          *TypesFile
+	tracerEnabled bool
+	imports       *importer.Importer
 }
 
 func (g typesGenerator) importFunc(importPath string) func() string {
@@ -39,7 +39,7 @@ func (g typesGenerator) bodyTemplateContext() interface{} {
 	return BodyContext{
 		File:          g.File,
 		Importer:      g.imports,
-		TracerEnabled: true,
+		TracerEnabled: g.tracerEnabled,
 	}
 
 }
@@ -150,15 +150,4 @@ func (g typesGenerator) generate(out io.Writer) error {
 		return errors.Wrap(err, "failed to write  output")
 	}
 	return nil
-}
-
-func generateTypes(file *TypesFile, w io.Writer) error {
-	g := typesGenerator{
-		File: file,
-
-		imports: &importer.Importer{
-			CurrentPackage: file.Package,
-		},
-	}
-	return g.generate(w)
 }

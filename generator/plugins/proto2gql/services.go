@@ -10,43 +10,6 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/proto2gql/parser"
 )
 
-// func (g Proto2GraphQL) SchemaServices() []schema.Service {
-// 	var res []schema.Service
-// 	for _, file := range g.ParsedFiles {
-// 		for _, service := range file.TypesFile.Services {
-// 			sc := file.Config.GetServices()[service.Name]
-// 			clientGoType := schema.GoType{
-// 				Kind: reflect.Interface,
-// 				Pkg:  file.GRPCSourcesPkg,
-// 				Name: service.Name + "Client",
-// 			}
-// 			queryService := schema.Service{
-// 				Name:          g.serviceQueryName(sc, service),
-// 				Pkg:           file.OutputPkg,
-// 				ClientGoType:  clientGoType,
-// 				TracerEnabled: g.GenerateTracers,
-// 			}
-// 			mutationService := schema.Service{
-// 				Name:          g.serviceMutationName(sc, service),
-// 				Pkg:           file.OutputPkg,
-// 				ClientGoType:  clientGoType,
-// 				TracerEnabled: g.GenerateTracers,
-// 			}
-// 			for _, method := range service.Methods {
-// 				methodCfg := sc.Methods[method.Name]
-// 				if g.methodIsQuery(methodCfg, method) {
-// 					queryService.Fields = append(queryService.Fields, g.methodName(methodCfg, method))
-// 				}
-// 				if g.methodIsMutation(methodCfg, method) {
-// 					mutationService.Fields = append(mutationService.Fields, g.methodName(methodCfg, method))
-// 				}
-// 			}
-//
-// 			res = append(res, queryService, mutationService)
-// 		}
-// 	}
-// 	return res
-// }
 func (g Proto2GraphQL) serviceMethodArguments(cfg MethodConfig, method *parser.Method) ([]graphql.MethodArgument, error) {
 	var args []graphql.MethodArgument
 	for _, field := range method.InputMessage.Fields {

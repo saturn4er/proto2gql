@@ -7,6 +7,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator"
+	"github.com/saturn4er/proto2gql/generator/plugins/graphql/lib/importer"
 )
 
 const (
@@ -50,7 +51,13 @@ func (p *Plugin) generateTypes() error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to open file %s for write", outputPath)
 		}
-		err = generateTypes(file, out)
+		err = typesGenerator{
+			File:          file,
+			tracerEnabled: p.generateCfg.GenerateTraces,
+			imports: &importer.Importer{
+				CurrentPackage: file.Package,
+			},
+		}.generate(out)
 		if err != nil {
 			if cerr := out.Close(); cerr != nil {
 				err = errors.Wrap(err, cerr.Error())
