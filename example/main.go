@@ -1,66 +1,83 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
+	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/saturn4er/graphql"
-	"github.com/saturn4er/proto2gql/example/out/example"
-	proto "github.com/saturn4er/proto2gql/example/proto"
+	"github.com/saturn4er/proto2gql/example/out/schema"
+	"github.com/saturn4er/proto2gql/example/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
-type FakeClient struct {
+type Client struct {
 }
 
-func (FakeClient) GetEmptiesMsg(ctx context.Context, in *timestamp.Timestamp, opts ...grpc.CallOption) (*proto.Empty, error) {
-	panic("implement me")
+func (Client) GetQueryMethod(ctx context.Context, in *example.AOneOffs, opts ...grpc.CallOption) (*example.B, error) {
+	return &example.B{
+		RScalar: []int32{
+			1, 2, 3, 4, 5,
+		},
+	}, nil
 }
 
-func (FakeClient) GetQueryMethod(ctx context.Context, in *proto.AOneOffs, opts ...grpc.CallOption) (*proto.B, error) {
-	return nil, nil
+func (Client) MutationMethod(ctx context.Context, in *example.B, opts ...grpc.CallOption) (*example.A, error) {
+	return &example.A{
+		NREnum: example.A_Val5,
+	}, nil
 }
 
-func (FakeClient) MutationMethod(ctx context.Context, in *proto.B, opts ...grpc.CallOption) (*proto.A, error) {
-	return nil, nil
+func (Client) QueryMethod(ctx context.Context, in *timestamp.Timestamp, opts ...grpc.CallOption) (*timestamp.Timestamp, error) {
+	return &timestamp.Timestamp{
+		Seconds: time.Now().Unix(),
+		Nanos:   int32(time.Now().Nanosecond()),
+	}, nil
 }
 
-func (FakeClient) QueryMethod(ctx context.Context, in *proto.A, opts ...grpc.CallOption) (*proto.B, error) {
-	return nil, nil
+func (Client) GetMutatuionMethod(ctx context.Context, in *example.MsgWithEmpty, opts ...grpc.CallOption) (*example.MsgWithEmpty, error) {
+	return &example.MsgWithEmpty{}, nil
 }
 
-func (FakeClient) GetMutatuionMethod(ctx context.Context, in *proto.MsgWithEmpty, opts ...grpc.CallOption) (*proto.MsgWithEmpty, error) {
-	return nil, nil
+func (Client) GetEmptiesMsg(ctx context.Context, in *example.Empty, opts ...grpc.CallOption) (*example.Empty, error) {
+	return &example.Empty{}, nil
 }
 
 func main() {
-	// Schema
-	fieldsQuery := example.GetServiceExampleGraphQLQueriesFields(new(FakeClient), nil)
-	rootQuery := graphql.ObjectConfig{Name: "RootQuery", Fields: fieldsQuery}
-	fieldsMutation := example.GetServiceExampleGraphQLMutationsFields(new(FakeClient), nil)
-	rootMutation := graphql.ObjectConfig{Name: "Mutation", Fields: fieldsMutation}
-	schemaConfig := graphql.SchemaConfig{Query: graphql.NewObject(rootQuery), Mutation: graphql.NewObject(rootMutation)}
-	schema, err := graphql.NewSchema(schemaConfig)
+	schem, err := schema.GetExampleSchemaSchema(schema.ExampleSchemaSchemaClients{
+		ServiceExampleClient:          Client{},
+		ServiceExampleMutationsClient: Client{},
+	}, nil)
 	if err != nil {
-		log.Fatalf("failed to create new schema, error: %v", err)
+		panic(err)
 	}
-
-	// Query
-	query := `
-		{
-			getQueryMethod{
-				n_r_enum
-			}
-		}
-	`
-	params := graphql.Params{Schema: schema, RequestString: query}
-	r := graphql.Do(params)
-	if len(r.Errors) > 0 {
-		log.Fatalf("failed to execute graphql operation, errors: %+v", r.Errors)
-	}
-	rJSON, _ := json.Marshal(r)
-	fmt.Printf("%s \n", rJSON) // {“data”:{“hello”:”world”}}
+	spew.Dump(graphql.Do(graphql.Params{
+		Schema: schem,
+		RequestString: `
+				{
+					getQueryMethod{
+						r_scalar
+					}
+					queryMethod{
+						seconds
+						nanos
+					}
+					getEmptiesMsg
+				}
+			`,
+	}))
+	spew.Dump(graphql.Do(graphql.Params{
+		Schema: schem,
+		RequestString: `
+				mutation {
+					mutationMethod{
+						n_r_enum
+					}
+					getMutatuionMethod{
+						empty_field
+					}
+				}
+			`,
+	}))
 }
