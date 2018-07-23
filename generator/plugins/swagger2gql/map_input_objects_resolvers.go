@@ -2,11 +2,16 @@ package swagger2gql
 
 import (
 	"reflect"
+	"sort"
 
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
+
+func (p *Plugin) mapResolverFunctionName(file *parsedFile, mp *parser.Map) string {
+	return "Resolve" + p.mapInputObjectVariable(file, mp)
+}
 
 func (p *Plugin) fileInputMapResolvers(file *parsedFile) ([]graphql.MapInputObjectResolver, error) {
 	var res []graphql.MapInputObjectResolver
@@ -21,7 +26,7 @@ func (p *Plugin) fileInputMapResolvers(file *parsedFile) ([]graphql.MapInputObje
 			}
 			valueResolver, valueWithErr, _, err := p.TypeValueResolver(file, t.ElemType, false, "")
 			res = append(res, graphql.MapInputObjectResolver{
-				FunctionName: "Resolve" + p.mapInputObjectVariable(file, t),
+				FunctionName: p.mapResolverFunctionName(file, t),
 				KeyGoType: graphql.GoType{
 					Kind: reflect.String,
 				},
@@ -58,5 +63,8 @@ func (p *Plugin) fileInputMapResolvers(file *parsedFile) ([]graphql.MapInputObje
 			}
 		}
 	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].FunctionName > res[j].FunctionName
+	})
 	return res, nil
 }

@@ -43,10 +43,6 @@ func (p *Plugin) Init(config *generator.GenerateConfig, plugins []generator.Plug
 	return nil
 }
 func (p *Plugin) prepareTypesFile(file *parsedFile) (*graphql.TypesFile, error) {
-	// enums, err := p.prepareFileEnums(file)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "failed to resolve file enums")
-	// }
 	inputs, err := p.fileInputObjects(file)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare file input objects")

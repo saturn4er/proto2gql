@@ -1,10 +1,8 @@
 package swagger2gql
 
 import (
-	"bytes"
 	"reflect"
 	"sort"
-	"text/template"
 
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
@@ -12,35 +10,13 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-// func (g *Plugin) inputMessageResolverName(msgFile *parsedFile, message *parser.Message) string {
-// 	return "Resolve" + g.inputObjectGQLName(msgFile, message)
-// }
-//
-// func (g *Plugin) oneOfValueAssigningWrapper(file *parsedFile, msg *parser.Message, field *parser.Field) graphql.AssigningWrapper {
-// 	return func(arg string, ctx graphql.BodyContext) string {
-// 		return "&" + ctx.Importer.Prefix(file.GRPCSourcesPkg) + camelCaseSlice(msg.TypeName) + "_" + camelCase(field.Name) + "{" + arg + "}"
-// 	}
-// }
-var arrayValueTemplate *template.Template
-
-func init() {
-	tplBody, err := templatesArray_value_resolverGohtmlBytes()
-	if err != nil {
-		panic(errors.Wrap(err, "failed to get array value resolver template").Error())
-	}
-	tpl, err := template.New("array_value_resolver").Parse(string(tplBody))
-	if err != nil {
-		panic(errors.Wrap(err, "failed to parse array value resolver template"))
-	}
-	arrayValueTemplate = tpl
-}
-
-func (p *Plugin) inputObjectResolverFuncName(file *parsedFile, obj *parser.Object) string {
+func (p *Plugin) objectResolverFunctionName(file *parsedFile, obj *parser.Object) string {
 	return "Resolve" + snakeCamelCaseSlice(obj.Route)
 }
-func (p *Plugin) methodParametersInputObjectResolverFuncName(file *parsedFile, method parser.Method) string {
+func (p *Plugin) methodParametersObjectResolverFuncName(file *parsedFile, method parser.Method) string {
 	return "Resolve" + pascalize(method.OperationID) + "Params"
 }
+
 func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag string, method parser.Method) (*graphql.InputObjectResolver, error) {
 	var fields []graphql.InputObjectResolverField
 	gqlName := p.methodParamsInputObjectGQLName(file, method)
@@ -49,10 +25,10 @@ func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag strin
 		return nil, errors.Wrap(err, "failed to resolve property config")
 	}
 	for _, param := range method.Parameters {
-		goTyp, err := p.goTypeByParserType(file, param.Type, true)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to resolve parameter go type")
-		}
+		// goTyp, err := p.goTypeByParserType(file, param.Type, true)
+		// if err != nil {
+		// 	return nil, errors.Wrap(err, "failed to resolve parameter go type")
+		// }
 		paramGqlName := names.FilterNotSupportedFieldNameCharacters(param.Name)
 		paramCfg, _ := cfg.Fields[paramGqlName]
 		valueResolver, withErr, fromArgs, err := p.TypeValueResolver(file, param.Type, !param.Required, paramCfg.ContextKey)
@@ -62,7 +38,6 @@ func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag strin
 		fields = append(fields, graphql.InputObjectResolverField{
 			OutputFieldName:       pascalize(param.Name),
 			GraphQLInputFieldName: paramGqlName,
-			GoType:                goTyp,
 			ValueResolver:         valueResolver,
 			ResolverWithError:     withErr,
 			IsFromArgs:            fromArgs,
@@ -70,7 +45,7 @@ func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag strin
 	}
 
 	return &graphql.InputObjectResolver{
-		FunctionName: p.methodParametersInputObjectResolverFuncName(file, method),
+		FunctionName: p.methodParametersObjectResolverFuncName(file, method),
 		Fields:       fields,
 		OutputGoType: graphql.GoType{
 			Kind: reflect.Ptr,
@@ -82,22 +57,7 @@ func (p *Plugin) methodParametersInputObjectResolver(file *parsedFile, tag strin
 		},
 	}, nil
 }
-func (p *Plugin) renderArrayValueResolver(arg string, resultGoTyp graphql.GoType, ctx graphql.BodyContext, elemResolver graphql.ValueResolver, elemResolverWithErr bool) (string, error) {
-	res := new(bytes.Buffer)
-	err := arrayValueTemplate.Execute(res, map[string]interface{}{
-		"resultType": func() string {
-			return resultGoTyp.String(ctx.Importer)
-		},
-		"rootCtx":             ctx,
-		"elemResolver":        elemResolver,
-		"elemResolverWithErr": elemResolverWithErr,
-		"arg":                 arg,
-		"errorsPkg": func() string {
-			return ctx.Importer.New(graphql.ErrorsPkgPath)
-		},
-	})
-	return res.String(), err
-}
+
 func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputObjectResolver, error) {
 	var res []graphql.InputObjectResolver
 	var handledObjects = map[parser.Type]struct{}{}
@@ -157,7 +117,7 @@ func (p *Plugin) fileInputMessagesResolvers(file *parsedFile) ([]graphql.InputOb
 				return fields[i].GraphQLInputFieldName > fields[j].GraphQLInputFieldName
 			})
 			res = append(res, graphql.InputObjectResolver{
-				FunctionName: p.inputObjectResolverFuncName(file, t),
+				FunctionName: p.objectResolverFunctionName(file, t),
 				Fields:       fields,
 				OutputGoType: resGoType,
 			})

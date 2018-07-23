@@ -1,20 +1,15 @@
 package swagger2gql
 
 import (
-"go/build"
-"path/filepath"
-"reflect"
-"strings"
+	"go/build"
+	"path/filepath"
+	"reflect"
+	"strings"
 
-
-
-
-
-"github.com/go-openapi/swag"
-"github.com/pkg/errors"
-"github.com/saturn4er/proto2gql/generator/plugins/graphql"
-"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
-
+	"github.com/go-openapi/swag"
+	"github.com/pkg/errors"
+	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
+	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
 const (
@@ -87,7 +82,7 @@ func (p *Plugin) goTypeByParserType(typeFile *parsedFile, typ parser.Type, ptrOb
 		goTyp, ok := scalarsGoTypes[t.Kind()]
 		if !ok {
 			err = errors.Errorf("convertation of scalar %s to golang type is not implemented", typ.Kind())
-			// return
+			return
 		}
 		return goTyp, nil
 	case *parser.Object:

@@ -86,10 +86,6 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 			return `ctx.Value("` + ctxKey + `").(` + goType.String(ctx.Importer) + `)`
 		}, false, false, nil
 	}
-	goTyp, err := p.goTypeByParserType(file, typ, true)
-	if err != nil {
-		return nil, false, false, errors.Wrap(err, "failed to resolve go type by parser type")
-	}
 	switch t := typ.(type) {
 	case *parser.Scalar:
 		if t.Kind() == parser.KindFile {
@@ -115,34 +111,17 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 		if t == parser.ObjDateTime {
 			return func(arg string, ctx graphql.BodyContext) string {
 				if required {
-					return "func(arg interface{}) (*" + ctx.Importer.Prefix(strFmtPkg) + "DateTime, error) {" +
-						"\n if arg == nil {" +
-						"\n		return nil, nil" +
-						"\n }" +
-						"\n a := arg.(map[string]interface{})" +
-						"\n if a[\"seconds\"] == nil || a[\"nanos\"] == nil {" +
-						"\n 	return nil, " + ctx.Importer.Prefix(graphql.ErrorsPkgPath) + "New(\"not all datetime parameters passed\")" +
-						"\n }" +
-						"\n secs := a[\"seconds\"].(int64)" +
-						"\n nanos := a[\"nanos\"].(int32)" +
-						"\n t := " + ctx.Importer.Prefix(timePkg) + "Unix(secs, int64(nanos))" +
-						"\n return (*" + ctx.Importer.Prefix(strFmtPkg) + "DateTime)(&t), nil" +
-						"\n}(" + arg + ")"
+					res, err := p.renderPtrDatetimeResolver(arg, ctx)
+					if err != nil {
+						panic(errors.Wrap(err, "failed to render ptr datetime resolver"))
+					}
+					return res
 				} else {
-					return "func(arg interface{}) (_ " + ctx.Importer.Prefix(strFmtPkg) + "DateTime, err error) {" +
-						"\n if arg == nil {" +
-						"\n		return" +
-						"\n }" +
-						"\n a := arg.(map[string]interface{})" +
-						"\n if a[\"seconds\"] == nil || a[\"nanos\"] == nil {" +
-						"\n 	err = " + ctx.Importer.Prefix(graphql.ErrorsPkgPath) + "New(\"not all datetime parameters passed\")" +
-						"\n		return" +
-						"\n }" +
-						"\n secs := a[\"seconds\"].(int64)" +
-						"\n nanos := a[\"nanos\"].(int32)" +
-						"\n t := " + ctx.Importer.Prefix(timePkg) + "Unix(secs, int64(nanos))" +
-						"\n return (" + ctx.Importer.Prefix(strFmtPkg) + "DateTime)(t), nil" +
-						"\n}(" + arg + ")"
+					res, err := p.renderDatetimeValueResolverTemplate(arg, ctx)
+					if err != nil {
+						panic(errors.Wrap(err, "failed to render ptr datetime resolver"))
+					}
+					return res
 				}
 			}, true, true, nil
 		}
@@ -153,7 +132,10 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 		if err != nil {
 			return nil, false, false, errors.Wrap(err, "failed to get array element type value resolver")
 		}
-
+		goTyp, err := p.goTypeByParserType(file, typ, true)
+		if err != nil {
+			return nil, false, false, errors.Wrap(err, "failed to resolve go type by parser type")
+		}
 		return func(arg string, ctx graphql.BodyContext) string {
 			res, err := p.renderArrayValueResolver(arg, goTyp, ctx, elemResolver, elemResolverWithErr)
 			if err != nil {
@@ -162,12 +144,7 @@ func (p *Plugin) TypeValueResolver(file *parsedFile, typ parser.Type, required b
 			return res
 		}, true, true, nil
 	case *parser.Map:
-		return func(arg string, ctx graphql.BodyContext) string {
-			if ctx.TracerEnabled {
-				return "Resolve" + p.mapInputObjectVariable(file, t) + "(tr, tr.ContextWithSpan(ctx, span), " + arg + ")"
-			}
-			return "Resolve" + p.mapInputObjectVariable(file, t) + "(ctx, " + arg + ")"
-		}, true, true,nil
+		return graphql.ResolverCall(file.OutputPkg, p.mapResolverFunctionName(file, t)), true, true, nil
 	}
 	return nil, false, true, errors.Errorf("unknown type: %v", typ.Kind().String())
 
