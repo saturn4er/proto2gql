@@ -293,11 +293,6 @@ func (g schemaGenerator) generate(out io.Writer) error {
 }
 
 func (p *Plugin) generateSchemas() error {
-	for _, file := range p.files {
-		for _, s := range file.Services {
-			fmt.Println(s.Name)
-		}
-	}
 	for _, schema := range p.schemaConfigs {
 		pkg, err := GoPackageByPath(filepath.Dir(schema.OutputPath), p.generateCfg.VendorPath)
 		if err != nil {

@@ -142,7 +142,7 @@ func (g *Proto2GraphQL) fileGRPCSourcesPackage(cfg *ProtoFileConfig, file *parse
 	cfgGoPkg := cfg.GetGoPackage()
 
 	if cfgGoPkg != "" {
-		return cfg.GetGoPackage(), nil
+		return cfgGoPkg, nil
 	}
 
 	if file.GoPackage != "" {

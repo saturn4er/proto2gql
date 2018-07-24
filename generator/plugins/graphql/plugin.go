@@ -1,12 +1,14 @@
 package graphql
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator"
+	"github.com/saturn4er/proto2gql/generator/plugins/graphql/lib/importer"
 )
 
 const (
@@ -34,11 +36,33 @@ func (p *Plugin) Init(config *generator.GenerateConfig, plugins []generator.Plug
 	p.generateCfg = config
 	return nil
 }
+
+// Types returns info about all parsed types
+func (p *Plugin) Types() map[string]*TypesFile {
+	return p.files
+}
 func (p *Plugin) AddTypesFile(outputPath string, file *TypesFile) {
 	p.files[outputPath] = file
 }
 func (p Plugin) Name() string {
 	return PluginName
+}
+func (p *Plugin) PrintInfo(infos generator.Infos) {
+	if infos.Contains("gql-services") {
+		for path, file := range p.files {
+			if len(file.Services) > 0 {
+				fmt.Println(path)
+				for _, service := range file.Services {
+					fmt.Println("\t Service " + service.Name)
+				}
+			}
+		}
+	}
+}
+func (p *Plugin) Infos() map[string]string {
+	return map[string]string{
+		"gql-services": "Info about all parsed GraphQL services",
+	}
 }
 func (p *Plugin) generateTypes() error {
 	for outputPath, file := range p.files {
@@ -50,7 +74,13 @@ func (p *Plugin) generateTypes() error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to open file %s for write", outputPath)
 		}
-		err = generateTypes(file, out)
+		err = typesGenerator{
+			File:          file,
+			tracerEnabled: p.generateCfg.GenerateTraces,
+			imports: &importer.Importer{
+				CurrentPackage: file.Package,
+			},
+		}.generate(out)
 		if err != nil {
 			if cerr := out.Close(); cerr != nil {
 				err = errors.Wrap(err, cerr.Error())

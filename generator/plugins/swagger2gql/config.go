@@ -86,11 +86,11 @@ func (pc *SwaggerFileConfig) GetOutputPkg() string {
 }
 func (pc *SwaggerFileConfig) GetTagGoPackage(tag string) (string, error) {
 	if pc == nil {
-		return "", errors.Errorf("go package is not specified for tag '%ws'", tag)
+		return "", errors.Errorf("go package is not specified for tag '%s'", tag)
 	}
 	pkg, ok := pc.TagsClientsGoPackages[tag]
 	if !ok {
-		return "", errors.Errorf("go package is not specified for tag '%ws'", tag)
+		return "", errors.Errorf("go package is not specified for tag '%s'", tag)
 	}
 	return pkg, nil
 

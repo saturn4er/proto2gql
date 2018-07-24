@@ -1,7 +1,7 @@
 func (arg interface{}) ({{call $.resultType}}, error) {
 	elements, ok := arg.([]interface{})
 	if !ok {
-		return nil, {{call $.errorsPkg}}.New("argument is not array")
+		return nil, {{errorsPkg}}.New("argument is not array")
 	}
 	res := make({{call $.resultType}}, len(elements))
 	for i, element := range elements{
@@ -9,7 +9,7 @@ func (arg interface{}) ({{call $.resultType}}, error) {
 		{{ if $.elemResolverWithErr -}}
 			elVal, err := {{call $.elemResolver "element" $.rootCtx}}
 			if err != nil{
-            	return nil, {{call $.errorsPkg}}.Wrap(err, "can't resolve array element")
+            	return nil, {{errorsPkg}}.Wrap(err, "can't resolve array element")
 			}
 			res[i] = elVal
 		{{ else -}}

@@ -54,7 +54,9 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 	_ = args
 	var result = new({{goTypeForNew $resolver.OutputGoType}})
 	{{ range $field := $resolver.Fields -}}
-		if args["{{$field.GraphQLInputFieldName}}"] != nil {
+		{{ if $field.IsFromArgs -}}
+			if args["{{$field.GraphQLInputFieldName}}"] != nil {
+		{{ end -}}
 			{{ if isArray $field.GoType -}}
 				in := args["{{$field.GraphQLInputFieldName}}"].([]interface{})
 				result.{{$field.OutputFieldName}} = make({{goType $field.GoType}}, len(in))
@@ -80,7 +82,9 @@ func {{$resolver.FunctionName}}({{ if $.TracerEnabled }} tr {{tracerPkg}}.Tracer
 					result.{{$field.OutputFieldName}} = {{call $field.ValueResolver (concat "args[\"" $field.GraphQLInputFieldName "\"]") $}}
 				{{ end -}}
 			{{ end -}}
-		}
+		{{ if $field.IsFromArgs -}}
+			}
+		{{ end -}}
 	{{ end -}}
 	{{range $oneof := $resolver.OneOfFields -}}
 		{{range $index, $field := $oneof.Fields -}}

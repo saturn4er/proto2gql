@@ -1,16 +1,17 @@
 package swagger2gql
 
 import (
-	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
+	"github.com/saturn4er/proto2gql/generator/plugins/graphql/lib/names"
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
-func (p *Plugin) graphqlMethod(methodCfg MethodConfig, file *parsedFile, tag parser.Tag, method parser.Method) (graphql.Method, error) {
+func (p *Plugin) graphqlMethod(methodCfg MethodConfig, file *parsedFile, tag parser.Tag, method parser.Method) (*graphql.Method, error) {
 	name := method.OperationID
 	if methodCfg.Alias != "" {
 		name = methodCfg.Alias
@@ -20,7 +21,7 @@ func (p *Plugin) graphqlMethod(methodCfg MethodConfig, file *parsedFile, tag par
 	for _, resp := range method.Responses {
 		if resp.StatusCode/100 == 2 {
 			if successResponseFound {
-				return graphql.Method{}, errors.New("method contains multiple success responses")
+				return nil, errors.New("method  contains multiple success responses")
 			}
 
 			successResponse = resp
@@ -29,23 +30,23 @@ func (p *Plugin) graphqlMethod(methodCfg MethodConfig, file *parsedFile, tag par
 	}
 	responseType, err := p.TypeOutputTypeResolver(file, successResponse.ResultType, false)
 	if err != nil {
-		return graphql.Method{}, errors.Wrap(err, "can't get response output type resolver")
+		return nil, errors.Wrap(err, "can't get response output type resolver")
 	}
 	gqlInputObjName := p.methodParamsInputObjectGQLName(file, method)
 	cfg, err := file.Config.ObjectConfig(gqlInputObjName)
 	if err != nil {
-		return graphql.Method{}, errors.Wrap(err, "failed to resolve object config")
+		return nil, errors.Wrap(err, "failed to resolve object config")
 	}
 	var args []graphql.MethodArgument
 	for _, param := range method.Parameters {
-		gqlName := pascalize(param.Name)
+		gqlName := names.FilterNotSupportedFieldNameCharacters(param.Name)
 		paramCfg := cfg.Fields[gqlName]
-		if paramCfg.ContextKey != ""{
+		if paramCfg.ContextKey != "" {
 			continue
 		}
 		paramType, err := p.TypeInputTypeResolver(file, param.Type)
 		if err != nil {
-			return graphql.Method{}, errors.Wrapf(err, "failed to resolve parameter '%s' type resolver", param.Name)
+			return nil, errors.Wrapf(err, "failed to resolve parameter '%s' type resolver", param.Name)
 		}
 		args = append(args, graphql.MethodArgument{
 			Name: gqlName,
@@ -60,40 +61,29 @@ func (p *Plugin) graphqlMethod(methodCfg MethodConfig, file *parsedFile, tag par
 			Name: pascalize(method.OperationID) + "Params",
 		},
 	}
-	respType, err := p.goTypeByParserType(file, successResponse.ResultType, true)
-	if err != nil {
-		return graphql.Method{}, errors.Wrap(err, "failed to resolve result go type")
-	}
-	return graphql.Method{
-		Name:              name,
-		GraphQLOutputType: responseType,
-		Arguments:         args,
-		RequestResolver: func(arg string, ctx graphql.BodyContext) string {
-			if ctx.TracerEnabled {
-				return "Resolve" + pascalize(method.OperationID) + "Params(tr, tr.ContextWithSpan(ctx, span), " + arg + ")"
-			}
-			return "Resolve" + pascalize(method.OperationID) + "Params(ctx, " + arg + ")"
-		},
+
+	return &graphql.Method{
+		Name:                   name,
+		GraphQLOutputType:      responseType,
+		Arguments:              args,
+		RequestResolver:        graphql.ResolverCall(file.OutputPkg, "Resolve"+pascalize(method.OperationID)+"Params"),
 		RequestResolverWithErr: true,
 		ClientMethodCaller: func(client, req string, ctx graphql.BodyContext) string {
+			var res string
+			var err error
 			if successResponse.ResultType.Kind() == parser.KindNull {
-				return "func(req " + reqType.String(ctx.Importer) + ") (interface{}, error) {" +
-					"\n _, err := " + client + "." + pascalize(method.OperationID) + "(req)" +
-					"\n if err != nil {" +
-					"\n		return nil, err" +
-					"\n	}" +
-					"\n return nil, nil" +
-					"\n }(" + req + ")"
+				res, err = p.renderNullMethodCaller(reqType.String(ctx.Importer), req, client, pascalize(method.OperationID))
 			} else {
-				return "func(req " + reqType.String(ctx.Importer) + ") (_ " + respType.String(ctx.Importer) + ", rerr error) {" +
-					"\n res, err := " + client + "." + pascalize(method.OperationID) + "(req)" +
-					"\n if err != nil {" +
-					"\n		rerr = err" +
-					"\n		return" +
-					"\n	}" +
-					"\n return res.Payload, nil" +
-					"\n }(" + req + ")"
+				respType, err := p.goTypeByParserType(file, successResponse.ResultType, true)
+				if err != nil {
+					panic(errors.Wrap(err, "failed to resolve result go type"))
+				}
+				res, err = p.renderMethodCaller(respType.String(ctx.Importer), reqType.String(ctx.Importer), req, client, pascalize(method.OperationID))
 			}
+			if err != nil {
+				panic(errors.Wrap(err, "failed to render method caller"))
+			}
+			return res
 		},
 		RequestType:          reqType,
 		PayloadErrorChecker:  nil,
@@ -114,8 +104,11 @@ func (p *Plugin) tagQueriesMethods(tagCfg TagConfig, file *parsedFile, tag parse
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve graphql method")
 		}
-		res = append(res, meth)
+		res = append(res, *meth)
 	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Name > res[j].Name
+	})
 	return res, nil
 }
 func (p *Plugin) tagMutationsMethods(tagCfg TagConfig, file *parsedFile, tag parser.Tag) ([]graphql.Method, error) {
@@ -132,8 +125,11 @@ func (p *Plugin) tagMutationsMethods(tagCfg TagConfig, file *parsedFile, tag par
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve graphql method")
 		}
-		res = append(res, meth)
+		res = append(res, *meth)
 	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Name > res[j].Name
+	})
 	return res, nil
 }
 func (p *Plugin) fileServices(file *parsedFile) ([]graphql.Service, error) {
@@ -147,9 +143,6 @@ func (p *Plugin) fileServices(file *parsedFile) ([]graphql.Service, error) {
 		name := pascalize(tag.Name)
 		if tagCfg.ServiceName != "" {
 			name = tagCfg.ServiceName
-		}
-		if name == "CRMTTriggersTriggers" {
-			fmt.Println(123)
 		}
 		res = append(res, graphql.Service{
 			Name:    name,
@@ -165,7 +158,7 @@ func (p *Plugin) fileServices(file *parsedFile) ([]graphql.Service, error) {
 		})
 		mutationsMethods, err := p.tagMutationsMethods(tagCfg, file, tag)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get tag queries methods")
+			return nil, errors.Wrap(err, "failed to get tag mutations methods")
 		}
 		res = append(res, graphql.Service{
 			Name:    name + "Mutations",
@@ -180,5 +173,8 @@ func (p *Plugin) fileServices(file *parsedFile) ([]graphql.Service, error) {
 			},
 		})
 	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Name > res[j].Name
+	})
 	return res, nil
 }

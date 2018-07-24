@@ -15,6 +15,13 @@ func (g *Proto2GraphQL) TypeOutputTypeResolver(typeFile *parsedFile, typ *parser
 		return resolver, nil
 	}
 	if typ.IsMessage() {
+		msgCfg, err := typeFile.Config.MessageConfig(typ.Message.Name)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to resolve message %s config", typ.Message.Name)
+		}
+		if !typ.Message.HaveFieldsExcept(msgCfg.ErrorField){
+			return graphql.GqlNoDataTypeResolver, nil
+		}
 		res, err := g.outputMessageTypeResolver(typeFile, typ.Message)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get message type resolver")
@@ -64,15 +71,15 @@ func (g *Proto2GraphQL) TypeInputTypeResolver(typeFile *parsedFile, typ *parser.
 	}
 	return nil, errors.New("not implemented " + typ.String())
 }
-func (g *Proto2GraphQL) TypeValueResolver(typeFile *parsedFile, typ *parser.Type, ctxKey string) (_ graphql.ValueResolver, withErr bool, err error) {
+func (g *Proto2GraphQL) TypeValueResolver(typeFile *parsedFile, typ *parser.Type, ctxKey string) (_ graphql.ValueResolver, withErr, fromArgs bool, err error) {
 	if ctxKey != "" {
 		goType, err := g.goTypeByParserType(typ)
 		if err != nil {
-			return nil, false, errors.Wrap(err, "failed to resolve go type")
+			return nil, false, false, errors.Wrap(err, "failed to resolve go type")
 		}
 		return func(arg string, ctx graphql.BodyContext) string {
 			return `ctx.Value("` + ctxKey + `").(` + goType.String(ctx.Importer) + `)`
-		}, false, nil
+		}, false, false, nil
 	}
 	if typ.IsScalar() {
 		gt, ok := goTypesScalars[typ.Scalar]
@@ -81,12 +88,12 @@ func (g *Proto2GraphQL) TypeValueResolver(typeFile *parsedFile, typ *parser.Type
 		}
 		return func(arg string, ctx graphql.BodyContext) string {
 			return arg + ".(" + gt.Kind.String() + ")"
-		}, false, nil
+		}, false, true, nil
 	}
 	if typ.IsEnum() {
 		return func(arg string, ctx graphql.BodyContext) string {
 			return ctx.Importer.Prefix(typeFile.GRPCSourcesPkg) + snakeCamelCaseSlice(typ.Enum.TypeName) + "(" + arg + ".(int))"
-		}, false, nil
+		}, false, true, nil
 	}
 	if typ.IsMessage() {
 		return func(arg string, ctx graphql.BodyContext) string {
@@ -95,20 +102,14 @@ func (g *Proto2GraphQL) TypeValueResolver(typeFile *parsedFile, typ *parser.Type
 			} else {
 				return ctx.Importer.Prefix(typeFile.OutputPkg) + g.inputMessageResolverName(typeFile, typ.Message) + "(ctx, " + arg + ")"
 			}
-		}, true, nil
+		}, true, true, nil
 	}
 	if typ.IsMap() {
-		return func(arg string, ctx graphql.BodyContext) string {
-			if ctx.TracerEnabled {
-				return ctx.Importer.Prefix(typeFile.OutputPkg) + g.mapResolverFunctionName(typeFile, typ.Map) + "(tr, tr.ContextWithSpan(ctx,span), " + arg + ")"
-			} else {
-				return ctx.Importer.Prefix(typeFile.OutputPkg) + g.mapResolverFunctionName(typeFile, typ.Map) + "(ctx, " + arg + ")"
-			}
-		}, true, nil
+		return graphql.ResolverCall(typeFile.OutputPkg, g.mapResolverFunctionName(typeFile, typ.Map)), true, true, nil
 	}
 	return func(arg string, ctx graphql.BodyContext) string {
 		return arg + "// not implemented"
-	}, false, nil
+	}, false, true, nil
 
 }
 

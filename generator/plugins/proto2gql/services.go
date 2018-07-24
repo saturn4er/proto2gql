@@ -10,43 +10,6 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/proto2gql/parser"
 )
 
-// func (g Proto2GraphQL) SchemaServices() []schema.Service {
-// 	var res []schema.Service
-// 	for _, file := range g.ParsedFiles {
-// 		for _, service := range file.TypesFile.Services {
-// 			sc := file.Config.GetServices()[service.Name]
-// 			clientGoType := schema.GoType{
-// 				Kind: reflect.Interface,
-// 				Pkg:  file.GRPCSourcesPkg,
-// 				Name: service.Name + "Client",
-// 			}
-// 			queryService := schema.Service{
-// 				Name:          g.serviceQueryName(sc, service),
-// 				Pkg:           file.OutputPkg,
-// 				ClientGoType:  clientGoType,
-// 				TracerEnabled: g.GenerateTracers,
-// 			}
-// 			mutationService := schema.Service{
-// 				Name:          g.serviceMutationName(sc, service),
-// 				Pkg:           file.OutputPkg,
-// 				ClientGoType:  clientGoType,
-// 				TracerEnabled: g.GenerateTracers,
-// 			}
-// 			for _, method := range service.Methods {
-// 				methodCfg := sc.Methods[method.Name]
-// 				if g.methodIsQuery(methodCfg, method) {
-// 					queryService.Fields = append(queryService.Fields, g.methodName(methodCfg, method))
-// 				}
-// 				if g.methodIsMutation(methodCfg, method) {
-// 					mutationService.Fields = append(mutationService.Fields, g.methodName(methodCfg, method))
-// 				}
-// 			}
-//
-// 			res = append(res, queryService, mutationService)
-// 		}
-// 	}
-// 	return res
-// }
 func (g Proto2GraphQL) serviceMethodArguments(cfg MethodConfig, method *parser.Method) ([]graphql.MethodArgument, error) {
 	var args []graphql.MethodArgument
 	for _, field := range method.InputMessage.Fields {
@@ -155,11 +118,11 @@ func (g Proto2GraphQL) serviceMethod(cfg MethodConfig, file *parsedFile, method 
 	}
 	outType, err := g.TypeOutputTypeResolver(outputMsgTypeFile, method.OutputMessage.Type)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get output type resolver for method: ", method.Name)
+		return nil, errors.Wrapf(err, "failed to get output type resolver for method: %s", method.Name)
 	}
 	requestType, err := g.goTypeByParserType(method.InputMessage.Type)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get request go type for method: ", method.Name)
+		return nil, errors.Wrapf(err, "failed to get request go type for method: %s", method.Name)
 	}
 	args, err := g.serviceMethodArguments(cfg, method)
 	if err != nil {
@@ -173,7 +136,7 @@ func (g Proto2GraphQL) serviceMethod(cfg MethodConfig, file *parsedFile, method 
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to resolve message '%s' parsed file", dotedTypeName(method.InputMessage.TypeName))
 	}
-	valueResolver, valueResolverWithErr, err := g.TypeValueResolver(inputMessageFile, method.InputMessage.Type, "")
+	valueResolver, valueResolverWithErr, _, err := g.TypeValueResolver(inputMessageFile, method.InputMessage.Type, "")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve message value resolver")
 	}

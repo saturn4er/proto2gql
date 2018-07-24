@@ -1,10 +1,12 @@
 package swagger2gql
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/saturn4er/proto2gql/generator/plugins/graphql"
+	"github.com/saturn4er/proto2gql/generator/plugins/graphql/lib/names"
 	"github.com/saturn4er/proto2gql/generator/plugins/swagger2gql/parser"
 )
 
@@ -22,24 +24,6 @@ func (p *Plugin) outputMessageTypeResolver(messageFile *parsedFile, obj *parser.
 	return func(ctx graphql.BodyContext) string {
 		return ctx.Importer.Prefix(messageFile.OutputPkg) + p.outputObjectVariable(messageFile, obj)
 	}, nil
-}
-func (p *Plugin) outputMessageMapFields(file *parsedFile, msg *parser.Object) ([]graphql.ObjectField, error) {
-	var res []graphql.ObjectField
-	for _, property := range msg.Properties {
-		if _, ok := property.Type.(parser.Map); !ok {
-			continue
-		}
-		typeResolver, err := p.TypeOutputTypeResolver(file, property.Type, property.Required)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to prepare message %s property %s output type resolver", msg.Name, property.Name)
-		}
-		res = append(res, graphql.ObjectField{
-			Name:  property.Name,
-			Type:  typeResolver,
-			Value: graphql.IdentAccessValueResolver(pascalize(property.Name)),
-		})
-	}
-	return res, nil
 }
 
 func (p *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, error) {
@@ -84,7 +68,7 @@ func (p *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, e
 
 				}
 				propObj := graphql.ObjectField{
-					Name:     prop.Name,
+					Name:     names.FilterNotSupportedFieldNameCharacters(prop.Name),
 					Type:     tr,
 					Value:    valueResolver,
 					NeedCast: false,
@@ -96,6 +80,9 @@ func (p *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, e
 					fields = append(fields, propObj)
 				}
 			}
+			sort.Slice(fields, func(i, j int) bool {
+				return fields[i].Name > fields[j].Name
+			})
 			res = append(res, graphql.OutputObject{
 				VariableName: p.outputObjectVariable(file, t),
 				GraphQLName:  p.outputObjectGQLName(file, t),
@@ -118,5 +105,8 @@ func (p *Plugin) fileOutputMessages(file *parsedFile) ([]graphql.OutputObject, e
 			}
 		}
 	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].VariableName > res[j].VariableName
+	})
 	return res, nil
 }
