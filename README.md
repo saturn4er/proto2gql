@@ -134,7 +134,7 @@ proto2gql:
           - "Request$":               # message name match regex
               fields:
                 "ip_address":
-                  context_key: "ip"   # get this field from context during message unmarshalling
+                  context_key: "ip"   # context key, where unmarshaller will get this field from
           - "Response$":
               error_field: "Error"    # name of payload error field
       - ...
@@ -160,41 +160,34 @@ pascalized() here means, that it converts string to CamelCase format and removes
 ...
 ...
 swagger2gql:
-    objects:
-      - "Response$":
-          error_field: "error"
+    objects:                                # GraphQL objects configs
+      - "Response$":                        # Object name
+          error_field: "error"              # name of payload error field
       - "InputParams$":
-          fields:
-            ip:
-              context_key: "user_ip"
-
-
+          fields:                           # Object fields config
+            ip:                             # field name
+              context_key: "user_ip"        # context key, where unmarshaller will get this field from
     files:
-      name: "Swagger file number 1"
-      path: "./service1/swagger.json"
-      models_go_path: "github.com/myproject/service1/client/models"
-      output_pkg: "gql_service1"
-      output_path: "./service1/schema/"
-      gql_objects_prefix: "Srv1"
-      tags:
-        "some-swagger-tag":
-          client_go_package: "github.com/myproject/service1/client/some_swagger_tag/client"
-          service_name: "SomeSwaggerTag"
-          methods:
-            "/somes":
-              get:
-                alias: "get"
-                request_type: "QUERY"
-      objects:
-       - "Request$":
-         fields:
-           "user_id":
-             context_key: "user_id"
-                
-
-
-
-
+      - name: "Swagger file number 1"         # swagger file name
+        path: "./service1/swagger.json"       # path to swagger file
+        models_go_path: "github.com/myproject/service1/client/models" # path to generated using goswagger models
+        output_pkg: "gql_service1"            # output go package name
+        output_path: "./service1/schema/"
+        gql_objects_prefix: "Srv1"            # prefix, which will be added to all generated GraphQL Objects
+        tags:                                 # tags settings
+          "some-swagger-tag":                 # tag name
+            client_go_package: "github.com/myproject/service1/client/some_swagger_tag/client"   # go client package
+            service_name: "SomeSwaggerTag"    # tag service name
+            methods:                          # tag method settings
+              "/somes":                       # request path
+                get:                          # request method (get/post/put/options...)
+                  alias: "get"
+                  request_type: "QUERY"       # request type (QUERY|MUTATIONS)
+        objects:                              # file specific objects settings
+         - "Request$":
+           fields:
+             "user_id":
+               context_key: "user_id"
 ...
 ...
 ```
