@@ -26,9 +26,6 @@ type TagConfig struct {
 type Config struct {
 	Files []*SwaggerFileConfig `mapstructure:"files"`
 
-	// Global configs for proto files
-	Paths          []string                  `mapstructure:"paths"`
-	ImportsAliases []map[string]string       `mapstructure:"imports_aliases"`
 	Messages       []map[string]ObjectConfig `mapstructure:"messages"`
 }
 type SwaggerFileConfig struct {
@@ -40,8 +37,6 @@ type SwaggerFileConfig struct {
 
 	OutputPkg  string `mapstructure:"output_package"`
 	OutputPath string `mapstructure:"output_path"`
-
-	TagsClientsGoPackages map[string]string `mapstructure:"swagger_go_package"` // go package of protoc generated code
 
 	GQLObjectsPrefix string `mapstructure:"gql_objects_prefix"`
 
@@ -84,17 +79,7 @@ func (pc *SwaggerFileConfig) GetOutputPkg() string {
 	}
 	return pc.OutputPkg
 }
-func (pc *SwaggerFileConfig) GetTagGoPackage(tag string) (string, error) {
-	if pc == nil {
-		return "", errors.Errorf("go package is not specified for tag '%s'", tag)
-	}
-	pkg, ok := pc.TagsClientsGoPackages[tag]
-	if !ok {
-		return "", errors.Errorf("go package is not specified for tag '%s'", tag)
-	}
-	return pkg, nil
 
-}
 func (pc *SwaggerFileConfig) GetOutputPath() string {
 	if pc == nil {
 		return ""

@@ -31,7 +31,7 @@ type Plugin interface {
 1) reading config
 2) plugins initialization ( calling Init() method of each plugin )
 3) plugins preparation ( calling Prepare() method of each plugin )
-3) plugins generation ( calling Generate() method of each plugin )=
+3) plugins generation ( calling Generate() method of each plugin )
 
 ## Default plugins
 Default plugins places in ./generator/plugins
@@ -58,7 +58,7 @@ type Mutation {
 }
 ```
 
-generate.yml
+
 ```yml
 ...
 ...
@@ -145,7 +145,59 @@ proto2gql:
 ...
 ```
 
+### `swagger2gql` plugin
+`proto2gql` plugin parses swagger files, defined in config and pass them to `graphql` plugin.
 
+#### Service names
+For each tag of each swagger file, `proto2gql` adds two services to `graphql` plugins with names:
+ - `pascalized(tag-name)` or `ServiceAlias`
+ - `pascalized(tag-name)`Mutations or `ServiceAlias`Mutations
+
+pascalized() here means, that it converts string to CamelCase format and removes all characters that is not valid in GraphQL Object name
+
+#### Config example
+```yml
+...
+...
+swagger2gql:
+    objects:
+      - "Response$":
+          error_field: "error"
+      - "InputParams$":
+          fields:
+            ip:
+              context_key: "user_ip"
+
+
+    files:
+      name: "Swagger file number 1"
+      path: "./service1/swagger.json"
+      models_go_path: "github.com/myproject/service1/client/models"
+      output_pkg: "gql_service1"
+      output_path: "./service1/schema/"
+      gql_objects_prefix: "Srv1"
+      tags:
+        "some-swagger-tag":
+          client_go_package: "github.com/myproject/service1/client/some_swagger_tag/client"
+          service_name: "SomeSwaggerTag"
+          methods:
+            "/somes":
+              get:
+                alias: "get"
+                request_type: "QUERY"
+      objects:
+       - "Request$":
+         fields:
+           "user_id":
+             context_key: "user_id"
+                
+
+
+
+
+...
+...
+```
 
 
 ### Simple plugin example
