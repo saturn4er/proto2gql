@@ -91,33 +91,6 @@ func (p *Plugin) Prepare() error {
 	return nil
 }
 
-func (g *Proto2GraphQL) AddSourceByConfig(config *ProtoFileConfig) error {
-	file, err := g.parser.Parse(config.ProtoPath, config.ImportsAliases, config.Paths)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse proto file")
-	}
-	outPath, err := g.fileOutputPath(config, file)
-	if err != nil {
-		return errors.Wrapf(err, "failed to resolve file '%s' output path", file.FilePath)
-	}
-	outPkgName, outPkg, err := g.fileOutputPackage(config, file)
-	if err != nil {
-		return errors.Wrapf(err, "failed to resolve file '%s' output Go package", file.FilePath)
-	}
-	grpcPkg, err := g.fileGRPCSourcesPackage(config, file)
-	if err != nil {
-		return errors.Wrapf(err, "failed to resolve file '%s' GRPC sources Go package", file.FilePath)
-	}
-	g.ParsedFiles = append(g.ParsedFiles, &parsedFile{
-		File:           file,
-		Config:         config,
-		OutputPath:     outPath,
-		OutputPkg:      outPkg,
-		OutputPkgName:  outPkgName,
-		GRPCSourcesPkg: grpcPkg,
-	})
-	return nil
-}
 
 func (Plugin) Name() string {
 	return PluginName
