@@ -55,7 +55,7 @@ func (g *Proto2GraphQL) fileInputObjects(file *parsedFile) ([]graphql.InputObjec
 		}
 		var fields []graphql.ObjectField
 		for _, field := range msg.Fields {
-			fieldTypeFile, err := g.parsedFile(field.Type.File)
+			fieldTypeFile, err := g.parsedFile(field.Type.File())
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve value type file")
 			}
@@ -80,7 +80,7 @@ func (g *Proto2GraphQL) fileInputObjects(file *parsedFile) ([]graphql.InputObjec
 		}
 		for _, oneOf := range msg.OneOffs {
 			for _, fld := range oneOf.Fields {
-				fieldTypeFile, err := g.parsedFile(fld.Type.File)
+				fieldTypeFile, err := g.parsedFile(fld.Type.File())
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to resolve value type file")
 				}

@@ -8,21 +8,21 @@ import (
 )
 
 func testFileInfo(file *File) *File {
-	var Int32Type = &Type{Scalar: "int32"}
+	var Int32Type = &ScalarType{ScalarName: "int32"}
 	var RootMessage = file.Messages[0]
 	var RootMessage2 = file.Messages[4]
-	var RootMessage2Type = &Type{File: file, Message: RootMessage2}
-	var RootEnumType = &Type{File: file, Enum: file.Enums[0]}
+	var RootMessage2Type = &MessageType{file: file, Message: RootMessage2}
+	var RootEnumType = &EnumType{file: file, Enum: file.Enums[0]}
 	var EmptyMessage = file.Messages[2]
-	var EmptyMessageType = &Type{File: file, Message: EmptyMessage}
+	var EmptyMessageType = &MessageType{file: file, Message: EmptyMessage}
 	var NestedMessage = file.Messages[1]
-	var NestedMessageType = &Type{File: file, Message: file.Messages[1]}
-	var NestedEnumType = &Type{File: file, Enum: file.Enums[1]}
-	var NestedNestedEnumType = &Type{File: file, Enum: file.Enums[2]}
+	var NestedMessageType = &MessageType{file: file, Message: file.Messages[1]}
+	var NestedEnumType = &EnumType{file: file, Enum: file.Enums[1]}
+	var NestedNestedEnumType = &EnumType{file: file, Enum: file.Enums[2]}
 	var MessageWithEmpty = file.Messages[3]
 
-	var CommonCommonEnumType = &Type{File: file.Imports[0], Enum: file.Imports[0].Enums[0]}
-	var CommonCommonMessageType = &Type{File: file.Imports[0], Message: file.Imports[0].Messages[0]}
+	var CommonCommonEnumType = &EnumType{file: file.Imports[0], Enum: file.Imports[0].Enums[0]}
+	var CommonCommonMessageType = &MessageType{file: file.Imports[0], Message: file.Imports[0].Messages[0]}
 
 	return &File{
 		Services: []*Service{
@@ -84,8 +84,8 @@ func testFileInfo(file *File) *File {
 					{
 						Name:          "map_enum",
 						QuotedComment: `"enum_map"`,
-						Type: &Type{
-							File: file,
+						Type: &MapType{
+							file: file,
 							Map: &Map{
 								Message:   RootMessage,
 								KeyType:   Int32Type,
@@ -96,8 +96,8 @@ func testFileInfo(file *File) *File {
 					{
 						Name:          "map_scalar",
 						QuotedComment: `"scalar map"`,
-						Type: &Type{
-							File: file,
+						Type: &MapType{
+							file: file,
 							Map: &Map{
 								Message:   RootMessage,
 								KeyType:   Int32Type,
@@ -108,8 +108,8 @@ func testFileInfo(file *File) *File {
 					{
 						Name:          "map_msg",
 						QuotedComment: `""`,
-						Type: &Type{
-							File: file,
+						Type: &MapType{
+							file: file,
 							Map: &Map{
 								Message:   RootMessage,
 								KeyType:   Int32Type,
@@ -221,7 +221,7 @@ func TestParser_Parse(t *testing.T) {
 				Convey("Should contain "+validEnum.Name, func() {
 					So(enum.File, ShouldEqual, validEnum.File)
 					So(enum.Name, ShouldEqual, validEnum.Name)
-					So(enum.Type.Enum, ShouldEqual, enum)
+					So(enum.Type.(*EnumType).Enum, ShouldEqual, enum)
 					So(enum.Type.File, ShouldEqual, test)
 					So(enum.TypeName, ShouldResemble, validEnum.TypeName)
 					So(enum.QuotedComment, ShouldEqual, validEnum.QuotedComment)
@@ -247,7 +247,7 @@ func TestParser_Parse(t *testing.T) {
 				Convey("Should have valid parsed "+strings.Join(validMsg.TypeName, "_")+" message ", func() {
 					So(msg.File, ShouldEqual, validMsg.File)
 					So(msg.Name, ShouldEqual, validMsg.Name)
-					So(msg.Type.Message, ShouldEqual, msg)
+					So(msg.Type.(*MessageType).Message, ShouldEqual, msg)
 					So(msg.Type.File, ShouldEqual, test)
 					So(msg.TypeName, ShouldResemble, validMsg.TypeName)
 					So(msg.QuotedComment, ShouldEqual, validMsg.QuotedComment)
@@ -320,24 +320,23 @@ func TestParser_Parse(t *testing.T) {
 	})
 }
 
-func CompareTypes(t1, t2 *Type) {
+func CompareTypes(t1, t2 TypeInterface) {
 	So(t1, ShouldNotBeNil)
 	So(t2, ShouldNotBeNil)
-	if t1.IsScalar() {
-		So(t1.Scalar, ShouldEqual, t2.Scalar)
-	}
-	if t1.IsMessage() {
-		So(t1.Message, ShouldEqual, t2.Message)
+
+	switch t1.(type) {
+	case ScalarType:
+		So(t1.(*ScalarType).ScalarName, ShouldEqual, t2.(*ScalarType).ScalarName)
+	case MessageType:
+		So(t1.(*MessageType).Message, ShouldEqual, t2.(*MessageType).Message)
+		So(t1.File(), ShouldEqual, t2.File())
+	case EnumType:
+		So(t1.(EnumType).Enum, ShouldEqual, t2.(EnumType).Enum)
 		So(t1.File, ShouldEqual, t2.File)
-	}
-	if t1.IsEnum() {
-		So(t1.Enum, ShouldEqual, t2.Enum)
-		So(t1.File, ShouldEqual, t2.File)
-	}
-	if t1.IsMap() {
-		So(t1.Map.Message, ShouldEqual, t2.Map.Message)
-		CompareTypes(t1.Map.KeyType, t2.Map.KeyType)
-		CompareTypes(t1.Map.ValueType, t2.Map.ValueType)
+	case MapType:
+		So(t1.(MapType).Map.Message, ShouldEqual, t2.(MapType).Map.Message)
+		CompareTypes(t1.(MapType).Map.KeyType, t2.(MapType).Map.KeyType)
+		CompareTypes(t1.(MapType).Map.ValueType, t2.(MapType).Map.ValueType)
 		So(t1.File, ShouldEqual, t2.File)
 	}
 }

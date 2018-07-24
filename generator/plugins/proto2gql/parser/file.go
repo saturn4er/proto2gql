@@ -49,7 +49,7 @@ func (f *File) enumByTypeName(typeName TypeName) (*Enum, bool) {
 }
 func (f *File) findTypeInMessage(msg *Message, typ string) (TypeInterface, bool) {
 	if typeIsScalar(typ) {
-		return &Type{Scalar: typ, File: f}, true
+		return &ScalarType{ScalarName: typ, file: f}, true
 	}
 	ms, ok := f.messageByTypeName(msg.TypeName.NewSubTypeName(typ))
 	if ok {
@@ -68,7 +68,7 @@ func (f *File) findTypeInMessage(msg *Message, typ string) (TypeInterface, bool)
 
 func (f *File) findType(typ string) (TypeInterface, bool) {
 	if typeIsScalar(typ) {
-		return &Type{Scalar: typ, File: f}, true
+		return &ScalarType{ScalarName: typ, file: f}, true
 	}
 	parts := strings.Split(typ, ".")
 	msg, ok := f.messageByTypeName(parts)
@@ -127,8 +127,8 @@ func (f *File) parseServices() error {
 			mtd := &Method{
 				Name:          method.Name,
 				QuotedComment: quoteComment(method.Comment),
-				InputMessage:  reqTyp.(*Type).Message,
-				OutputMessage: retTyp.(*Type).Message,
+				InputMessage:  reqTyp.(*MessageType).Message,
+				OutputMessage: retTyp.(*MessageType).Message,
 				Service:       srv,
 			}
 			srv.Methods = append(srv.Methods, mtd)
@@ -171,7 +171,7 @@ func (f *File) parseMessagesFields() error {
 					Field:     fld,
 					File:      f,
 				}
-				t := &Type{Map: mp, File: f}
+				t := &MapType{Map: mp, file: f}
 				mp.Type = t
 				mf := &MapField{
 					Name:          fld.Name,

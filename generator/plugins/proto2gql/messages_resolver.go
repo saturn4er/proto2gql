@@ -29,7 +29,7 @@ func (g *Proto2GraphQL) fileInputMessagesResolvers(file *parsedFile) ([]graphql.
 		for _, oneOf := range msg.OneOffs {
 			var fields []graphql.InputObjectResolverOneOfField
 			for _, fld := range oneOf.Fields {
-				fldTypeFile, err := g.parsedFile(fld.Type.File)
+				fldTypeFile, err := g.parsedFile(fld.Type.File())
 				if err != nil {
 					return nil, errors.Wrapf(err, "failed to resolve message '%s' field '%s' type parsed file", dotedTypeName(msg.TypeName), fld.Name)
 				}
@@ -51,7 +51,7 @@ func (g *Proto2GraphQL) fileInputMessagesResolvers(file *parsedFile) ([]graphql.
 		}
 		var fields []graphql.InputObjectResolverField
 		for _, fld := range msg.Fields {
-			fldTypeFile, err := g.parsedFile(fld.Type.File)
+			fldTypeFile, err := g.parsedFile(fld.Type.File())
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to resolve message '%s' field '%s' type parsed file", dotedTypeName(msg.TypeName), fld.Name)
 			}
@@ -81,7 +81,7 @@ func (g *Proto2GraphQL) fileInputMessagesResolvers(file *parsedFile) ([]graphql.
 			})
 		}
 		for _, fld := range msg.MapFields {
-			valueTypeParsedFile, err := g.parsedFile(fld.Type.File)
+			valueTypeParsedFile, err := g.parsedFile(fld.Type.File())
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to resolve message '%s' parsed file", dotedTypeName(msg.TypeName))
 			}

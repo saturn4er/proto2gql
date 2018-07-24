@@ -75,7 +75,7 @@ type MapField struct {
 	Name          string
 	QuotedComment string
 	descriptor    *proto.MapField
-	Type          *Type
+	Type          TypeInterface
 	Map           *Map
 }
 

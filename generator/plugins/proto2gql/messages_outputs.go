@@ -27,10 +27,10 @@ func (g *Proto2GraphQL) outputMessageTypeResolver(messageFile *parsedFile, messa
 func (g *Proto2GraphQL) outputMessageFields(msgCfg MessageConfig, file *parsedFile, msg *parser.Message) ([]graphql.ObjectField, error) {
 	var res []graphql.ObjectField
 	for _, field := range msg.Fields {
-		if msgCfg.ErrorField == field.Name{
+		if msgCfg.ErrorField == field.Name {
 			continue
 		}
-		fieldTypeFile, err := g.parsedFile(field.Type.File)
+		fieldTypeFile, err := g.parsedFile(field.Type.File())
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to resolve file type file")
 		}
@@ -54,10 +54,10 @@ func (g *Proto2GraphQL) outputMessageFields(msgCfg MessageConfig, file *parsedFi
 	}
 	for _, of := range msg.OneOffs {
 		for _, field := range of.Fields {
-			if msgCfg.ErrorField == field.Name{
+			if msgCfg.ErrorField == field.Name {
 				continue
 			}
-			fieldTypeFile, err := g.parsedFile(field.Type.File)
+			fieldTypeFile, err := g.parsedFile(field.Type.File())
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve file type file")
 			}
@@ -78,7 +78,7 @@ func (g *Proto2GraphQL) outputMessageFields(msgCfg MessageConfig, file *parsedFi
 func (g *Proto2GraphQL) outputMessageMapFields(msgCfg MessageConfig, file *parsedFile, msg *parser.Message) ([]graphql.ObjectField, error) {
 	var res []graphql.ObjectField
 	for _, field := range msg.MapFields {
-		if msgCfg.ErrorField == field.Name{
+		if msgCfg.ErrorField == field.Name {
 			continue
 		}
 		typeResolver, err := g.TypeOutputTypeResolver(file, field.Type)

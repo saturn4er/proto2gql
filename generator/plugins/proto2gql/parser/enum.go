@@ -23,11 +23,11 @@ func newEnum(file *File, enum *proto.Enum, typeName []string) *Enum {
 		Name:          enum.Name,
 		QuotedComment: quoteComment(enum.Comment),
 		Descriptor:    enum,
-		Type:          &Type{File: file},
 		TypeName:      typeName,
 		File:          file,
 	}
-	m.Type.(*Type).Enum = m
+	enumType := &EnumType{file: file, Enum: m}
+	m.Type = enumType
 	for _, v := range enum.Elements {
 		value, ok := v.(*proto.EnumField)
 		if !ok {

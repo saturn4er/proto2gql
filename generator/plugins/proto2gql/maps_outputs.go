@@ -22,7 +22,7 @@ func (g *Proto2GraphQL) fileMapOutputObjects(file *parsedFile) ([]graphql.MapOut
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve key input type resolver")
 			}
-			valueFile, err := g.parsedFile(mapFld.Map.ValueType.File)
+			valueFile, err := g.parsedFile(mapFld.Map.ValueType.File())
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to resolve value type file")
 			}

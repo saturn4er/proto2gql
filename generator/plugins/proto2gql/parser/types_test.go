@@ -8,36 +8,26 @@ import (
 
 func TestTypeIs(t *testing.T) {
 	Convey("Test Type", t, func() {
+
+
 		Convey("Type is Message", func() {
-			msgTyp := &Type{Message: &Message{}}
-			So(msgTyp.IsMessage(), ShouldBeTrue)
-			So(msgTyp.IsMap(), ShouldBeFalse)
-			So(msgTyp.IsEnum(), ShouldBeFalse)
-			So(msgTyp.IsScalar(), ShouldBeFalse)
+			msgTyp := &MessageType{Message: &Message{}}
+			So(msgTyp.Kind(), ShouldEqual, TypeMessage)
 		})
 
 		Convey("Type is Enum", func() {
-			enumTyp := &Type{Enum: &Enum{}}
-			So(enumTyp.IsEnum(), ShouldBeTrue)
-			So(enumTyp.IsMap(), ShouldBeFalse)
-			So(enumTyp.IsMessage(), ShouldBeFalse)
-			So(enumTyp.IsScalar(), ShouldBeFalse)
+			enumTyp := &EnumType{Enum: &Enum{}}
+			So(enumTyp.Kind(), ShouldEqual, TypeEnum)
 		})
 
 		Convey("Type is Map", func() {
-			enumTyp := &Type{Map: &Map{}}
-			So(enumTyp.IsMap(), ShouldBeTrue)
-			So(enumTyp.IsEnum(), ShouldBeFalse)
-			So(enumTyp.IsMessage(), ShouldBeFalse)
-			So(enumTyp.IsScalar(), ShouldBeFalse)
+			enumTyp := &MapType{Map: &Map{}}
+			So(enumTyp.Kind(), ShouldEqual, TypeMap)
 		})
 
 		Convey("Type is Scalar", func() {
-			enumTyp := &Type{Scalar: "int"}
-			So(enumTyp.IsScalar(), ShouldBeTrue)
-			So(enumTyp.IsMap(), ShouldBeFalse)
-			So(enumTyp.IsEnum(), ShouldBeFalse)
-			So(enumTyp.IsMessage(), ShouldBeFalse)
+			enumTyp := &ScalarType{ScalarName: "int"}
+			So(enumTyp.Kind(), ShouldEqual, TypeScalar)
 		})
 	})
 }

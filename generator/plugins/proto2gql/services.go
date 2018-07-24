@@ -13,7 +13,7 @@ import (
 func (g Proto2GraphQL) serviceMethodArguments(cfg MethodConfig, method *parser.Method) ([]graphql.MethodArgument, error) {
 	var args []graphql.MethodArgument
 	for _, field := range method.InputMessage.Fields {
-		typeFile, err := g.parsedFile(field.Type.File)
+		typeFile, err := g.parsedFile(field.Type.File())
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to resolve field '%s' file", field.Name)
 		}
@@ -30,7 +30,7 @@ func (g Proto2GraphQL) serviceMethodArguments(cfg MethodConfig, method *parser.M
 		})
 	}
 	for _, field := range method.InputMessage.MapFields {
-		typeFile, err := g.parsedFile(field.Type.File)
+		typeFile, err := g.parsedFile(field.Type.File())
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to resolve field '%s' file", field.Name)
 		}
@@ -57,17 +57,17 @@ func (g Proto2GraphQL) messagePayloadErrorParams(message *parser.Message) (check
 	errorAccessor := func(arg string) string {
 		return arg + ".Get" + camelCase(outMsgCfg.ErrorField) + "()"
 	}
-	errorCheckerByType := func(repeated bool, p *parser.Type) graphql.PayloadErrorChecker {
-		if repeated || p.IsMap() {
+	errorCheckerByType := func(repeated bool, p parser.TypeInterface) graphql.PayloadErrorChecker {
+		if repeated || p.Kind() == parser.TypeMap {
 			return func(arg string) string {
 				return "len(" + arg + ".Get" + camelCase(outMsgCfg.ErrorField) + "())>0"
 			}
 		}
-		if p.IsScalar() || p.IsEnum() {
+		if p.Kind() == parser.TypeScalar || p.Kind() == parser.TypeEnum {
 			fmt.Println("Warning: scalars and enums is not supported as payload error fields")
 			return nil
 		}
-		if p.IsMessage() {
+		if p.Kind() == parser.TypeMessage {
 			return func(arg string) string {
 				return arg + ".Get" + camelCase(outMsgCfg.ErrorField) + "() != nil"
 			}

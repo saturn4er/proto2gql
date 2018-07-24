@@ -13,57 +13,73 @@ const (
 type TypeInterface interface {
 	Kind() Kind
 	String() string
+	File() *File
 }
 
-type Type struct {
-	File    *File
+type ScalarType struct {
+	file       *File
+	ScalarName string
+}
+
+func (t ScalarType) Kind() Kind {
+	return TypeScalar
+}
+
+func (t ScalarType) String() string {
+	return t.ScalarName
+}
+
+func (t ScalarType) File() *File {
+	return t.file
+}
+
+type EnumType struct {
+	file *File
+	Enum *Enum
+}
+
+func (t EnumType) Kind() Kind {
+	return TypeEnum
+}
+
+func (t EnumType) String() string {
+	return t.Enum.Name + " enum"
+}
+
+func (t EnumType) File() *File {
+	return t.file
+}
+
+type MapType struct {
+	file *File
+	Map  *Map
+}
+
+func (t MapType) Kind() Kind {
+	return TypeMap
+}
+
+func (t MapType) String() string {
+	return t.Map.Message.Name + "." + t.Map.Field.Name + " map"
+}
+
+func (t MapType) File() *File {
+	return t.file
+}
+
+type MessageType struct {
+	file    *File
 	Message *Message
-	Enum    *Enum
-	Scalar  string
-	Map     *Map
 }
 
-func (p *Type) IsScalar() bool {
-	return p.Scalar != ""
-}
-func (p *Type) IsMessage() bool {
-	return p.Message != nil
+func (t MessageType) Kind() Kind {
+	return TypeMessage
 }
 
-func (p *Type) IsEnum() bool {
-	return p.Enum != nil
+func (t MessageType) String() string {
+	return t.Message.Name + " message"
 }
 
-func (p *Type) IsMap() bool {
-	return p.Map != nil
-}
-
-func (p *Type) Kind() Kind {
-	switch {
-	case p.IsMessage():
-		return TypeMessage
-	case p.IsMap():
-		return TypeMap
-	case p.IsEnum():
-		return TypeEnum
-	case p.IsScalar():
-		return TypeScalar
-	default:
-		return TypeUndefined
-	}
-}
-
-func (p *Type) String() string {
-	switch {
-	case p.IsMessage():
-		return p.Message.Name + " message"
-	case p.IsMap():
-		return p.Map.Message.Name + "." + p.Map.Field.Name + " map"
-	case p.IsEnum():
-		return p.Enum.Name + " enum"
-	case p.IsScalar():
-		return p.Scalar
-	default:
-		return "unknown type"
-	}
+func (t MessageType) File() *File {
+	return t.file
 }
