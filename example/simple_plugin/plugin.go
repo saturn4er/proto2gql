@@ -51,3 +51,5 @@ func (plugin) Infos() map[string]string       { return nil }
 func Plugin() generator.Plugin {
 	return new(plugin)
 }
+
+func main(){}
