@@ -10,7 +10,7 @@ const (
 	TypeMap
 )
 
-type TypeInterface interface {
+type Type interface {
 	Kind() Kind
 	String() string
 	File() *File

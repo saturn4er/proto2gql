@@ -6,7 +6,7 @@ import (
 	"github.com/saturn4er/proto2gql/generator/plugins/proto2gql/parser"
 )
 
-func (g *Proto2GraphQL) TypeOutputTypeResolver(typeFile *parsedFile, typ parser.TypeInterface) (graphql.TypeResolver, error) {
+func (g *Proto2GraphQL) TypeOutputTypeResolver(typeFile *parsedFile, typ parser.Type) (graphql.TypeResolver, error) {
 	switch pType := typ.(type) {
 	case *parser.ScalarType:
 		resolver, ok := scalarsResolvers[pType.ScalarName]
@@ -42,7 +42,7 @@ func (g *Proto2GraphQL) TypeOutputTypeResolver(typeFile *parsedFile, typ parser.
 	}
 	return nil, errors.New("not implemented " + typ.String())
 }
-func (g *Proto2GraphQL) TypeInputTypeResolver(typeFile *parsedFile, typ parser.TypeInterface) (graphql.TypeResolver, error) {
+func (g *Proto2GraphQL) TypeInputTypeResolver(typeFile *parsedFile, typ parser.Type) (graphql.TypeResolver, error) {
 	switch pType := typ.(type) {
 	case *parser.ScalarType:
 		resolver, ok := scalarsResolvers[pType.ScalarName]
@@ -68,7 +68,7 @@ func (g *Proto2GraphQL) TypeInputTypeResolver(typeFile *parsedFile, typ parser.T
 	}
 	return nil, errors.New("not implemented " + typ.String())
 }
-func (g *Proto2GraphQL) TypeValueResolver(typeFile *parsedFile, typ parser.TypeInterface, ctxKey string) (_ graphql.ValueResolver, withErr, fromArgs bool, err error) {
+func (g *Proto2GraphQL) TypeValueResolver(typeFile *parsedFile, typ parser.Type, ctxKey string) (_ graphql.ValueResolver, withErr, fromArgs bool, err error) {
 	if ctxKey != "" {
 		goType, err := g.goTypeByParserType(typ)
 		if err != nil {
@@ -116,7 +116,7 @@ func (g *Proto2GraphQL) TypeValueResolver(typeFile *parsedFile, typ parser.TypeI
 
 }
 
-func (g *Proto2GraphQL) FieldOutputValueResolver(fieldFile *parsedFile, fieldName string, fieldRepeated bool, fieldType parser.TypeInterface) (_ graphql.ValueResolver, err error) {
+func (g *Proto2GraphQL) FieldOutputValueResolver(fieldFile *parsedFile, fieldName string, fieldRepeated bool, fieldType parser.Type) (_ graphql.ValueResolver, err error) {
 	switch ft := fieldType.(type) {
 	case *parser.ScalarType:
 		return graphql.IdentAccessValueResolver(camelCase(fieldName)), nil

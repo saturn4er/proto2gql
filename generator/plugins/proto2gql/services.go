@@ -57,7 +57,7 @@ func (g Proto2GraphQL) messagePayloadErrorParams(message *parser.Message) (check
 	errorAccessor := func(arg string) string {
 		return arg + ".Get" + camelCase(outMsgCfg.ErrorField) + "()"
 	}
-	errorCheckerByType := func(repeated bool, p parser.TypeInterface) graphql.PayloadErrorChecker {
+	errorCheckerByType := func(repeated bool, p parser.Type) graphql.PayloadErrorChecker {
 		if repeated || p.Kind() == parser.TypeMap {
 			return func(arg string) string {
 				return "len(" + arg + ".Get" + camelCase(outMsgCfg.ErrorField) + "())>0"

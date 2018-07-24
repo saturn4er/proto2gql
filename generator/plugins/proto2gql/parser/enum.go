@@ -6,7 +6,7 @@ type Enum struct {
 	Name          string
 	QuotedComment string
 	Values        []*EnumValue
-	Type          TypeInterface
+	Type          Type
 	File          *File
 	TypeName      TypeName
 	Descriptor    *proto.Enum

@@ -47,7 +47,7 @@ func (f *File) enumByTypeName(typeName TypeName) (*Enum, bool) {
 	}
 	return nil, false
 }
-func (f *File) findTypeInMessage(msg *Message, typ string) (TypeInterface, bool) {
+func (f *File) findTypeInMessage(msg *Message, typ string) (Type, bool) {
 	if typeIsScalar(typ) {
 		return &ScalarType{ScalarName: typ, file: f}, true
 	}
@@ -66,7 +66,7 @@ func (f *File) findTypeInMessage(msg *Message, typ string) (TypeInterface, bool)
 	return f.findType(typ)
 }
 
-func (f *File) findType(typ string) (TypeInterface, bool) {
+func (f *File) findType(typ string) (Type, bool) {
 	if typeIsScalar(typ) {
 		return &ScalarType{ScalarName: typ, file: f}, true
 	}

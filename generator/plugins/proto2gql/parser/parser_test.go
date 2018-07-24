@@ -320,7 +320,7 @@ func TestParser_Parse(t *testing.T) {
 	})
 }
 
-func CompareTypes(t1, t2 TypeInterface) {
+func CompareTypes(t1, t2 Type) {
 	So(t1, ShouldNotBeNil)
 	So(t2, ShouldNotBeNil)
 
