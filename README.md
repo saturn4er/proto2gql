@@ -1,8 +1,6 @@
 proto2gql
 ==============
-[![Build Status](https://travis-ci.org/saturn4er/proto2gql.svg?branch=master)](https://travis-ci.org/saturn4er/proto2gql)
-[![Coverage Status](https://coveralls.io/repos/github/saturn4er/proto2gql/badge.svg?branch=master)](https://coveralls.io/github/saturn4er/proto2gql?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/saturn4er/proto2gql)](https://goreportcard.com/report/github.com/saturn4er/proto2gql)
+# The project has been migrated to https://github.com/EGT-Ukraine/go2gql.
 
 Tool, which generates [graphql-go](https://github.com/graphql-go/graphql) schema for `.proto` file.  
 
